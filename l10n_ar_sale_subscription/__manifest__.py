@@ -7,7 +7,7 @@
 #
 ###############################################################################
 {
-    "name": "l10n ar Sale Subscription",
+    "name": "l10n_ar Sale Subscription",
     "summary": "",
     'version': "15.0.1",
     'author': 'SINAPSYS GLOBAL SA || MASTERCORE SAS',

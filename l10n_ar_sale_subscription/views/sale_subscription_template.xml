@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="sale_subscription_template_form_inherit" model="ir.ui.view">
+        <field name="name">sale.subscription.template.form.inherit</field>
+        <field name="model">sale.subscription.template</field>
+        <field name="inherit_id" ref="sale_subscription.sale_subscription_template_view_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='payment_mode']" position="after">
+                <field name="recurring_invoicing_type" />
+            </xpath>
+        </field>
+    </record>
+</odoo>

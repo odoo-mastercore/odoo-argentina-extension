@@ -14,7 +14,7 @@ Available addons
 ----------------
 addon | version | maintainers | summary
 --- | --- | --- | ---
-[l10n_ar_sale_subscription](l10n_ar_sale_subscription/) | 15.0.1 |  |  l10n_ar Sale Subscription
+[l10n_ar_sale_subscription](l10n_ar_sale_subscription/) | 16.0.1 |  |  l10n_ar Sale Subscription
 
 [//]: # (end addons)
 

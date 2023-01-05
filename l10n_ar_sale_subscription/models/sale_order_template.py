@@ -15,8 +15,8 @@ import json
 
 _logger = logging.getLogger(__name__)
 
-class SaleSubscriptionTemplateInherit(models.Model):
-    _inherit = 'sale.subscription.template'
+class SaleOrderTemplate(models.Model):
+    _inherit = 'sale.order.template'
 
     recurring_invoicing_type = fields.Selection([
         ('pre_paid', 'Prepago'),

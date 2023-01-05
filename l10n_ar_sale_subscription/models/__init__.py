@@ -6,5 +6,5 @@
 #
 #
 ###############################################################################
-from . import sale_subscription_template
-from . import sale_subscription
+from . import sale_order_template
+from . import sale_order

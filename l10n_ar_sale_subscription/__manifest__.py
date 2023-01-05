@@ -9,13 +9,17 @@
 {
     "name": "l10n_ar Sale Subscription",
     "summary": "",
-    'version': "15.0.1",
+    'version': "16.0.1",
     'author': 'SINAPSYS GLOBAL SA || MASTERCORE SAS',
     'website': "http://sinapsys.global",
     'category': "sale",
     "license": "AGPL-3",
-    "depends": ["sale","sale_subscription"],
+    "depends": [
+        "sale",
+        "sale_subscription",
+        "l10n_ar"
+    ],
     "data": [
-        'views/sale_subscription_template.xml'
+        'views/sale_order_template.xml'
     ],
 }

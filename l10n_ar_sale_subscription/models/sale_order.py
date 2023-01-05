@@ -24,7 +24,7 @@ class SaleOrderInherit(models.Model):
 
     def _prepare_invoice(self):
         vals = super()._prepare_invoice()
-        if self.sale_order_template_id.recurring_invoicing_type != 'post_paid':
+        if self.sale_order_template_id.recurring_invoicing_type == 'post_paid':
             start_date_service = self.next_invoice_date and \
                 self.next_invoice_date - get_timedelta(self.recurrence_id.duration, \
                     self.recurrence_id.unit)
@@ -32,11 +32,12 @@ class SaleOrderInherit(models.Model):
           
             vals['l10n_ar_afip_service_start'] = start_date_service
             vals['l10n_ar_afip_service_end'] = end_date_service
-        else:
+        elif self.sale_order_template_id.recurring_invoicing_type == 'pre_paid':
             end_date_service = self.next_invoice_date and \
                 self.next_invoice_date + get_timedelta(self.recurrence_id.duration, \
                     self.recurrence_id.unit)
             start_date_service = self.next_invoice_date
+          
             vals['l10n_ar_afip_service_start'] = start_date_service
             vals['l10n_ar_afip_service_end'] = end_date_service
         return vals

@@ -14,7 +14,7 @@
     'website': "http://sinapsys.global",
     'category': "contact",
     "license": "AGPL-3",
-    "depends": [],
+    "depends": ['l10n_ar_ux'],
     "data": [
         'data/afip_activity_data.xml',
     ],

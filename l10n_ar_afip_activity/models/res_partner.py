@@ -15,18 +15,41 @@ class ResPartner(models.Model):
 
     _inherit = "res.partner"
     
-    def create(self,vals):
-        rec = super(ResPartner, self).create(vals)
-        _logges.warning(self.actividades_padron[0])
-        if self.actividades_padron:
-            self.industry_id = self.actividades_padron[0]
-        return rec
+    def create(self, vals):
+        res = super(ResPartner, self).create(vals)
+        _logger.warning("entre")
+        _logger.warning(vals)
+        _logger.warning(res.actividades_padron[0].name)
+        activity_name = res.actividades_padron[0].name
+        _logger.warning(activity_name)
+        exist =  self.env['res.partner.industry'].search([('name', '=', activity_name)],limit=1)
+        _logger.warning(exist)
+        if not exist:
+            industry =  self.env['res.partner.industry'].create({
+                'name' : activity_name,
+            })
+            _logger.warning(industry)
+            res.industry_id = industry
+        else:
+            res.industry_id = exist
+       
+        return res
 
-    def write(self,vals):
-        rec = super(ResPartner, self).write(vals)
-        _logges.warning(self.actividades_padron[0])
-        if self.actividades_padron:
-            self.industry_id = self.actividades_padron[0]
-        return rec
+    def write(self, vals):
+       
+        res = super(ResPartner, self).write(vals)
+        if 'actividades_padron' in vals:
+            exist =  self.env['res.partner.industry'].search([('name', '=', self.actividades_padron[0].name)],limit=1)
+            if not exist:
+                industry =  self.env['res.partner.industry'].create({
+                    'name' : self.actividades_padron[0].name,
+                    'active' : True,
+                })
+                self.industry_id = industry
+            else:
+                self.industry_id = exist
+       
+        return res
+        
     
         

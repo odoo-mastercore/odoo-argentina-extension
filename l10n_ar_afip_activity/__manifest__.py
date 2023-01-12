@@ -9,7 +9,7 @@
 {
     "name": "l10n_ar_afip_activity",
     "summary": "",
-    'version': "15.0",
+    'version': "15.0.1",
     'author': 'SINAPSYS GLOBAL SA || MASTERCORE SAS',
     'website': "http://sinapsys.global",
     'category': "contact",

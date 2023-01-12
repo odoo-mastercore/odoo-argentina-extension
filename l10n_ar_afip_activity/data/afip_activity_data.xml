@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <data noupdate="0">
+    <data noupdate="1">
         <record id="afip_tax_0" model="afip.activity">
             <field name="name">ACTIVIDADES NO CLASIFICADAS EN OTRA PARTE</field>
             <field name="code">0</field>

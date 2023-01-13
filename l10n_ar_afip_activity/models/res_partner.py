@@ -17,7 +17,7 @@ class ResPartner(models.Model):
     
     def create(self, vals):
         res = super(ResPartner, self).create(vals)
-        if res.actividades_padron[0]:
+        if res.actividades_padron:
             activity_name = res.actividades_padron[0].name
             exist =  self.env['res.partner.industry'].search([('name', '=', activity_name)],limit=1)
             if not exist:

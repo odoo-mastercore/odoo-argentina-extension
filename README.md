@@ -14,7 +14,8 @@ Available addons
 ----------------
 addon | version | maintainers | summary
 --- | --- | --- | ---
-[l10n_ar_sale_subscription](l10n_ar_sale_subscription/) | 15.0.1 |  |  l10n_ar Sale Subscription
+[l10n_ar_sale_subscription](l10n_ar_sale_subscription/) | 15.0.1 | Elvis Paez epa@sinapsys.global |  l10n_ar Sale Subscription
+[l10n_ar_afip_activity](l10n_ar_afip_actovity/) | 15.0.1 | Morena Sandroni msa@sinapsys.global |  l10n_ar match Sector with afip activity from padron A5
 
 [//]: # (end addons)
 

@@ -15,6 +15,7 @@ class ResPartner(models.Model):
 
     _inherit = "res.partner"
     
+    @api.model
     def create(self, vals):
         res = super(ResPartner, self).create(vals)
         if res.actividades_padron:

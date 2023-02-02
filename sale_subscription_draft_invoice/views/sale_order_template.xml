@@ -6,7 +6,7 @@
         <field name="inherit_id" ref="sale_management.sale_order_template_view_form" />
         <field name="arch" type="xml">
             <xpath expr="//field[@name='recurrence_id']" position="before">
-                <field name="draft_invoices" />
+                <field name="draft_invoices" widget="boolean_toggle" />
             </xpath>
         </field>
     </record>

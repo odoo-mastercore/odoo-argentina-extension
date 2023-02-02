@@ -9,4 +9,4 @@ _logger = logging.getLogger(__name__)
 class SaleOrder(models.Model):
     _inherit = "sale.order.template"
 
-    draft_invoices = fields.Boolean('draft_invoices', default=False)
+    draft_invoices = fields.Boolean('Generar Factura en borrador', default=False)

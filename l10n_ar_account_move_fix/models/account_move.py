@@ -19,6 +19,7 @@ import json
 
 
 _logger = logging.getLogger(__name__)
+WS_DATE_FORMAT = {'wsfe': '%Y%m%d', 'wsfex': '%Y%m%d', 'wsbfe': '%Y%m%d'}
 
 
 class AccountMove(models.Model):

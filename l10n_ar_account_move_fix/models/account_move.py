@@ -12,7 +12,6 @@ from odoo.exceptions import UserError, RedirectWarning
 from odoo.tools.float_utils import float_repr, float_round
 from odoo.tools import html2plaintext, plaintext2html
 from datetime import datetime
-from . import afip_errors
 import re
 import logging
 import base64

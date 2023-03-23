@@ -36,13 +36,13 @@ class AccountMove(models.Model):
                 lambda y: y.tax_group_id.l10n_ar_tribute_afip_code == tribute.tax_line_id.tax_group_id.l10n_ar_tribute_afip_code)).mapped(
                     'price_subtotal'))
             company_currency = self.currency_id.id == self.company_id.currency_id.id
-            amount_field = company_currency and 'balance' or 'amount_currency'
+            amount_field = company_currency and 'tribute.balance' or 'tribute.amount_currency'
             sign = -1 if self.is_inbound() else 1
             res.append({'Id': tribute.tax_line_id.tax_group_id.l10n_ar_tribute_afip_code,
                         'Alic': 0,
                         'Desc': tribute.tax_line_id.tax_group_id.name,
                         'BaseImp': float_repr(base_imp, precision_digits=2),
-                        'Importe': float_repr((sign * tribute.mapped('amount_field')), precision_digits=2)})
+                        'Importe': float_repr((sign * exec('amount_field')), precision_digits=2)})
         return res if res else None
 
     @api.model

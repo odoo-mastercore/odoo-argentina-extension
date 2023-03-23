@@ -38,6 +38,9 @@ class AccountMove(models.Model):
             amounts = self._l10n_ar_get_amounts()
             _logger.warning('--------------------------------')
             _logger.warning(float_repr(amounts['not_vat_taxes_amount'], precision_digits=2))
+            _logger.warning(self.invoice_line_ids.filtered(lambda x: x.tax_ids.filtered(
+                lambda y: y.tax_group_id.l10n_ar_tribute_afip_code == tribute.tax_line_id.tax_group_id.l10n_ar_tribute_afip_code)))
+            _logger.warning(not_vat_taxes)
             res.append({'Id': tribute.tax_line_id.tax_group_id.l10n_ar_tribute_afip_code,
                         'Alic': 0,
                         'Desc': tribute.tax_line_id.tax_group_id.name,

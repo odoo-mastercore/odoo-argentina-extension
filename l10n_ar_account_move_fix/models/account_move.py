@@ -26,6 +26,27 @@ class AccountMove(models.Model):
 
     _inherit = "account.move"
 
+
+    def _get_tributes(self):
+        """ Applies on wsfe web service """
+        res = []
+        not_vat_taxes = self.line_ids.filtered(lambda x: x.tax_line_id and x.tax_line_id.tax_group_id.l10n_ar_tribute_afip_code)
+        for tribute in not_vat_taxes:
+            base_imp = sum(self.invoice_line_ids.filtered(lambda x: x.tax_ids.filtered(
+                lambda y: y.tax_group_id.l10n_ar_tribute_afip_code == tribute.tax_line_id.tax_group_id.l10n_ar_tribute_afip_code)).mapped(
+                    'price_subtotal'))
+            ImpTrib = sum(self.invoice_line_ids.filtered(lambda x: x.tax_ids.filtered(
+                lambda y: y.tax_group_id.l10n_ar_tribute_afip_code == tribute.tax_line_id.tax_group_id.l10n_ar_tribute_afip_code)).mapped(
+                    'ImpTrib'))
+            _logger.warning('--------------------------------')
+            _logger.warning(ImpTrib)
+            res.append({'Id': tribute.tax_line_id.tax_group_id.l10n_ar_tribute_afip_code,
+                        'Alic': 0,
+                        'Desc': tribute.tax_line_id.tax_group_id.name,
+                        'BaseImp': float_repr(base_imp, precision_digits=2),
+                        'Importe': float_repr(tribute.price_subtotal, precision_digits=2)})
+        return res if res else None
+
     @api.model
     def wsfe_get_cae_request(self, client=None):
         self.ensure_one()

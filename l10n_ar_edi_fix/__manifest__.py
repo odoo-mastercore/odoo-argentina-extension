@@ -7,7 +7,7 @@
 #
 ###############################################################################
 {
-    "name": "Hot Fix in AFIP Services",
+    "name": "HotFix with compute ImpTrib amounts to Electronic Invoice validation",
     "summary": "",
     'version': "16.0.1",
     'author': 'SINAPSYS GLOBAL SA || MASTERCORE SAS',

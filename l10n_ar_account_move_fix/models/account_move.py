@@ -35,7 +35,7 @@ class AccountMove(models.Model):
             base_imp = sum(self.invoice_line_ids.filtered(lambda x: x.tax_ids.filtered(
                 lambda y: y.tax_group_id.l10n_ar_tribute_afip_code == tribute.tax_line_id.tax_group_id.l10n_ar_tribute_afip_code)).mapped(
                     'price_subtotal'))
-            company_currency = self.move_id.currency_id.id == self.move_id.company_id.currency_id.id:
+            company_currency = self.move_id.currency_id.id == self.move_id.company_id.currency_id.id
             amount_field = company_currency and 'balance' or 'amount_currency'
             sign = -1 if self.move_id.is_inbound() else 1
             res.append({'Id': tribute.tax_line_id.tax_group_id.l10n_ar_tribute_afip_code,

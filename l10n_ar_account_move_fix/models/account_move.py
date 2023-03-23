@@ -42,7 +42,7 @@ class AccountMove(models.Model):
                         'Alic': 0,
                         'Desc': tribute.tax_line_id.tax_group_id.name,
                         'BaseImp': float_repr(base_imp, precision_digits=2),
-                        'Importe': float_repr(tribute.price_subtotal, precision_digits=2)})
+                        'Importe': float_repr(amounts['not_vat_taxes_amount'], precision_digits=2)})
         return res if res else None
 
     @api.model

@@ -41,6 +41,7 @@ class AccountMove(models.Model):
             _logger.warning(self.invoice_line_ids.filtered(lambda x: x.tax_ids.filtered(
                 lambda y: y.tax_group_id.l10n_ar_tribute_afip_code == tribute.tax_line_id.tax_group_id.l10n_ar_tribute_afip_code)))
             _logger.warning(not_vat_taxes)
+            _logger.warning(PATITO)
             res.append({'Id': tribute.tax_line_id.tax_group_id.l10n_ar_tribute_afip_code,
                         'Alic': 0,
                         'Desc': tribute.tax_line_id.tax_group_id.name,

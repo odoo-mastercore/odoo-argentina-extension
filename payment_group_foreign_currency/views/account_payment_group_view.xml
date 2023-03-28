@@ -22,6 +22,8 @@
                         name="selected_finacial_debt_currency"
                         attrs="{'invisible': ['|',('debt_multicurrency', '=', False),  ('state', 'not in', ['draft', 'confirmed'])]}" 
                         options="{'currency_field': 'selected_debt_currency_id'}"/>
+                    <field name="apply_foreign_payment" />
+                    <field name="exchange_rate_applied" />
                 </field>
             </field>
         </record>

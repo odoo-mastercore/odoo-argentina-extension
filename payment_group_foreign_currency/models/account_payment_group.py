@@ -17,11 +17,6 @@ class AccountPaymentGroup(models.Model):
 
     _inherit = "account.payment.group"
 
-    # this field is to be used by vat retention
-    selected_debt_taxed = fields.Monetary(
-        string='Selected Debt taxed',
-        compute='_compute_selected_debt_taxed',
-    )
     #This field is to be used by invoice in multicurrency
     selected_finacial_debt = fields.Monetary(
         string='Selected Financial Debt',

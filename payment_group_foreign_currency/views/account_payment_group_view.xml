@@ -7,23 +7,19 @@
             <field name="model">account.payment.group</field>
             <field name="inherit_id" ref="account_payment_group.view_account_payment_group_form"/>
             <field name="arch" type="xml">
-                <field name="selected_debt" position="replace">
+                <field name="selected_debt" position="after">
                     <field name="debt_multicurrency" invisible="1"/>
                     <field name="selected_debt_currency_id" invisible="1" />
                     <field
-                        name="selected_debt"
-                        attrs="{'invisible': [('state', 'not in', ['draft', 'confirmed'])]}"
-                        options="{'currency_field': 'currency_id'}"/>
-                    <field
                         name="selected_finacial_debt"
-                        attrs="{'invisible': ['|',('debt_multicurrency', '=', False),  ('state', 'not in', ['draft', 'confirmed'])]}" 
+                        attrs="{'invisible': ['|',('debt_multicurrency', '=', False),  ('state', 'not in', ['draft', 'confirmed'])]}"
                         options="{'currency_field': 'currency_id'}"/>
                     <field
-                        name="selected_finacial_debt_currency"
-                        attrs="{'invisible': ['|',('debt_multicurrency', '=', False),  ('state', 'not in', ['draft', 'confirmed'])]}" 
+                        name="selected_financial_debt_currency"
+                        attrs="{'invisible': ['|',('debt_multicurrency', '=', False),  ('state', 'not in', ['draft', 'confirmed'])]}"
                         options="{'currency_field': 'selected_debt_currency_id'}"/>
-                    <field name="apply_foreign_payment" />
-                    <field name="exchange_rate_applied" />
+                    <field name="apply_foreign_payment" widget="boolean_toggle" />
+                    <field name="exchange_rate_applied" attrs="{'invisible': [('apply_foreign_payment', '=', False)]}"/>
                 </field>
             </field>
         </record>

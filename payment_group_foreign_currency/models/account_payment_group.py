@@ -22,7 +22,7 @@ class AccountPaymentGroup(models.Model):
         string='Selected Financial Debt',
         compute='_compute_selected_debt_financial',
     )
-    selected_finacial_debt_currency = fields.Monetary(
+    selected_financial_debt_currency = fields.Monetary(
         string='Selected Financial Debt in foreign currency',
         compute='_compute_selected_debt_financial',
     )
@@ -47,15 +47,15 @@ class AccountPaymentGroup(models.Model):
     def _compute_selected_debt_financial(self):
         for rec in self:
             selected_finacial_debt = 0.0
-            selected_finacial_debt_currency = 0.0
+            selected_financial_debt_currency = 0.0
             for line in rec.to_pay_move_line_ids._origin:
                 # factor for total_untaxed
-                if line.move_id.currency_id.id != rec.company_id.currency_id.id:
-                    selected_finacial_debt_currency += line.amount_residual_currency
+                if line.currency_id.id != rec.company_id.currency_id.id:
+                    selected_financial_debt_currency += line.amount_residual_currency
                     rec.debt_multicurrency = True
-                    rec.selected_debt_currency_id = line.move_id.currency_id.id
-                elif line.move_id.currency_id.id != rec.company_id.currency_id.id and rec.debt_multicurrency:
-                    selected_finacial_debt_currency += line.amount_residual_currency
+                    rec.selected_debt_currency_id = line.currency_id.id
+                elif line.currency_id.id != rec.company_id.currency_id.id and rec.debt_multicurrency:
+                    selected_financial_debt_currency += line.amount_residual_currency
                     rec.debt_multicurrency = True
                 else:
                     rec.debt_multicurrency = False
@@ -72,14 +72,14 @@ class AccountPaymentGroup(models.Model):
                     if last_rate == 0:
                         last_rate = 1
                     rate = round((1 / last_rate), 4)
-                    finacial_debt_currency = selected_finacial_debt_currency*rate
+                    finacial_debt_currency = selected_financial_debt_currency*rate
                     selected_finacial_debt += finacial_debt_currency
                 else:
                     selected_finacial_debt += line.amount_residual
                     #selected_debt += line.move_id.amount_residual
             sign = rec.partner_type == 'supplier' and -1.0 or 1.0
             rec.selected_finacial_debt = selected_finacial_debt * sign
-            rec.selected_finacial_debt_currency = selected_finacial_debt_currency * sign
+            rec.selected_financial_debt_currency = selected_financial_debt_currency * sign
 
     @api.depends('selected_debt', 'debt_multicurrency','selected_finacial_debt', 'unreconciled_amount',)
     def _compute_to_pay_amount(self):

@@ -15,7 +15,7 @@ class AccounTpaymentAddChecks(models.TransientModel):
                     'exchange_rate': payment_group.exchange_rate_applied,
                     'amount': (check.amount_company_currency / payment_group.exchange_rate_applied),
                     'amount_company_currency': check.amount_company_currency,
-                    'currency_id': payment_group.
+                    'currency_id': payment_group.selected_debt_currency_id.id,
                     'partner_id': payment_group.partner_id.id,
                     'payment_group_id': payment_group.id,
                     'payment_type': 'outbound',

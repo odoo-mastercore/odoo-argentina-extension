@@ -109,3 +109,12 @@ class AccountPayment(models.Model):
                     msgs.append(_("Check '%s' is on journal '%s', it can't be received it again",
                                 rec.l10n_latam_check_id.display_name, rec.journal_id.name))
         return msgs
+
+    @api.depends('journal_id')
+    def _compute_currency_id(self):
+        for pay in self:
+            if pay.payment_group_id:
+                if pay.payment_group_id.apply_foreign_payment:
+                    pay.currency_id = pay.payment_group_id.exchange_rate_applied
+            else:
+                pay.currency_id = pay.journal_id.currency_id or pay.journal_id.company_id.currency_id

@@ -9,11 +9,11 @@ class AccounTpaymentAddChecks(models.TransientModel):
         self.ensure_one()
         payment_group = self.env["account.payment.group"].browse(self.env.context.get("active_id", False))
         if payment_group:
-            if not rec.payment_group_id.apply_foreign_payment:
-                amount_currency = check.amount_company_currency * rec.payment_group_id.exchange_rate_applied
+            if not payment_group.apply_foreign_payment:
+                amount_currency = check.amount_company_currency * payment_group.exchange_rate_applied
                 vals_list = [{
                     'l10n_latam_check_id': check.id,
-                    'exchange_rate': rec.payment_group_id.exchange_rate_applied,
+                    'exchange_rate': payment_group.exchange_rate_applied,
                     'amount': amount_currency,
                     'partner_id': payment_group.partner_id.id,
                     'payment_group_id': payment_group.id,

@@ -115,6 +115,6 @@ class AccountPayment(models.Model):
         for pay in self:
             if pay.payment_group_id:
                 if pay.payment_group_id.apply_foreign_payment:
-                    pay.currency_id = pay.payment_group_id.exchange_rate_applied
+                    pay.currency_id = pay.payment_group_id.selected_debt_currency_id
             else:
                 pay.currency_id = pay.journal_id.currency_id or pay.journal_id.company_id.currency_id

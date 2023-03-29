@@ -9,7 +9,7 @@
 {
     "name": "Payment Group in Foreign currency",
     "summary": "",
-    'version': "16.0.1.1",
+    'version': "16.0.2.1",
     'author': 'SINAPSYS GLOBAL SA || MASTERCORE SAS',
     'website': "http://sinapsys.global",
     'category': "contact",

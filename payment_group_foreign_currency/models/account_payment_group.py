@@ -23,7 +23,7 @@ class AccountPaymentGroup(models.Model):
         compute='_compute_selected_debt_financial',
     )
     selected_financial_debt_currency = fields.Monetary(
-        string='Selected Financial Debt in foreign currency',
+        string='Deuda seleccionada en divisa',
         compute='_compute_selected_debt_financial',
     )
     debt_multicurrency = fields.Boolean(

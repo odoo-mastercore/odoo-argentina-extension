@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="account_payment_form_inherit" model="ir.ui.view">
+        <field name="name">account.check.form.inherit</field>
+        <field name="model">account.payment</field>
+        <field name="inherit_id" ref="l10n_latam_check.view_account_payment_form_inherited" />
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='l10n_latam_check_number']" position="before">
+                <field name="l10n_latam_check_type" 
+                        attrs="{
+                        'invisible': [('payment_method_code', '!=', 'new_third_party_checks'), '|', ('payment_method_code', '!=', 'check_printing'), ('l10n_latam_manual_checks', '=', False)],
+                        'required': ['|', ('payment_method_code', '=', 'new_third_party_checks'), ('payment_method_code', '=', 'check_printing'), ('l10n_latam_manual_checks', '=', True)],
+                        'readonly': [('state', '!=', 'draft')]}" />
+            </xpath>
+        </field>
+    </record>
+
+    <record id="account_payment_tree_inherit" model="ir.ui.view">
+        <field name="name">account.check.tree.inherit</field>
+        <field name="model">account.payment</field>
+        <field name="inherit_id" ref="l10n_latam_check.view_account_third_party_check_tree" />
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='l10n_latam_check_current_journal_id']" position="before">
+                <field name="l10n_latam_check_type" />
+            </xpath>
+        </field>
+    </record>
+</odoo>

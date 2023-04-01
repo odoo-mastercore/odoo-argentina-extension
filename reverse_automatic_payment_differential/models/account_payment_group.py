@@ -16,22 +16,38 @@ class AccountPaymentGroup(models.Model):
 
     def post(self):
         res = super(AccountPaymentGroup, self).post()
-        if self.matched_move_line_ids:
-            for line in self.matched_move_line_ids:
-                if line.move_id.journal_id.differential_reverse:
-                    self._reverse_automatic_move(line.move_id)
+        journal_id = self.env['account.journal'].search([
+            ('differential_reverse', '=', True)
+        ], limit=1)
+        if journal_id:
+            move_line = self.env['account.move.line'].search([
+                ('journal_id', '=', journal_id.id),
+                ('move_id.state', '=', 'posted'),
+                ('company_id', '=', self.company_id.id),
+                ('partner_id', '=', self.partner_id.id),
+                ('move_id.reversed_entry_id', '=', False)
+            ])
+            if move_line:
+                line_to_reverse = False
+                for line in move_line:
+                    reconciled_lines = line._get_reconcile_lines()
+                    for r_line in reconciled_lines:
+                        if r_line.move_id.payment_group_id.id == self.id:
+                            line_to_reverse = line
+                            break
+                if line_to_reverse:
+                    self._reverse_automatic_move(line_to_reverse.move_id)
         return res
 
     def _reverse_automatic_move(self, move_id):
         moves = move_id
-        refund_method = 'refund'
+        refund_method = 'modify'
         date_mode = 'custom'
 
         # Create default values.
         default_values_list = []
         for move in moves:
             default_values_list.append(self._prepare_default_reversal(move))
-
         batches = [
             [self.env['account.move'], [], True],   # Moves to be cancelled by the reverses.
             [self.env['account.move'], [], False],  # Others.
@@ -48,7 +64,7 @@ class AccountPaymentGroup(models.Model):
         for moves, default_values_list, is_cancel_needed in batches:
             new_moves = moves._reverse_moves(default_values_list, cancel=is_cancel_needed)
 
-            if self.refund_method == 'modify':
+            if refund_method == 'modify':
                 moves_vals_list = []
                 for move in moves.with_context(include_business_fields=True):
                     moves_vals_list.append(move.copy_data({'date': fields.Date.context_today(self) if date_mode == 'custom' else move.date})[0])

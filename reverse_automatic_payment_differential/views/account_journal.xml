@@ -6,7 +6,7 @@
         <field name="inherit_id" ref="account.view_account_journal_form"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='type']" position="after">
-                <field name="differential_reverse" />
+                <field name="differential_reverse" widget="boolean_toggle" />
             </xpath>
         </field>
     </record>

@@ -33,7 +33,7 @@ class AccountPaymentGroup(models.Model):
                     reconciled_lines = line._get_reconcile_lines()
                     for r_line in reconciled_lines:
                         if r_line.move_id.payment_group_id.id == self.id:
-                            self._reverse_automatic_move(r_line.move_id)
+                            self._reverse_automatic_move(line.move_id)
         return res
 
     def _reverse_automatic_move(self, move_id):

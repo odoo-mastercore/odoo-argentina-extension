@@ -16,7 +16,7 @@ class AccountPaymentGroup(models.Model):
 
     def post(self):
         res = super(AccountPaymentGroup, self).post()
-        journal_id = rec.env['account.journal'].search([
+        journal_id = self.env['account.journal'].search([
             ('differential_reverse', '=', True)
         ], limit=1)
         if journal_id:

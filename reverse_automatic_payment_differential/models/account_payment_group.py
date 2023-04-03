@@ -19,7 +19,7 @@ class AccountPaymentGroup(models.Model):
         journal_id = self.env['account.journal'].search([
             ('differential_reverse', '=', True)
         ], limit=1)
-         black = []
+        black = []
         if journal_id:
             move_line = self.env['account.move.line'].search([
                 ('journal_id', '=', journal_id.id),

@@ -19,70 +19,43 @@ class AccountPaymentGroup(models.Model):
         journal_id = self.env['account.journal'].search([
             ('differential_reverse', '=', True)
         ], limit=1)
-        black = []
         if journal_id:
-            move_line = self.env['account.move.line'].search([
+            all_move_line = self.env['account.move.line'].search([
                 ('journal_id', '=', journal_id.id),
                 ('move_id.state', '=', 'posted'),
                 ('company_id', '=', self.company_id.id),
                 ('partner_id', '=', self.partner_id.id),
                 ('move_id.reversed_entry_id', '=', False),
             ])
-            if move_line:
-                line_to_reverse = False
-                for line in move_line:
+            move_line_unreversed_ids = []
+            moves_to_reverse = []
+            if all_move_line:
+                for line in all_move_line:
+                    unreversed_move_line = self.env['account.move.line'].search([
+                        ('move_id.reversed_entry_id', '=', line.move_id.id)
+                    ])
+                    if not unreversed_move_line:
+                        move_line_unreversed_ids.append(line.id)
+            if move_line_unreversed_ids:
+                move_lines = self.env['account.move.line'].browse(move_line_unreversed_ids)
+                for line in move_lines:
                     reconciled_lines = line._get_reconcile_lines()
-                    if not line.move_id and black:
+                    if reconciled_lines:
                         for r_line in reconciled_lines:
-                            if r_line.move_id.payment_group_id.id == self.id:
-                                self._reverse_automatic_move(line.move_id)
-                                black.append(line.move_id)
+                            if r_line.move_id.payment_group_id and r_line.move_id.payment_group_id.id == self.id:
+                                if line.move_id.id not in moves_to_reverse:
+                                    moves_to_reverse.append(line.move_id.id)
+            moves = self.env['account.move'].browse(moves_to_reverse)
+            self._reverse_automatic_move(moves)
         return res
 
     def _reverse_automatic_move(self, move_id):
-        moves = move_id
-        refund_method = 'modify'
-        date_mode = 'custom'
-
-        # Create default values.
-        default_values_list = []
-        for move in moves:
-            default_values_list.append(self._prepare_default_reversal(move))
-        batches = [
-            [self.env['account.move'], [], True],   # Moves to be cancelled by the reverses.
-            [self.env['account.move'], [], False],  # Others.
-        ]
-        for move, default_vals in zip(moves, default_values_list):
-            is_auto_post = default_vals.get('auto_post') != 'no'
-            is_cancel_needed = not is_auto_post and refund_method in ('cancel', 'modify')
-            batch_index = 0 if is_cancel_needed else 1
-            batches[batch_index][0] |= move
-            batches[batch_index][1].append(default_vals)
-
-        # Handle reverse method.
-        moves_to_redirect = self.env['account.move']
-        for moves, default_values_list, is_cancel_needed in batches:
-            new_moves = moves._reverse_moves(default_values_list, cancel=is_cancel_needed)
-
-            if refund_method == 'modify':
-                moves_vals_list = []
-                for move in moves.with_context(include_business_fields=True):
-                    moves_vals_list.append(move.copy_data({'date': fields.Date.context_today(self) if date_mode == 'custom' else move.date})[0])
-                new_moves = self.env['account.move'].create(moves_vals_list)
-
-            moves_to_redirect |= new_moves
-
-        # self.new_move_ids = moves_to_redirect
-
-    def _prepare_default_reversal(self, move):
-        reverse_date = move.date
-        return {
-            'ref': _('Reversal of: %s', move.name),
-            'date': reverse_date,
-            'invoice_date_due': reverse_date,
-            'invoice_date': move.is_invoice(include_receipts=True) and (move.date) or False,
-            'journal_id': move.journal_id.id,
-            'invoice_payment_term_id': None,
-            'invoice_user_id': move.invoice_user_id.id,
-            'auto_post': 'at_date' if reverse_date > fields.Date.context_today(self) else 'no',
-        }
+        move_reversal = self.env['account.move.reversal']\
+            .with_context(active_model="account.move", active_ids=move_id.ids)\
+            .create({
+                'company_id': move_id[0].company_id.id,
+                'journal_id': move_id[0].journal_id.id,
+                'reason': "(Automático)",
+                'refund_method': 'cancel',
+            })
+        move_reversal.reverse_moves()

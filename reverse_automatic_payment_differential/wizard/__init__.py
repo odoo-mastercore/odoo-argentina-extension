@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 ##############################################################################
 # Author: SINAPSYS GLOBAL SA || MASTERCORE SAS
@@ -6,5 +7,4 @@
 #
 #
 ###############################################################################
-from . import models
-from . import wizard
+from . import account_move_reversal

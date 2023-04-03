@@ -19,22 +19,24 @@ class AccountPaymentGroup(models.Model):
         journal_id = self.env['account.journal'].search([
             ('differential_reverse', '=', True)
         ], limit=1)
+         black = []
         if journal_id:
             move_line = self.env['account.move.line'].search([
                 ('journal_id', '=', journal_id.id),
                 ('move_id.state', '=', 'posted'),
                 ('company_id', '=', self.company_id.id),
                 ('partner_id', '=', self.partner_id.id),
-                ('move_id.reversed_entry_id', '=', False)
+                ('move_id.reversed_entry_id', '=', False),
             ])
             if move_line:
                 line_to_reverse = False
                 for line in move_line:
                     reconciled_lines = line._get_reconcile_lines()
-                    for r_line in reconciled_lines:
-                        if r_line.move_id.payment_group_id.id == self.id:
-                            self._reverse_automatic_move(line.move_id)
-                    break
+                    if not line.move_id and black:
+                        for r_line in reconciled_lines:
+                            if r_line.move_id.payment_group_id.id == self.id:
+                                self._reverse_automatic_move(line.move_id)
+                                black.append(line.move_id)
         return res
 
     def _reverse_automatic_move(self, move_id):

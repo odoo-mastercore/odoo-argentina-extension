@@ -46,7 +46,8 @@ class AccountPaymentGroup(models.Model):
                                 if line.move_id.id not in moves_to_reverse:
                                     moves_to_reverse.append(line.move_id.id)
             moves = self.env['account.move'].browse(moves_to_reverse)
-            self._reverse_automatic_move(moves)
+            if moves:
+                self._reverse_automatic_move(moves)
         return res
 
     def _reverse_automatic_move(self, move_id):

@@ -6,5 +6,13 @@
 #
 #
 ###############################################################################
-from . import account
-from . import account_journal
+from odoo import fields, models, _, api
+from odoo.exceptions import UserError, ValidationError
+import logging
+_logger = logging.getLogger(__name__)
+
+
+class AccountJournal(models.Model):
+    _inherit = 'account.journal'
+
+    withholding_journal = fields.Boolean(string='Diario de Retenciones', default=False)

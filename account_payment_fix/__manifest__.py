@@ -18,5 +18,7 @@
         "account",
         "account_withholding"
     ],
-    "data": [],
+    "data": [
+        "views/account_journal.xml"
+    ],
 }

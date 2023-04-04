@@ -18,7 +18,8 @@
                         name="selected_financial_debt_currency"
                         attrs="{'invisible': ['|',('debt_multicurrency', '=', False),  ('state', 'not in', ['draft', 'confirmed'])]}"
                         options="{'currency_field': 'selected_debt_currency_id'}"/>
-                    <field name="apply_foreign_payment" widget="boolean_toggle" />
+                    <field name="show_apply_foreign_payment" invisible="1" />
+                    <field name="apply_foreign_payment" attrs="{'invisible': [('show_apply_foreign_payment', '=', False)]}" widget="boolean_toggle" />
                     <field name="exchange_rate_applied" attrs="{'invisible': [('apply_foreign_payment', '=', False)]}"/>
                 </field>
             </field>

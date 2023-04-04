@@ -32,6 +32,7 @@ class AccounTpaymentAddChecks(models.TransientModel):
                     'payment_group_id': payment_group.id,
                     'payment_type': 'outbound',
                     'journal_id': check.l10n_latam_check_current_journal_id.id,
+                    'currency_id': payment_group.company_id.currency_id.id,
                     'payment_method_line_id': check.l10n_latam_check_current_journal_id._get_available_payment_method_lines(
                         'oubound').filtered(lambda x: x.code == 'out_third_party_checks').id,
                 } for check in self.check_ids]

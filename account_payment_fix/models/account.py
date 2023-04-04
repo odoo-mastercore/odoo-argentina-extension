@@ -20,8 +20,9 @@ class AccountPayment(models.Model):
         self.move_id.button_draft()
 
         # hr_expense
-        if self.reconciled_bill_ids.expense_sheet_id:
-            self.reconciled_bill_ids.expense_sheet_id.write({'state': 'post'})
+        if 'expense_sheet_id' in self.env['account.move.line']._fields:
+            if self.reconciled_bill_ids.expense_sheet_id:
+                self.reconciled_bill_ids.expense_sheet_id.write({'state': 'post'})
 
         # Adhoc account-payment with improvements
         withholdings = self.filtered(lambda x: x.tax_withholding_id)

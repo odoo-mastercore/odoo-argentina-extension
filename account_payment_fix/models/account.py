@@ -35,6 +35,6 @@ class AccountPayment(models.Model):
 
     def _get_valid_liquidity_accounts(self):
         res = super(AccountPayment, self)._get_valid_liquidity_accounts()
-        if self.journal_id.self.journal_id.withholding_journal:
-            res+=self.journal_id.suspense_account_id
+        if self.journal_id.withholding_journal:
+            return (*res, self.journal_id.suspense_account_id)
         return res

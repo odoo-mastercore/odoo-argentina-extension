@@ -17,7 +17,8 @@ class AccountPaymentGroup(models.Model):
     def post(self):
         res = super(AccountPaymentGroup, self).post()
         journal_id = self.env['account.journal'].search([
-            ('differential_reverse', '=', True)
+            ('differential_reverse', '=', True),
+            ('company_id', '=', self.company_id.id)
         ], limit=1)
         if journal_id:
             all_move_line = self.env['account.move.line'].search([
@@ -32,7 +33,8 @@ class AccountPaymentGroup(models.Model):
             if all_move_line:
                 for line in all_move_line:
                     unreversed_move_line = self.env['account.move.line'].search([
-                        ('move_id.reversed_entry_id', '=', line.move_id.id)
+                        ('move_id.reversed_entry_id', '=', line.move_id.id),
+                        ('move_id.company_id', '=', line.company_id.id)
                     ])
                     if not unreversed_move_line:
                         move_line_unreversed_ids.append(line.id)

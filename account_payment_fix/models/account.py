@@ -20,7 +20,7 @@ class AccountPayment(models.Model):
         self.move_id.button_draft()
 
         # hr_expense
-        if 'expense_sheet_id' in self.env['account.move.line']._fields:
+        if 'expense_sheet_id' in self.env['account.move']._fields:
             if self.reconciled_bill_ids.expense_sheet_id:
                 self.reconciled_bill_ids.expense_sheet_id.write({'state': 'post'})
 

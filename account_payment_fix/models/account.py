@@ -32,3 +32,9 @@ class AccountPayment(models.Model):
                 'tax_repartition_line_id': None,
                 'tax_line_id': None,
             })
+
+    def _get_valid_liquidity_accounts(self):
+        res = super(AccountPayment, self)._get_valid_liquidity_accounts()
+        if self.journal_id.self.journal_id.withholding_journal:
+            res+=self.journal_id.suspense_account_id
+        return res

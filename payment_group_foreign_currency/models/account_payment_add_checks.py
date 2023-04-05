@@ -1,5 +1,6 @@
 
-from odoo import fields, models
+from odoo import fields, models, _
+from odoo.exceptions import UserError, ValidationError
 
 
 class AccounTpaymentAddChecks(models.TransientModel):
@@ -25,6 +26,12 @@ class AccounTpaymentAddChecks(models.TransientModel):
                 } for check in self.check_ids]
                 self.env['account.payment'].create(vals_list)
             else:
+                if any(check.currency_id.id != payment_group.company_id.currency_id.id  \
+                    and not payment_group.apply_foreign_payment for check in self.check_ids):
+                    raise ValidationError(
+                        _("¡Lo sentimos!, todos los cheques seleccionados deben ser de "
+                        + "la misma divisa en %s" % (payment_group.company_id.currency_id.name))
+                    )
                 vals_list = [{
                     'l10n_latam_check_id': check.id,
                     'amount': check.amount,
@@ -37,5 +44,4 @@ class AccounTpaymentAddChecks(models.TransientModel):
                         'oubound').filtered(lambda x: x.code == 'out_third_party_checks').id,
                 } for check in self.check_ids]
                 self.env['account.payment'].create(vals_list)
-
         return {"type": "ir.actions.act_window_close"}

@@ -26,15 +26,11 @@ class AccounTpaymentAddChecks(models.TransientModel):
                 } for check in self.check_ids]
                 self.env['account.payment'].create(vals_list)
             else:
-                if any(check.currency_id.id != payment_group.company_id.currency_id.id  \
-                    and not payment_group.apply_foreign_payment for check in self.check_ids):
-                    raise ValidationError(
-                        _("¡Lo sentimos!, todos los cheques seleccionados deben ser de "
-                        + "la misma divisa en %s" % (payment_group.company_id.currency_id.name))
-                    )
                 vals_list = [{
                     'l10n_latam_check_id': check.id,
-                    'amount': check.amount,
+                    'amount': check.amount if check.currency_id.id \
+                        == payment_group.company_id.currency_id.id else \
+                        check.amount_company_currency,
                     'partner_id': payment_group.partner_id.id,
                     'payment_group_id': payment_group.id,
                     'payment_type': 'outbound',

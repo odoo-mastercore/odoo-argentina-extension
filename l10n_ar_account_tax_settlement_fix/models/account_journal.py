@@ -12,6 +12,25 @@ from odoo.exceptions import ValidationError
 from odoo.tools.float_utils import float_round
 import re
 
+#########
+# helpers
+#########
+
+def format_amount(amount, padding=15, decimals=2, sep=""):
+    if amount < 0:
+        template = "-{:0>%dd}" % (padding - 1 - len(sep))
+    else:
+        template = "{:0>%dd}" % (padding - len(sep))
+    res = template.format(
+        int(round(abs(amount) * 10**decimals, decimals)))
+    if sep:
+        res = "{0}{1}{2}".format(res[:-decimals], sep, res[-decimals:])
+    return res
+
+def get_line_tax_base(move_line):
+    return sum(move_line.move_id.line_ids.filtered(
+        lambda x: move_line.tax_line_id in x.tax_ids).mapped(
+        'balance'))
 
 class AccountJournal(models.Model):
     _inherit = 'account.journal'

@@ -83,9 +83,15 @@ class AccountPayment(models.Model):
             else:
                 rec.amount_company_currency = rec.force_amount_company_currency
                 if rec.tax_withholding_id:
-                    rec.amount_company_currency = rec.computed_withholding_amount
-                    rec.exchange_rate = rec.payment_group_id.exchange_rate_applied
-                    rec.amount = rec.amount_company_currency / rec.exchange_rate
+                    withholding_amount = rec.computed_withholding_amount
+                    exchange_rate = rec.payment_group_id.exchange_rate_applied or 1
+                    amount = withholding_amount / exchange_rate
+                    rec.write({
+                        'amount_company_currency': withholding_amount,
+                        'exchange_rate': exchange_rate,
+                        'amount': amount,
+                        'withholding_base_amount': rec.withholdable_base_amount / rec.exchange_rate
+                    })
 
 
     def _get_blocking_l10n_latam_warning_msg(self):

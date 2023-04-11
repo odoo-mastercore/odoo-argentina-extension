@@ -103,7 +103,7 @@ class AccountPayment(models.Model):
                 if rec.currency_id.id == rec.company_id.currency_id.id and \
                     rec.l10n_latam_check_id.currency_id.id != rec.company_id.currency_id.id:
                     check_amount = rec.l10n_latam_check_id.amount_company_currency
-                    payment_amount = rec.amount
+                    # payment_amount = rec.amount
                 if not rec.currency_id.is_zero(check_amount - payment_amount):
                     msgs.append(_(
                         'The amount of the payment (%s) does not match the amount of the selected check (%s). '

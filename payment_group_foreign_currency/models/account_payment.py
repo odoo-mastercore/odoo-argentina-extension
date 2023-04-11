@@ -90,7 +90,7 @@ class AccountPayment(models.Model):
                         'amount_company_currency': withholding_amount,
                         'exchange_rate': exchange_rate,
                         'amount': amount,
-                        'withholding_base_amount': rec.withholdable_base_amount / rec.exchange_rate
+                        'withholding_base_amount': rec.withholdable_base_amount / exchange_rate
                     })
 
 

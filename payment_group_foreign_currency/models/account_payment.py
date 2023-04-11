@@ -98,7 +98,13 @@ class AccountPayment(models.Model):
         msgs = []
         for rec in self.filtered('l10n_latam_check_id'):
             if not rec.payment_group_id.apply_foreign_payment:
-                if not rec.currency_id.is_zero(rec.l10n_latam_check_id.amount - rec.amount):
+                check_amount = rec.l10n_latam_check_id.amount
+                payment_amount = rec.amount
+                if rec.currency_id.id == rec.company_id.currency_id.id and \
+                    rec.l10n_latam_check_id.currency_id.id != rec.company_id.currency_id.id:
+                    check_amount = rec.l10n_latam_check_id.amount_company_currency
+                    payment_amount = rec.amount
+                if not rec.currency_id.is_zero(check_amount - payment_amount):
                     msgs.append(_(
                         'The amount of the payment (%s) does not match the amount of the selected check (%s). '
                         'Please try to deselect and select the check again.', rec.amount, rec.l10n_latam_check_id.amount))

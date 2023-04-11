@@ -1,11 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <template id="withholding_certificate_inherit" name="withholding certificar inherit" inherit_id="l10n_ar_account_withholding.report_withholding_certificate_document">
-        <xpath expr="//table//tbody//tr[4]//td[2]" position="replace">
+        <xpath expr="//table//tbody//tr[4]" position="replace">
+            <tr>
+                <td class="text-right">
+                    Importe que origina la retención:
+                </td>
+                <td class="text-left">
+                    <span t-field="o.withholdable_base_amount" t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}"/>
+                    <t t-if="o.currency_id.id != o.company_id.currency_id.id">
+                        (<span t-field="o.withholding_base_amount"/>)
+                    </t>
+                </td>
+            </tr>
+        </xpath>
+        <xpath expr="//table//tbody//tr[5]//td[2]" position="replace">
             <td class="text-left">
-                <span t-field="o.withholdable_base_amount" t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}"/>
+                <span t-field="o.computed_withholding_amount" t-options="{'widget': 'monetary', 'display_currency': o.company_id.currency_id}"/>
                 <t t-if="o.currency_id.id != o.company_id.currency_id.id">
-                    (<span t-field="o.withholdable_base_amount"/>)
+                    (<span t-field="o.amount"/>)
                 </t>
             </td>
         </xpath>

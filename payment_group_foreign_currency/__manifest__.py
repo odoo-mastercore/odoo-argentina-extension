@@ -14,8 +14,13 @@
     'website': "http://sinapsys.global",
     'category': "contact",
     "license": "AGPL-3",
-    "depends": ['account_payment_group','l10n_ar_ux'],
+    "depends": [
+        'account_payment_group',
+        'l10n_ar_ux',
+        'l10n_ar_account_withholding'
+    ],
     "data": [
         "views/account_payment_group_view.xml",
+        "reports/report_withholding_certificate.xml"
     ],
 }

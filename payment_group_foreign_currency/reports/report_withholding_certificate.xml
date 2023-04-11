@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="withholding_certificate_inherit" name="withholding certificar inherit" inherit_id="l10n_ar_account_withholding.report_withholding_certificate_document">
+        <xpath expr="//table//tbody//tr[3]" position="replace">
+            <tr>
+                <td class="text-right">
+                    Importe en divisa que origina la retención:
+                </td>
+                <td class="text-left">
+                    <span t-field="o.withholding_base_amount"/>
+                </td>
+            </tr>
+        </xpath>
+    </template>
+</odoo>

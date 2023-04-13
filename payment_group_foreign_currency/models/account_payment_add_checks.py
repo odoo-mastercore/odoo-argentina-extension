@@ -11,6 +11,10 @@ class AccounTpaymentAddChecks(models.TransientModel):
         payment_group = self.env["account.payment.group"].browse(self.env.context.get("active_id", False))
         if payment_group:
             if payment_group.apply_foreign_payment:
+                if not payment_group.exchange_rate_applied:
+                    raise ValidationError(_("¡Lo sentimos!, Debe configurar"
+                    + " el marcador de tipo de cambio con un valor distinto"
+                    + " a cero, antes de agregar una linea"))
                 vals_list = [{
                     'l10n_latam_check_id': check.id,
                     'exchange_rate': payment_group.exchange_rate_applied,

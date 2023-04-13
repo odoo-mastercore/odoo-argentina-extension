@@ -6,9 +6,10 @@
 #
 ###############################################################################
 from odoo import models, fields, api, _
+from odoo.exceptions import UserError, ValidationError
 import logging
-
 _logger = logging.getLogger(__name__)
+
 
 class AccountPayment(models.Model):
     _inherit = "account.payment"
@@ -37,6 +38,10 @@ class AccountPayment(models.Model):
                     rec.exchange_rate = rec.amount and (
                         rec.amount_company_currency / rec.amount) or 0.0
                 else:
+                    if not rec.payment_group_id.exchange_rate_applied:
+                        raise ValidationError(_("¡Lo sentimos!, Debe configurar"
+                        + " el marcador de tipo de cambio con un valor distinto"
+                        + " a cero, antes de agregar una linea"))
                     rec.exchange_rate = rec.payment_group_id.exchange_rate_applied
                     rec.amount = rec.amount_company_currency / rec.exchange_rate
             else:

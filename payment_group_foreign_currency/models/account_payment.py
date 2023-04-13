@@ -94,7 +94,7 @@ class AccountPayment(models.Model):
                     rec.write({
                         'amount_company_currency': withholding_amount,
                         'exchange_rate': exchange_rate,
-                        # 'amount': amount,
+                        'amount': amount,
                         'withholding_base_amount': rec.withholdable_base_amount / exchange_rate
                     })
 

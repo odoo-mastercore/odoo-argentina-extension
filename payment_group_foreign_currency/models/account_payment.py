@@ -43,7 +43,8 @@ class AccountPayment(models.Model):
                         + " el marcador de tipo de cambio con un valor distinto"
                         + " a cero, antes de agregar una linea"))
                     rec.exchange_rate = rec.payment_group_id.exchange_rate_applied
-                    rec.amount = rec.amount_company_currency / rec.exchange_rate
+                    if rec.state == 'draft':
+                        rec.amount = rec.amount_company_currency / rec.exchange_rate
             else:
                 rec.exchange_rate = False
 
@@ -141,9 +142,8 @@ class AccountPayment(models.Model):
             else:
                 pay.currency_id = pay.journal_id.currency_id or pay.journal_id.company_id.currency_id
 
-    @api.model
-    def write(self, vals):
-        res = super(AccountPayment, self).write(vals)
-        print("#####################################################")
-        print(vals)
-        return res
+    # def write(self, vals):
+    #     res = super(AccountPayment, self).write(vals)
+    #     print("#####################################################")
+    #     print(vals)
+    #     return res

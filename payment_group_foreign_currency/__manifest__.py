@@ -15,6 +15,7 @@
     'category': "contact",
     "license": "AGPL-3",
     "depends": [
+        'account',
         'account_payment_group',
         'l10n_ar_ux',
         'l10n_ar_account_withholding'

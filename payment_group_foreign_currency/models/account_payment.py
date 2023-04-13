@@ -94,7 +94,7 @@ class AccountPayment(models.Model):
                     rec.write({
                         'amount_company_currency': withholding_amount,
                         'exchange_rate': exchange_rate,
-                        'amount': amount,
+                        # 'amount': amount,
                         'withholding_base_amount': rec.withholdable_base_amount / exchange_rate
                     })
 
@@ -139,3 +139,10 @@ class AccountPayment(models.Model):
                     pay.currency_id = pay.payment_group_id.selected_debt_currency_id
             else:
                 pay.currency_id = pay.journal_id.currency_id or pay.journal_id.company_id.currency_id
+
+    @api.model
+    def write(self, vals):
+        res = super(AccountPayment, self).write(vals)
+        print("#####################################################")
+        print(vals)
+        return res

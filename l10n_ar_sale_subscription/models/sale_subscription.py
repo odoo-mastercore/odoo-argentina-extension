@@ -28,21 +28,36 @@ class SaleSubscriptionInherit(models.Model):
         recurring_next_date = self._get_recurring_next_date(self.recurring_rule_type, \
             self.recurring_interval, next_date, self.recurring_invoice_day)
         end_date = fields.Date.from_string(recurring_next_date) - relativedelta(days=1)
-        if self.template_id.recurring_invoicing_type == 'pre_paid' and \
-            self.recurring_rule_type == 'monthly' and self.recurring_interval == 1:
-            res.update({
-                "l10n_ar_afip_service_start": format_date(self.env, next_date),
-                "l10n_ar_afip_service_end": format_date(self.env, end_date),
-            })
-        elif self.template_id.recurring_invoicing_type == 'post_paid' and \
-            self.recurring_rule_type == 'monthly' and self.recurring_interval == 1:
-            next_date = self.recurring_next_date - relativedelta(months = 1)
-            recurring_next_date = self._get_recurring_next_date(self.recurring_rule_type, \
-            self.recurring_interval, next_date, self.recurring_invoice_day)
-            end_date = fields.Date.from_string(recurring_next_date) - relativedelta(days=1)
-            res.update({
-                "narration": _("This invoice covers the following period: %s - %s") % (format_date(self.env, next_date), format_date(self.env, end_date)),
-                "l10n_ar_afip_service_start": next_date,
-                "l10n_ar_afip_service_end": end_date,
-            })
+        if self.recurring_rule_type == 'monthly':
+            if self.template_id.recurring_invoicing_type == 'pre_paid' and self.recurring_interval == 1:
+                res.update({
+                    "l10n_ar_afip_service_start": format_date(self.env, next_date),
+                    "l10n_ar_afip_service_end": format_date(self.env, end_date),
+                })
+            elif self.template_id.recurring_invoicing_type == 'post_paid' and self.recurring_interval == 1:
+                next_date = self.recurring_next_date - relativedelta(months = 1)
+                recurring_next_date = self._get_recurring_next_date(self.recurring_rule_type, \
+                self.recurring_interval, next_date, self.recurring_invoice_day)
+                end_date = fields.Date.from_string(recurring_next_date) - relativedelta(days=1)
+                res.update({
+                    "narration": _("This invoice covers the following period: %s - %s") % (format_date(self.env, next_date), format_date(self.env, end_date)),
+                    "l10n_ar_afip_service_start": next_date,
+                    "l10n_ar_afip_service_end": end_date,
+                })
+        elif self.recurring_rule_type == 'yearly':
+            if self.template_id.recurring_invoicing_type == 'pre_paid' and self.recurring_interval == 1:
+                res.update({
+                    "l10n_ar_afip_service_start": format_date(self.env, next_date),
+                    "l10n_ar_afip_service_end": format_date(self.env, end_date + - relativedelta(year=1)),
+                })
+            elif self.template_id.recurring_invoicing_type == 'post_paid' and self.recurring_interval == 1:
+                next_date = self.recurring_next_date
+                recurring_next_date = self._get_recurring_next_date(self.recurring_rule_type, \
+                self.recurring_interval, next_date, self.recurring_invoice_day)
+                end_date = fields.Date.from_string(recurring_next_date)
+                res.update({
+                    "narration": _("This invoice covers the following period: %s - %s") % (format_date(self.env, next_date), format_date(self.env, end_date)),
+                    "l10n_ar_afip_service_start": next_date,
+                    "l10n_ar_afip_service_end": end_date,
+                })
         return res

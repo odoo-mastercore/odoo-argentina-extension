@@ -91,6 +91,7 @@ class AccountPayment(models.Model):
                 if rec.tax_withholding_id:
                     withholding_amount = rec.computed_withholding_amount or rec.force_amount_company_currency
                     exchange_rate = rec.payment_group_id.exchange_rate_applied or 1
+                    _logger.warning(_('::::::EXCHANGE_RATE::::::: %s', exchange_rate))
                     amount = withholding_amount / exchange_rate
                     if rec.state == 'draft':
                         rec.write({

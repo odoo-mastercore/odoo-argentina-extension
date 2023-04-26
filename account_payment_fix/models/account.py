@@ -15,6 +15,7 @@ _logger = logging.getLogger(__name__)
 class AccountPayment(models.Model):
     _inherit = 'account.payment'
 
+    # TODO: Esperar merge de parte de Adhoc para eliminar esto
     def action_draft(self):
         # account
         self.move_id.button_draft()

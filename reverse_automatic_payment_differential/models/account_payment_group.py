@@ -8,6 +8,7 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
 import logging
+from odoo.tools import ( float_is_zero )
 _logger = logging.getLogger(__name__)
 
 
@@ -16,11 +17,19 @@ class AccountPaymentGroup(models.Model):
 
     def post(self):
         res = super(AccountPaymentGroup, self).post()
+        reversed_move = False
+        if self.apply_foreign_payment:
+            amount_payment = sum(self.payment_ids.mapped('amount'))
+            amount_to_pay = sum(self.to_pay_move_line_ids.mapped('amount_currency'))
+            if float_is_zero(amount_to_pay - amount_payment):
+                reversed_move = True
+        else:
+            reversed_move = True
         journal_id = self.env['account.journal'].search([
             ('differential_reverse', '=', True),
             ('company_id', '=', self.company_id.id)
         ], limit=1)
-        if journal_id:
+        if journal_id and reversed_move:
             all_move_line = self.env['account.move.line'].search([
                 ('journal_id', '=', journal_id.id),
                 ('move_id.state', '=', 'posted'),

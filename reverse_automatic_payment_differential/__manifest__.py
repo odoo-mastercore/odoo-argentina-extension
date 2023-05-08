@@ -16,7 +16,8 @@
     "license": "AGPL-3",
     "depends": [
         "account",
-        "account_payment_group"
+        "account_payment_group",
+        "payment_group_foreign_currency"
     ],
     "data": [
         "views/account_journal.xml"

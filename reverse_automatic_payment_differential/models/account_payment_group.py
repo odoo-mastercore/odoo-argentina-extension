@@ -21,7 +21,7 @@ class AccountPaymentGroup(models.Model):
         if self.apply_foreign_payment:
             amount_payment = sum(self.payment_ids.mapped('amount'))
             amount_to_pay = sum(self.to_pay_move_line_ids.mapped('amount_currency'))
-            if float_is_zero(amount_to_pay - amount_payment, precision_digits=self.selected_debt_currency_id.rounding):
+            if not float_is_zero(amount_to_pay - amount_payment, precision_digits=self.selected_debt_currency_id.rounding):
                 reversed_move = True
         else:
             reversed_move = True

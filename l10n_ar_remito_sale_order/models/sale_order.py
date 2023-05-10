@@ -17,7 +17,7 @@ class saleOrder(models.Model):
     remito_number = fields.Integer('Número de remito', default=False)
 
     def generate_remito(self):
-        if not remito_number:
+        if not self.remito_number:
             company = self.mapped('company_id')
-            remito_number = self.env['ir.sequence'].with_company(company).next_by_code('remito.sale.order')
+            self.remito_number = self.env['ir.sequence'].with_company(company).next_by_code('remito.sale.order')
         return self.env.ref('l10n_ar_remito_sale_order.action_report_remito').report_action(self)

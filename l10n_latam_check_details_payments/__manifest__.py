@@ -7,7 +7,7 @@
 #
 ###############################################################################
 {
-    "name": "l10n ar remito sale order",
+    "name": "l10n latam check details",
     "summary": "",
     'version': "16.0.0.0.1",
     'author': 'SINAPSYS GLOBAL SA || MASTERCORE SAS',
@@ -15,10 +15,10 @@
     'category': "sale",
     "license": "AGPL-3",
     "depends": [
-        "l10n_ar_stock"
+        "account_payment_group",
+        "l10n_latam_check"
     ],
     "data": [
-       'views/sale_order.xml',
-       'views/remito_report.xml'
+       'views/account_payment.xml',
     ],
 }

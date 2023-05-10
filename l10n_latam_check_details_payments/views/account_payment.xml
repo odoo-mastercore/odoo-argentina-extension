@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <record id="view_account_payment_from_group_tree_inherit_l10n_latam_check_details" model="ir.ui.view">
+        <field name="name">account.payment.view.tree.inherit</field>
+        <field name="model">account.payment</field>
+        <field name="inherit_id" ref="account_payment_group.view_account_payment_from_group_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='payment_method_description']" position="after">
+                <field name="l10n_latam_check_bank_id" optional="show" />
+                <field name="l10n_latam_check_number" string="Número de cheque"  optional="show" />
+                <field name="l10n_latam_check_payment_date"  optional="show" />
+                <field name="l10n_latam_check_type"  optional="show" />
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

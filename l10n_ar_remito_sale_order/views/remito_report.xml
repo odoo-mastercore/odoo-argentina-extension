@@ -67,7 +67,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <t t-set="lines" t-value="o.order_line.filtered(lambda x: x.qty_delivered &gt; 0 and x.product_id.rent_ok"/>
+                                <t t-set="lines" t-value="o.order_line.filtered(lambda x: x.qty_delivered &gt; 0 and x.product_id.rent_ok == True)"/>
                                 <tr t-foreach="lines" t-as="move">
                                     <td>
                                         <span t-field="move.name"/>

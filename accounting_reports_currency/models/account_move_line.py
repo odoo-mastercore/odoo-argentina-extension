@@ -27,6 +27,6 @@ class AccountMoveLine(models.Model):
                     ('currency_id', '=', rec.currency_id.id),
                     ('name', '<=', rec.date)
                     ],limit=1)
-                rec.amount_currency_company = rec.amount_currency / rate.company_rate
+                rec.amount_currency_company = rec.amount_currency / (rate.company_rate or 1)
             else:
                 rec.amount_currency_company = rec.amount_currency

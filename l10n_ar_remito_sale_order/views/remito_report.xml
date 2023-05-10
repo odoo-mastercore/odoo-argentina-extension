@@ -12,8 +12,54 @@
                         <t t-set="document_legend" t-value="'Doc. no válido como factura'"/>
                         <t t-set="report_number" t-value="o.remito_number"/>
                         <t t-set="report_name" t-value="'REMITO'"/>
-                        <t t-set="header_address" t-value="o.partner_id"/>
-                        <table class="table table-sm" t-if="o.state!='done'" name="stock_move_table">
+                        <t t-set="header_address" t-value="o.company_id.partner_id"/>
+                        <br/>
+                        <br/>
+                        <div class="row mt32 mb32" position="replace">
+                          <div id="informations" class="row mt8 mb8">
+                              <div class="col-6">
+                                  <t t-set="partner" t-value="o.partner_id"/>
+                                  <t t-set="commercial_partner" t-value="partner.commercial_partner_id"/>
+              
+                                  <!-- IDENTIFICACION (ADQUIRIENTE-LOCATARIO-PRESTARIO) -->
+              
+                                  <!-- (14) Apellido uy Nombre: Denominicacion o Razon Soclial -->
+                                  <strong>Customer: </strong><span t-field="commercial_partner.name"/>
+              
+                                  <!-- (15) Domicilio Comercial -->
+                                  <br/>
+              
+                                  <span t-if="commercial_partner != partner"><strong>Deliver to: </strong><span t-field="partner.name"/></span>
+                                  <span t-out="partner" t-options="{&quot;widget&quot;: &quot;contact&quot;, &quot;fields&quot;: [&quot;address&quot;, &quot;phone&quot;, &quot;mobile&quot;], &quot;no_marker&quot;: False, &quot;no_tag_br&quot;: True}"/>
+              
+                                  <!-- (16) Responsabilidad AFIP -->
+                                  <strong>VAT Cond: </strong><span t-field="partner.l10n_ar_afip_responsibility_type_id"/>
+              
+                                  <!-- (17) CUIT -->
+                                  <t t-if="partner.vat and partner.l10n_latam_identification_type_id.name and partner.l10n_latam_identification_type_id.name != 'Sigd'">
+                                      <br/><strong><t t-out="partner.l10n_latam_identification_type_id.name or o.company_id.country_id.vat_label" id="inv_tax_id_label"/>:</strong> <span t-out="partner.l10n_ar_formatted_vat or partner.vat"/>
+                                  </t>
+              
+                              </div>
+                              <div class="col-6">
+              
+                                  <t>
+                                      <strong>Order:</strong>
+                                      <span t-field="o.name"/>
+                                  </t>
+                                  
+                                  <t t-if="o.client_order_ref">
+                                      <br/><strong>Customer Reference:</strong>
+                                      <span t-field="o.client_order_ref"/>
+                                  </t>
+                                 
+                                
+                              </div>
+              
+                          </div>
+                      </div>
+                        <br/>
+                        <table class="table table-sm" style="padding-top: 2rem" name="stock_move_table">
                             <thead>
                                 <tr>
                                     <th name="th_sm_product"><strong>Producto</strong></th>
@@ -21,13 +67,13 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <t t-set="lines" t-value="o.order_line.filtered(lambda x: x.qty_delivered > 0)"/>
+                                <t t-set="lines" t-value="o.order_line.filtered(lambda x: x.qty_invoiced &gt; 0 and x.product_id.detailed_type == 'product')"/>
                                 <tr t-foreach="lines" t-as="move">
                                     <td>
-                                        <span t-field="move.product_id"/>
+                                        <span t-field="move.name"/>
                                     </td>
                                     <td class="text-right">
-                                        <span t-field="move.qty_delivered"/>
+                                        <span t-field="move.qty_invoiced"/>
                                         <span t-field="move.product_uom"/>
                                     </td>
                                 </tr>
@@ -38,12 +84,12 @@
                                 <thead>
                                     <tr class="mt-4">
                                         <th width="25%">Recibí conforme:</th>
-                                        <th width="25%"></th>
-                                        <th width="25%"></th>
-                                        <th width="25%"></th>
+                                        <th width="25%"/>
+                                        <th width="25%"/>
+                                        <th width="25%"/>
                                     </tr>
                                 </thead>
-                                <tbody >
+                                <tbody>
                                     <tr class="pt-4">
                                         <th width="25%">Fecha: ____ / ____ / ____</th>
                                         <td><hr style="border: 1px solid #000000;"/></td>
@@ -51,7 +97,7 @@
                                         <td><hr style="border: 1px solid #000000;"/></td>
                                     </tr>
                                     <tr class="pt-4">
-                                        <td></td>
+                                        <td/>
                                         <th style="text-align: center;">DNI</th>
                                         <th style="text-align: center;">Firma</th>
                                         <th style="text-align: center;">Aclaración</th>

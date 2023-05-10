@@ -18,7 +18,8 @@
         "l10n_ar_stock"
     ],
     "data": [
-       'views/sale_order.xml',
-       'views/remito_report.xml'
+        'data/ir_sequence_data.xml',
+        'views/sale_order.xml',
+        'views/remito_report.xml'
     ],
 }

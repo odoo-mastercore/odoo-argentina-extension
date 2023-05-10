@@ -1,0 +1,11 @@
+<odoo>
+    <data noupdate="1">
+
+        <record id="remito_sale_sequence" model="ir.sequence">
+            <field name="name">Sequencia para Remitos</field>
+            <field name="code">remito.sale.order</field>
+            <field name="prefix"></field>
+            <field name="padding">6</field>
+        </record>
+    </data>
+</odoo>

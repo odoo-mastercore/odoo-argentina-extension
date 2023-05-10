@@ -14,9 +14,10 @@ from odoo.exceptions import ValidationError, UserError
 class saleOrder(models.Model):
     _inherit = 'sale.order'
 
-    remito_number = fields.Integer('Número de remito')
+    remito_number = fields.Integer('Número de remito', default=False)
 
     def generate_remito(self):
-        '''This function prints the voucher'''
-        print('333')
+        if not remito_number:
+            company = self.mapped('company_id')
+            remito_number = self.env['ir.sequence'].with_company(company).next_by_code('remito.sale.order')
         return self.env.ref('l10n_ar_remito_sale_order.action_report_remito').report_action(self)

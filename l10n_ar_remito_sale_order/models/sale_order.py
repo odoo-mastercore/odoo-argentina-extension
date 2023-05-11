@@ -15,8 +15,11 @@ class saleOrder(models.Model):
     _inherit = 'sale.order'
 
     remito_number = fields.Integer('Número de remito', default=False)
+    driver_id = fields.Many2one('res.partner', string='Transportista')
 
     def generate_remito(self):
+        if not self.driver_id:
+            raise ValidationError(_('No se ha seleccionado un transportista'))
         if not self.remito_number:
             company = self.mapped('company_id')
             self.remito_number = self.env['ir.sequence'].with_company(company).next_by_code('remito.sale.order')

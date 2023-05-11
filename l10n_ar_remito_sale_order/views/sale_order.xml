@@ -18,6 +18,7 @@
             </xpath>
             <xpath expr="//field[@name='picking_policy']" position="before">
                 <field name="remito_number" />
+                <field name="driver_id" />
             </xpath>
         </field>
     </record>

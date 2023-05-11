@@ -20,6 +20,7 @@
     "data": [
         'data/ir_sequence_data.xml',
         'views/sale_order.xml',
-        'views/remito_report.xml'
+        'views/remito_report.xml',
+        'views/res_partner.xml'
     ],
 }

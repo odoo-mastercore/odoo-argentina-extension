@@ -24,8 +24,7 @@ class AccountMove(models.Model):
                     rec.amount_residual_foreign = rec.amount_residual
                 else:
                     _logger.warning('ec.else')
-                    
-                    if rec.l10n_ar_currency_rate != 0.00:
+                    if rec.currency_id == rec.company_id.currency_id:
                         _logger.warning('ec.kskkss')
                         rate = 1/rec.l10n_ar_currency_rate
                     else:

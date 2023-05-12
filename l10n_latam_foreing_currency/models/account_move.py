@@ -19,7 +19,6 @@ class AccountMove(models.Model):
             if rec.move_type in ['out_invoice','out_refund','in_invoice','in_refund'] and not rec.debit_origin_id:
                 _logger.warning('if rec.move_type')
                 if rec.currency_id == rec.company_foreign_currency_id:
-                    _logger.warning('ec.currency_id')
                     rec.amount_total_signed_foreign = rec.amount_total_in_currency_signed
                     rec.amount_residual_foreign = rec.amount_residual
                 else:

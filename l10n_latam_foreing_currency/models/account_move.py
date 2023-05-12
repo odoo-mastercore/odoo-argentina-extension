@@ -10,9 +10,9 @@ class AccountMove(models.Model):
 
     company_foreign_currency_id = fields.Many2one(string='Foreign Company Currency', readonly=True,
         related='company_id.foreign_currency_id')
-    amount_total_signed_foreign = fields.Monetary(string='Total Signed', readonly=True, store=True, currency_field='company_foreign_currency_id', compute='_compute_foreigns')
-    amount_residual_foreign = fields.Monetary(string='Amount Due', store=True, currency_field='company_foreign_currency_id', compute='_compute_foreigns')
-    
+    amount_total_signed_foreign = fields.Monetary(string='Total Signed', readonly=True, currency_field='company_foreign_currency_id')
+    amount_residual_foreign = fields.Monetary(string='Amount Due', currency_field='company_foreign_currency_id')
+
     @api.depends('amount_total_signed', 'amount_residual')
     def _compute_foreigns(self):
         for rec in self:
@@ -41,4 +41,3 @@ class AccountMove(models.Model):
                 _logger.warning('nota de debito')
                 rec.amount_total_signed_foreign = 0
                 rec.amount_residual_foreign = 0
-                

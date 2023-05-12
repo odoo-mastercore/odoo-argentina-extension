@@ -8,6 +8,7 @@
       <xpath expr="//field[@name='amount_total_in_currency_signed']" position="after">
         <field name="company_foreign_currency_id"/>
         <field name="amount_residual_foreign" widget='monetary' options="{'currency_field': 'company_foreign_currency_id'}" string="Importe Adeudado Moneda Extranjera" sum="total"/>
+        <field name="amount_untaxed_signed_foreign" widget='monetary' options="{'currency_field': 'company_foreign_currency_id'}" string="Impuestos no incluidos en Moneda Extranjera" sum="total"/>
         <field name="amount_total_signed_foreign" widget='monetary' options="{'currency_field': 'company_foreign_currency_id'}" string="Total en Moneda Extranjera" sum="total"/>
       </xpath>
     </field>
@@ -20,6 +21,7 @@
       <xpath expr="//field[@name='amount_residual_signed']" position="after">
         <field name="company_foreign_currency_id"/>
         <field name="amount_residual_foreign" widget='monetary' options="{'currency_field': 'company_foreign_currency_id'}" string="Importe Adeudado Moneda Extranjera" sum="total"/>
+        <field name="amount_untaxed_signed_foreign" widget='monetary' options="{'currency_field': 'company_foreign_currency_id'}" string="Impuestos no incluidos en Moneda Extranjera" sum="total"/>
         <field name="amount_total_signed_foreign" widget='monetary' options="{'currency_field': 'company_foreign_currency_id'}" string="Total en Moneda Extranjera" sum="total"/>
       </xpath>
     </field>

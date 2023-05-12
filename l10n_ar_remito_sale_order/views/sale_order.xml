@@ -17,7 +17,8 @@
                     }" type="object" class="oe_highlight"/>
             </xpath>
             <xpath expr="//field[@name='picking_policy']" position="before">
-                <field name="remito_number" />
+                <!-- <field name="remito_number" /> -->
+                <field name="book_id" />
                 <field name="driver_id" />
             </xpath>
         </field>

@@ -19,6 +19,7 @@
     ],
     "data": [
         'data/ir_sequence_data.xml',
+        'data/stock_book.xml',
         'views/sale_order.xml',
         'views/remito_report.xml',
         'views/res_partner.xml'

@@ -23,28 +23,9 @@ class AccountMove(models.Model):
                     rec.amount_total_signed_foreign = rec.amount_total_in_currency_signed
                     rec.amount_residual_foreign = rec.amount_residual
                 else:
-                    _logger.warning('ec.else')
-                    if rec.currency_id == rec.company_id.currency_id:
-                        _logger.warning('ec.kskkss')
-                        rate = rec.env['res.currency.rate'].search([
-                            ('currency_id','=', rec.company_foreign_currency_id.id),
-                            ('name', '<=', rec.invoice_date)], limit=1).inverse_company_rate
-                        rec.amount_total_signed_foreign = rec.amount_total_in_currency_signed/ rate
-                        rec.amount_residual_foreign = rec.amount_residual /rate
-
-                    elif rec.currency_id == rec.company_foreign_currency_id:
-                        _logger.warning('ec.jskjsjkskelse')
-                        rec.amount_total_signed_foreign = rec.amount_total_in_currency_signed
-                        rec.amount_residual_foreign = rec.amount_residual
-            
-                    else:
-                        
-                        rec.amount_total_signed_foreign = rec.currency_id._convert(rec.amount_total_in_currency_signed, rec.company_foreign_currency_id, rec.company_id, rec.date)
-                        rec.amount_residual_foreign = rec.currency_id._convert(rec.amount_residual, rec.company_foreign_currency_id, rec.company_id, rec.date)
-
-                        
-                   
-            else:    
+                    rec.amount_total_signed_foreign = rec.currency_id._convert(rec.amount_total_in_currency_signed, rec.company_foreign_currency_id, rec.company_id, rec.date)
+                    rec.amount_residual_foreign = rec.currency_id._convert(rec.amount_residual, rec.company_foreign_currency_id, rec.company_id, rec.date)
+            else:
                 _logger.warning('nota de debito')
                 rec.amount_total_signed_foreign = 0
                 rec.amount_residual_foreign = 0

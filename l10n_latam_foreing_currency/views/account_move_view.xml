@@ -12,4 +12,16 @@
       </xpath>
     </field>
   </record>
+  <record id="view_in_invoice_bill_tree_inherit" model="ir.ui.view">
+    <field name="name">view.in.invoice.bill.tree.inherit</field>
+    <field name="model">account.move</field>
+    <field name="inherit_id" ref="account.view_in_invoice_bill_tree" />
+    <field name="arch" type="xml">
+      <xpath expr="//field[@name='amount_residual_signed']" position="after">
+        <field name="company_foreign_currency_id"/>
+        <field name="amount_residual_foreign" widget='monetary' options="{'currency_field': 'company_foreign_currency_id'}" string="Importe Adeudado Moneda Extranjera" sum="total"/>
+        <field name="amount_total_signed_foreign" widget='monetary' options="{'currency_field': 'company_foreign_currency_id'}" string="Total en Moneda Extranjera" sum="total"/>
+      </xpath>
+    </field>
+  </record>
 </odoo>

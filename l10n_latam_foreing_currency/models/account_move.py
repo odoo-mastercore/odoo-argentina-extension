@@ -16,7 +16,7 @@ class AccountMove(models.Model):
     @api.depends('amount_total_signed', 'amount_residual')
     def _compute_foreigns(self):
         for rec in self:
-            if rec.move_type == 'out_invoice' and not rec.debit_origin_id:
+            if rec.move_type == 'out_invoice' or rec.move_type == 'out_refund' and not rec.debit_origin_id:
                 _logger.warning('if rec.move_type')
                 if rec.currency_id == rec.company_foreign_currency_id:
                     _logger.warning('ec.currency_id')

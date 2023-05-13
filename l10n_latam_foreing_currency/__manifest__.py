@@ -8,7 +8,7 @@
 ###############################################################################
 {
     'name': 'Foreign Currency',
-    'version': '15.0.9.7',
+    'version': '15.0.9.8',
     'description': '',
     'summary': '',
     'author': "SINAPSYS GLOBAL SA || MASTERCORE SAS",

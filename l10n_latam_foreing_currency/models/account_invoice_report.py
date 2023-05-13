@@ -25,7 +25,15 @@ class AccountInvoiceReport(models.Model):
     amount_untaxed_foreign = fields.Monetary(string='Subtotal en Divisas',
         currency_field='company_foreign_currency_id'
     )
+    #Por Ahora funciona porque todas las facturas son en $$ Buscar mejora
+    price_subtotal_foreign = fields.Monetary('Precio Subtotal', readonly=True,
+        currency_field='invoice_currency_id',
+    )
 
     def _select(self):
-        return super(AccountInvoiceReport, self)._select() + ", move.amount_untaxed_foreign as amount_untaxed_foreign, \
-        move.amount_total_foreign as amount_total_foreign, move.amount_residual_foreign as amount_residual_foreign"
+        return super(AccountInvoiceReport, self)._select() + """,
+        move.amount_untaxed_foreign as amount_untaxed_foreign,
+        move.amount_total_foreign as amount_total_foreign,
+        move.amount_residual_foreign as amount_residual_foreign,
+        line.price_subtotal as price_subtotal_foreign,
+        """

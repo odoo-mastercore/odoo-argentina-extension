@@ -14,10 +14,10 @@ class AccountInvoiceReport(models.Model):
 
     company_foreign_currency_id = fields.Many2one(string='Foreign Company Currency', readonly=True,
         related='company_id.foreign_currency_id')
-    amount_total_signed_foreign = fields.Monetary(string='Total en Divisas', currency_field='company_foreign_currency_id')
+    amount_total_foreign = fields.Monetary(string='Total en Divisas', currency_field='company_foreign_currency_id')
     amount_residual_foreign = fields.Monetary(string='Adeudado en Divisas', currency_field='company_foreign_currency_id')
-    amount_untaxed_signed_foreign = fields.Monetary(string='Subtotal en Divisas', currency_field='company_foreign_currency_id')
+    amount_untaxed_foreign = fields.Monetary(string='Subtotal en Divisas', currency_field='company_foreign_currency_id')
 
     def _select(self):
-        return super(AccountInvoiceReport, self)._select() + ", move.amount_untaxed_signed_foreign as amount_untaxed_signed_foreign, \
-        move.amount_total_signed_foreign as amount_total_signed_foreign, move.amount_residual_foreign as amount_residual_foreign"
+        return super(AccountInvoiceReport, self)._select() + ", move.amount_untaxed_foreign as amount_untaxed_foreign, \
+        move.amount_total_foreign as amount_total_foreign, move.amount_residual_foreign as amount_residual_foreign"

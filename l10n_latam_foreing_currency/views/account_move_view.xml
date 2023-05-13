@@ -8,8 +8,8 @@
       <xpath expr="//field[@name='amount_total_in_currency_signed']" position="after">
         <field name="company_foreign_currency_id"/>
         <field name="amount_residual_foreign" widget='monetary' options="{'currency_field': 'company_foreign_currency_id'}" string="Adeudado en Divisas" sum="total"/>
-        <field name="amount_untaxed_signed_foreign" widget='monetary' options="{'currency_field': 'company_foreign_currency_id'}" string="Subtotal en Divisas" sum="total"/>
-        <field name="amount_total_signed_foreign" widget='monetary' options="{'currency_field': 'company_foreign_currency_id'}" string="Total en Divisas" sum="total"/>
+        <field name="amount_untaxed_foreign" widget='monetary' options="{'currency_field': 'company_foreign_currency_id'}" string="Subtotal en Divisas" sum="total"/>
+        <field name="amount_total_foreign" widget='monetary' options="{'currency_field': 'company_foreign_currency_id'}" string="Total en Divisas" sum="total"/>
       </xpath>
     </field>
   </record>
@@ -21,8 +21,8 @@
       <xpath expr="//field[@name='amount_residual_signed']" position="after">
         <field name="company_foreign_currency_id"/>
         <field name="amount_residual_foreign" widget='monetary' options="{'currency_field': 'company_foreign_currency_id'}" string="Adeudado en Divisas" sum="total"/>
-        <field name="amount_untaxed_signed_foreign" widget='monetary' options="{'currency_field': 'company_foreign_currency_id'}" string="Subtotal en Divisas" sum="total"/>
-        <field name="amount_total_signed_foreign" widget='monetary' options="{'currency_field': 'company_foreign_currency_id'}" string="Total en Divisas" sum="total"/>
+        <field name="amount_untaxed_foreign" widget='monetary' options="{'currency_field': 'company_foreign_currency_id'}" string="Subtotal en Divisas" sum="total"/>
+        <field name="amount_total_foreign" widget='monetary' options="{'currency_field': 'company_foreign_currency_id'}" string="Total en Divisas" sum="total"/>
       </xpath>
     </field>
   </record>

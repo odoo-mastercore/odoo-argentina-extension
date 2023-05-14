@@ -26,7 +26,9 @@ class AccountInvoiceReport(models.Model):
         currency_field='company_foreign_currency_id'
     )
     #Por Ahora funciona porque todas las facturas son en $$ Buscar mejora
-    price_subtotal_foreign = fields.Monetary('Precio Subtotal',)
+    price_subtotal_foreign = fields.Monetary('Precio Subtotal',
+        currency_field='company_foreign_currency_id'
+    )
 
     def _select(self):
         return super(AccountInvoiceReport, self)._select() + """,

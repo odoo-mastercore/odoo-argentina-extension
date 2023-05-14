@@ -16,17 +16,17 @@ class AccountInvoiceReport(models.Model):
         string='Foreign Company Currency', readonly=True,
         related='company_id.foreign_currency_id'
     )
-    amount_total_foreign = fields.Monetary(string='Total en Divisas',
+    amount_total_foreign = fields.Monetary(string='Total en Divisa',
         currency_field='company_foreign_currency_id'
     )
-    amount_residual_foreign = fields.Monetary(string='Adeudado en Divisas',
+    amount_residual_foreign = fields.Monetary(string='Adeudado en Divisa',
         currency_field='company_foreign_currency_id'
     )
-    amount_untaxed_foreign = fields.Monetary(string='Subtotal en Divisas',
+    amount_untaxed_foreign = fields.Monetary(string='Subtotal en Divisa',
         currency_field='company_foreign_currency_id'
     )
     #Por Ahora funciona porque todas las facturas son en $$ Buscar mejora
-    price_subtotal_foreign = fields.Monetary('Precio Subtotal',
+    price_subtotal_foreign = fields.Monetary('Precio Subtotal en Divisa',
         currency_field='company_foreign_currency_id'
     )
 

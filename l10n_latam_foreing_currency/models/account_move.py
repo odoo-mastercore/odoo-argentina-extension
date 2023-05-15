@@ -12,13 +12,13 @@ class AccountMove(models.Model):
         string='Foreign Company Currency', readonly=True,
         related='company_id.foreign_currency_id'
     )
-    amount_total_foreign = fields.Monetary(string='Total Signed',
+    amount_total_foreign = fields.Monetary(string='Total en Divisa',
         readonly=True, currency_field='company_foreign_currency_id'
     )
-    amount_residual_foreign = fields.Monetary(string='Amount Due',
+    amount_residual_foreign = fields.Monetary(string='Adeudado en Divisa',
         currency_field='company_foreign_currency_id'
     )
-    amount_untaxed_foreign = fields.Monetary(string='Untaxed Amount Signed',
+    amount_untaxed_foreign = fields.Monetary(string='Subtotal en Divisa',
         readonly=True, currency_field='company_foreign_currency_id'
     )
 
@@ -46,3 +46,32 @@ class AccountMove(models.Model):
                 rec.amount_total_foreign = 0
                 rec.amount_residual_foreign = 0
                 rec.amount_untaxed_foreign = 0
+
+
+class AccountMoveLine(models.Model):
+    _inherit = 'account.move.line'
+
+    company_foreign_currency_id = fields.Many2one(
+        string='Foreign Company Currency', readonly=True,
+        related='company_id.foreign_currency_id'
+    )
+    price_subtotal_foreign = fields.Monetary('Precio Subtotal en Divisa',
+        currency_field='company_foreign_currency_id'
+    )
+
+    @api.depends('price_subtotal')
+    def _compute_foreigns(self):
+        for rec in self:
+            if rec.move_id.move_type in ['out_invoice','out_refund','in_invoice','in_refund'] and not rec.move_id.debit_origin_id:
+                _logger.warning('Factura')
+                if rec.currency_id == rec.company_foreign_currency_id:
+                    rec.price_subtotal_foreign = rec.price_subtotal
+                else:
+                    rec.price_subtotal_foreign = rec.currency_id._convert(
+                        rec.price_subtotal, rec.company_foreign_currency_id,
+                        rec.company_id, rec.date)
+            else:
+                _logger.warning('nota de debito')
+                rec.price_subtotal_foreign = 0
+
+

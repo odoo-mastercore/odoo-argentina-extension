@@ -12,13 +12,13 @@ class AccountMove(models.Model):
         string='Foreign Company Currency', readonly=True,
         related='company_id.foreign_currency_id'
     )
-    amount_total_foreign = fields.Monetary(string='Total Signed',
+    amount_total_foreign = fields.Monetary(string='Total en Divisa',
         readonly=True, currency_field='company_foreign_currency_id'
     )
-    amount_residual_foreign = fields.Monetary(string='Amount Due',
+    amount_residual_foreign = fields.Monetary(string='Adeudado en Divisa',
         currency_field='company_foreign_currency_id'
     )
-    amount_untaxed_foreign = fields.Monetary(string='Untaxed Amount Signed',
+    amount_untaxed_foreign = fields.Monetary(string='Subtotal en Divisa',
         readonly=True, currency_field='company_foreign_currency_id'
     )
 

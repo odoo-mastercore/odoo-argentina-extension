@@ -35,5 +35,5 @@ class AccountInvoiceReport(models.Model):
         move.amount_untaxed_foreign as amount_untaxed_foreign,
         move.amount_total_foreign as amount_total_foreign,
         move.amount_residual_foreign as amount_residual_foreign,
-        line.price_subtotal as price_subtotal_foreign
+        line.price_subtotal_foreign as price_subtotal_foreign
         """

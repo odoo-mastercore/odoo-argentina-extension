@@ -16,6 +16,11 @@ class AccounTpaymentAddChecks(models.TransientModel):
                     + " el marcador de tipo de cambio con un valor distinto"
                     + " a cero, antes de agregar una linea"))
                 vals_list = [{
+                    'l10n_latam_check_bank_id': check.l10n_latam_check_bank_id,
+                    'l10n_latam_check_number': check.l10n_latam_check_number,
+                    'l10n_latam_check_payment_date': check.l10n_latam_check_payment_date,
+                    'l10n_latam_check_type': check.l10n_latam_check_type,
+                    'l10n_latam_check_id': check.id,
                     'l10n_latam_check_id': check.id,
                     'exchange_rate': payment_group.exchange_rate_applied,
                     'amount': (check.amount_company_currency / payment_group.exchange_rate_applied),
@@ -31,6 +36,10 @@ class AccounTpaymentAddChecks(models.TransientModel):
                 self.env['account.payment'].create(vals_list)
             else:
                 vals_list = [{
+                    'l10n_latam_check_bank_id': check.l10n_latam_check_bank_id,
+                    'l10n_latam_check_number': check.l10n_latam_check_number,
+                    'l10n_latam_check_payment_date': check.l10n_latam_check_payment_date,
+                    'l10n_latam_check_type': check.l10n_latam_check_type,
                     'l10n_latam_check_id': check.id,
                     'amount': check.amount if check.currency_id.id \
                         == payment_group.company_id.currency_id.id else \

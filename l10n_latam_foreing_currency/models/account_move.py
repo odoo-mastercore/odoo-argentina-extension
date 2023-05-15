@@ -59,7 +59,7 @@ class AccountMoveLine(models.Model):
         currency_field='company_foreign_currency_id'
     )
 
-    @api.depends('price_subtotal')
+    @api.depends('price_subtotal', 'move_id.amount_untaxed')
     def _compute_foreigns(self):
         for rec in self:
             if rec.move_id.move_type in ['out_invoice','out_refund','in_invoice','in_refund'] and not rec.move_id.debit_origin_id:

@@ -16,7 +16,7 @@ class AccountInvoiceReport(models.Model):
         string='Foreign Company Currency', readonly=True,
         related='company_id.foreign_currency_id'
     )
-    price_subtotal_foreign = fields.Monetary('Precio Subtotal en Divisa',
+    price_subtotal_foreign = fields.Monetary('Subtotal en Divisa',
         currency_field='company_foreign_currency_id'
     )
 

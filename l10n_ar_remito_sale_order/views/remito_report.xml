@@ -63,25 +63,35 @@
                             <thead>
                                 <tr>
                                     <th name="th_sm_product"><strong>Producto</strong></th>
+                                    <th name="th_sm_ordered"><strong>N° de Interno</strong></th>
+                                    <th name="th_sm_ordered"><strong>N° de Serie</strong></th>
                                     <th name="th_sm_ordered"><strong>Cantidad</strong></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <t t-set="lines" t-value="o.order_line.filtered(lambda x: x.qty_delivered &gt; 0 and x.product_id.rent_ok == True)"/>
                                 <tr t-foreach="lines" t-as="move">
+                                  
                                     <td>
                                         <span t-field="move.name"/>
+                                    </td>
+                                    <td>
+                                      <span t-field="move.pickedup_lot_ids"/>
+                                    </td>
+                                    <td>
+                                      <span t-if="move.pickedup_lot_ids" t-field="move.pickedup_lot_ids[0].ref"/>
                                     </td>
                                     <td class="text-right">
                                         <span t-field="move.qty_delivered"/>
                                         <span t-field="move.product_uom"/>
+                                        
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
                         <div class="card">
                             <div class="card-body">
-                                <strong class="card-text">Transportista: </strong><t t-out="o.partner_id.name" />
+                                <strong class="card-text">Transportista: </strong><t t-out="o.partner_id.name"/>
                                 <br/>
                                 <strong><t t-out="o.driver_id.l10n_latam_identification_type_id.name or o.company_id.country_id.vat_label" id="inv_tax_id_label"/>:</strong> <span t-out="o.driver_id.l10n_ar_formatted_vat or o.driver_id.vat"/>
                             </div>

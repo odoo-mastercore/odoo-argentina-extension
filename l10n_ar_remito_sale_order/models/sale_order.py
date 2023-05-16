@@ -24,7 +24,7 @@ class saleOrder(models.Model):
     driver_id = fields.Many2one('res.partner', 
                                 string='Transportista', 
                                 domain="[('is_driver','=', True)]")
-    
+
 
     def open_pickup(self):
         rec = super(saleOrder, self).open_pickup()

@@ -9,7 +9,7 @@
 {
     "name": "l10n latam check details",
     "summary": "",
-    'version': "16.0.0.0.1",
+    'version': "16.0.0.0.2",
     'author': 'SINAPSYS GLOBAL SA || MASTERCORE SAS',
     'website': "http://sinapsys.global",
     'category': "sale",

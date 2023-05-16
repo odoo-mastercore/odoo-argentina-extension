@@ -21,7 +21,6 @@ class AccounTpaymentAddChecks(models.TransientModel):
                     'l10n_latam_check_payment_date': check.l10n_latam_check_payment_date,
                     'l10n_latam_check_type': check.l10n_latam_check_type,
                     'l10n_latam_check_id': check.id,
-                    'l10n_latam_check_id': check.id,
                     'exchange_rate': payment_group.exchange_rate_applied,
                     'amount': (check.amount_company_currency / payment_group.exchange_rate_applied),
                     'amount_company_currency': check.amount_company_currency,

@@ -20,5 +20,6 @@
     ],
     "data": [
        'views/account_payment.xml',
+       'views/account_payment_add_checks_views.xml'
     ],
 }

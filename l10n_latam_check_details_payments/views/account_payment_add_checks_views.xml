@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="view_account_payment_add_checks_form_inherit" model="ir.ui.view">
+        <field name="name">account.payment.add.checks.form</field>
+        <field name="model">account.payment.add.checks</field>
+        <field name="inherit_id" ref="l10n_ar_ux.view_account_payment_add_checks_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='check_ids']" position="attributes">
+                <attribute name="domain">[('id', 'not in',check_ids),('payment_method_code', '=', 'new_third_party_checks'), ('l10n_latam_check_current_journal_id', '!=', False), ('state', '=', 'posted') ,('company_id', '=', company_id)]</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>

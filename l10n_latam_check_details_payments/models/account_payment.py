@@ -20,6 +20,16 @@ class accountPayment(models.Model):
         string='Banco del cheque',
     )
 
+    @api.onchange('l10n_latam_check_number')
+    def _onchange_l10n_latam_check_number(self):
+        if self.l10n_latam_check_number:
+            self.number_check_aux =  self.l10n_latam_check_number
+
+    @api.onchange('l10n_latam_check_bank_id')
+    def _onchange_l10n_latam_check_bank_id(self):
+        if self.l10n_latam_check_bank_id:
+            self.l10n_latam_check_bank_id_aux =  self.l10n_latam_check_bank_id.id
+
     @api.model_create_multi
     def create(self, vals_list):
         records = super().create(vals_list)

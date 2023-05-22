@@ -7,10 +7,10 @@
 #
 ###############################################################################
 {
-    'name': "SW - General Ledger in Foreign Currency",
+    'name': "General Ledger in Foreign Currency",
     'version': "16.0.1",
     'description': '',
-    'summary': "Generate your General Balance report with your preferred currencies",
+    'summary': "",
     'author': "SINAPSYS GLOBAL SA || MASTERCORE SAS",
     'website': "http://sinapsys.global",
     'license': 'AGPL-3',

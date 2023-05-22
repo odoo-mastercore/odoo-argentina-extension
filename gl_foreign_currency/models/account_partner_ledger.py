@@ -38,28 +38,6 @@ class ReportPartnerLedger(models.AbstractModel):
                     if c['id'] == self.env.user.company_id.currency_id.id:
                         c['selected'] = True
 
-    def _dynamic_lines_generator(self, report, options, all_column_groups_expression_totals):
-        #print('_dynamic_lines_generator-self: ', self)
-        #print('_dynamic_lines_generator-report: ', report)
-        #print('_dynamic_lines_generator-options: ', options)
-        #print('_dynamic_lines_generator-all_column_groups_expression_totals: ', all_column_groups_expression_totals)
-        if self.env.context.get('print_mode') and options.get('filter_search_bar'):
-            # Handled here instead of in custom options initializer as init_options functions aren't re-called when printing the report.
-            options.setdefault('forced_domain', []).append(('partner_id', 'ilike', options['filter_search_bar']))
-
-        partner_lines, totals_by_column_group = self._build_partner_lines(report, options)
-        #print('_dynamic_lines_generator-_build_partner_lines-partner_lines: ', partner_lines)
-        #print('_dynamic_lines_generator-_build_partner_lines-totals_by_column_group: ', totals_by_column_group)
-        lines = report._regroup_lines_by_name_prefix(options, partner_lines, '_report_expand_unfoldable_line_partner_ledger_prefix_group', 0)
-        #print('_dynamic_lines_generator-_regroup_lines_by_name_prefix-lines: ', lines)
-        # Inject sequence on dynamic lines
-        lines = [(0, line) for line in lines]
-
-        # Report total line.
-        lines.append((0, self._get_report_line_total(options, totals_by_column_group)))
-
-        return lines
-
     def _get_query_sums(self, options):
         #print('_get_query_sums===> ', self)
         query, params = super()._get_query_sums(options)

@@ -24,9 +24,9 @@ class ReportGeneralLedger(models.AbstractModel):
         super()._custom_options_initializer(report, options, previous_options=previous_options)
         if self.filter_currencys :
             currencies = [] #self.env['res.currency'].search([])
-            print('company_id: ', self.env.user.company_id)
-            print('currency_id: ', self.env.user.company_id.currency_id)
-            print('_context: ', self._context)
+            #print('company_id: ', self.env.user.company_id)
+            #print('currency_id: ', self.env.user.company_id.currency_id)
+            #print('_context: ', self._context)
             if (self._context.get('allowed_company_ids')[0] == self.env.user.company_id.id):
                 company = self.env.user.company_id
             else:

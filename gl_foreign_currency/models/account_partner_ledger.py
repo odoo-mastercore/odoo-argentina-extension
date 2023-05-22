@@ -60,12 +60,15 @@ class ReportPartnerLedger(models.AbstractModel):
                 query = query.replace('SUM(ROUND(account_move_line.balance * currency_table.rate, currency_table.precision)) AS balance', 'SUM(ROUND(account_move_line.balance / ROUND((1/currency_rate.rate),4), 2)) AS balance')
                 query = query.replace('FROM "account_move_line" LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id")', 'FROM "account_move_line" LEFT JOIN "res_currency_rate" as "currency_rate" ON ("account_move_line"."date" = "currency_rate"."name") INNER JOIN "res_company" as "company_rate" ON ("account_move_line"."company_id" = "company_rate"."id" AND "company_rate"."foreign_currency_id" = "currency_rate"."currency_id") LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id") LEFT JOIN account_journal journal ON (journal.id = account_move_line.journal_id) ')
                 query = query.replace('GROUP BY account_move_line.partner_id', ' AND (journal.exclude_report is NULL or journal.exclude_report = False) GROUP BY account_move_line.partner_id')
+                print('apl-_get_query_sums-modif(query)===> ', query)
+                print('apl-_get_query_sums-modif(params)===> ', params)
         else:
             #print('_get_query_sums-else===> ', self)
             if (query.find('FROM "account_move_line" LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id")') > 0):
                 query = query.replace('FROM "account_move_line" LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id")', 'FROM "account_move_line" LEFT JOIN "res_currency_rate" as "currency_rate" ON ("account_move_line"."date" = "currency_rate"."name") INNER JOIN "res_company" as "company_rate" ON ("account_move_line"."company_id" = "company_rate"."id" AND "company_rate"."foreign_currency_id" = "currency_rate"."currency_id") LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id") LEFT JOIN account_journal journal ON (journal.id = account_move_line.journal_id) ')
                 query = query.replace('GROUP BY account_move_line.partner_id', ' AND (journal.exclude_report is NULL or journal.exclude_report = False) GROUP BY account_move_line.partner_id')
-                #print('_get_query_sums-modif===> ', self)
+                print('apl-_get_query_sums-modif(query)===> ', query)
+                print('apl-_get_query_sums-modif(params)===> ', params)
         return query, params
 
     def _get_aml_values(self, options, partner_ids, offset=0, limit=None):
@@ -234,8 +237,8 @@ class ReportPartnerLedger(models.AbstractModel):
                 query = query.replace('account_move.name                                                                   AS move_name,', 'account_move.name         AS move_name, (select count(distinct am.id) FROM account_move_line aml LEFT JOIN account_move am ON (aml.move_id = am.id) where am.name = account_move.name ) AS count_move_name,')
                 query = query.replace('FROM "account_move_line" LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id")', 'FROM "account_move_line" LEFT JOIN "res_currency_rate" as "currency_rate" ON ("account_move_line"."date" = "currency_rate"."name") INNER JOIN "res_company" as "company_rate" ON ("account_move_line"."company_id" = "company_rate"."id" AND "company_rate"."foreign_currency_id" = "currency_rate"."currency_id") LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id")')
                 query = query.replace('ORDER BY account_move_line.date, account_move_line.id', ' AND (journal.exclude_report is NULL or journal.exclude_report = False) ORDER BY account_move_line.date, account_move_line.id')
-        #print('_get_query_amls-query: ', query)
-        #print('_get_query_amls-all_params: ', all_params)
+        print('apl-_get_query_amls-query: ', query)
+        print('apl-_get_query_amls-all_params: ', all_params)
 
         self._cr.execute(query, all_params)
         for aml_result in self._cr.dictfetchall():

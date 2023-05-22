@@ -62,11 +62,14 @@ class ReportGeneralLedger(models.AbstractModel):
                 queries = queries.replace('SUM(ROUND(account_move_line.credit * currency_table.rate, currency_table.precision))  AS credit,', 'SUM(ROUND(ROUND(account_move_line.credit/ROUND((1/currency_rate.rate),4),2) * currency_table.rate, currency_table.precision)) AS credit,')
                 queries = queries.replace('SUM(ROUND(account_move_line.balance * currency_table.rate, currency_table.precision)) AS balance', 'SUM(ROUND(ROUND(account_move_line.balance/ROUND((1/currency_rate.rate),4),2) * currency_table.rate, currency_table.precision)) AS balance ')
                 queries = queries.replace('FROM "account_move_line" LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id")', 'FROM "account_move_line" INNER JOIN "res_company" as "company" ON ("account_move_line"."company_id" = "company"."id") LEFT JOIN "res_currency_rate" as "currency_rate" ON ("account_move_line"."date" = "currency_rate"."name" AND "company"."foreign_currency_id" = "currency_rate"."currency_id") LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id")')
+                print('agl-_get_query_sums-modif(queries)===> ', queries)
+                print('agl-_get_query_sums-modif(params)===> ', params)
         else:
             if (queries.find('FROM "account_move_line" LEFT JOIN "account_move" AS "account_move_line__move_id"') > 0):
                 queries = queries.replace('COALESCE(SUM(account_move_line.amount_currency), 0.0)   AS amount_currency', 'ROUND(COALESCE(SUM((CASE WHEN account_move_line.currency_id=currency_rate.currency_id THEN ROUND(account_move_line.amount_currency * ROUND((1/currency_rate.rate),4), 2) ELSE account_move_line.amount_currency END)), 0.0), 2) AS amount_currency')
                 queries = queries.replace('FROM "account_move_line" LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id")', 'FROM "account_move_line" INNER JOIN "res_company" as "company" ON ("account_move_line"."company_id" = "company"."id") LEFT JOIN "res_currency_rate" as "currency_rate" ON ("account_move_line"."date" = "currency_rate"."name" AND "company"."foreign_currency_id" = "currency_rate"."currency_id") LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id")')
-                #print('_get_query_sums-queries(2): ', queries)
+                print('agl-_get_query_sums-modif(queries)===> ', queries)
+                print('agl-_get_query_sums-modif(params)===> ', params)
         return queries, params
 
     @api.model
@@ -91,4 +94,6 @@ class ReportGeneralLedger(models.AbstractModel):
             if (query.find('FROM "account_move_line"') > 0):
                 query = query.replace('account_move_line.amount_currency,', 'ROUND(COALESCE((CASE WHEN account_move_line.currency_id=currency_rate.currency_id THEN ROUND(account_move_line.amount_currency * ROUND((1/currency_rate.rate),4), 2) ELSE account_move_line.amount_currency END), 0.0), 2) AS amount_currency,')
                 query = query.replace('FROM "account_move_line"', 'FROM "account_move_line" INNER JOIN "res_company" as "company_rate" ON ("account_move_line"."company_id" = "company_rate"."id") LEFT JOIN "res_currency_rate" as "currency_rate" ON ("account_move_line"."date" = "currency_rate"."name" AND "company_rate"."foreign_currency_id" = "currency_rate"."currency_id") ')
+        print('agl-_get_query_sums-modif(query)===> ', query)
+        print('agl-_get_query_sums-modif(where_params)===> ', where_params)
         return query, where_params

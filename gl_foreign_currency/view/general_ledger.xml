@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+
+		<template id="search_template_currency">
+			<t t-if="'currenciess' in options">
+				<button type="button" class="o-no-caret btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown">
+					<span class="fa fa-filter" />
+					Currency:
+					<t t-set="Currency_value" t-value="' '" />
+					<t t-foreach="options['currenciess']" t-as="c">
+						<t t-if="c.get('selected') == True">
+							<t t-set="Currency_value" t-value="''" />
+							<t t-esc="c.get('name')" />
+						</t>
+					</t>
+					<t t-esc="Currency_value" />
+					<span class="caret" />
+				</button>
+				<ul class="dropdown-menu o_filter_menu" role="menu">
+					<t t-foreach="options['currenciess']" t-as="c">
+						<li t-att-title="c.get('name')" data-filter="currenciess"
+							t-att-data-id="c.get('id')" class="o_account_report_search account_currency_filter">
+							<a class="dropdown-item">
+								<t t-esc="c.get('name')" />
+							</a>
+						</li>
+					</t>
+				</ul>
+			</t>
+		</template>
+
+		<template id="search_template_analytic_currency" inherit_id="account_reports.search_template" primary="True">
+			<xpath expr="//div[@id='extra_options_dropdown']" position="after">
+				<div id="extra_currencys" class="btn-group dropdown o_account_reports_filter_bool">
+		            <span t-esc="options.get('currencys')"/>
+		            <t t-call="gl_foreign_currency.search_template_currency"/>
+		        </div>
+			</xpath>
+
+		</template>
+
+		<record id="account_view_account_journal_tree_gl_cur" model="ir.ui.view">
+	        <field name="name">account_view_account_journal_tree_gl_cur</field>
+	        <field name="model">account.journal</field>
+	        <field name="inherit_id" ref="account.view_account_journal_tree"/>
+	        <field name="arch" type="xml">
+	            <field name="default_account_id" position="after">
+	                <field name="exclude_report" widget="boolean_toggle"/>
+	            </field>
+	        </field>
+	    </record>
+
+	    <record id="account_view_account_journal_form_gl_cur" model="ir.ui.view">
+	        <field name="name">account.view_account_journal_form_gl_cur</field>
+	        <field name="model">account.journal</field>
+	        <field name="inherit_id" ref="account.view_account_journal_form"/>
+	        <field name="arch" type="xml">
+	            <field name="currency_id" position="before">
+	                <field name="exclude_report" widget="boolean_toggle"/>
+	            </field>
+	        </field>
+	    </record>
+
+	</data>
+</odoo>

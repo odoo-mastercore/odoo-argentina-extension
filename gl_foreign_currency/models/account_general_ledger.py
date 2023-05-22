@@ -24,8 +24,15 @@ class ReportGeneralLedger(models.AbstractModel):
         super()._custom_options_initializer(report, options, previous_options=previous_options)
         if self.filter_currencys :
             currencies = [] #self.env['res.currency'].search([])
-            currencies.append(self.env.user.company_id.currency_id)
-            currencies.append(self.env.user.company_id.foreign_currency_id)
+            print('company_id: ', self.env.user.company_id)
+            print('currency_id: ', self.env.user.company_id.currency_id)
+            print('_context: ', self._context)
+            if (self._context.get('allowed_company_ids')[0] == self.env.user.company_id.id):
+                company = self.env.user.company_id
+            else:
+                company = self.env['res.company'].browse(self._context.get('uid'))
+            currencies.append(company.currency_id)
+            currencies.append(company.foreign_currency_id)
             options['currenciess'] = [{'id': c.id, 'name': c.name, 'selected': False} for c in currencies]
             if 'curr' in self._context:
                 for c in options['currenciess']:
@@ -33,63 +40,22 @@ class ReportGeneralLedger(models.AbstractModel):
                         c['selected'] = True
             else:
                 for c in options['currenciess']:
-                    if c['id'] == self.env.user.company_id.currency_id.id:
+                    if c['id'] == company.currency_id.id:
                         c['selected'] = True
-
-    '''@api.model
-    def _get_aml_line(self, options, account, aml, cumulated_balance):
-        if 'curr' in self._context:
-            cur = self.env['res.currency'].browse(self._context.get('curr'))
-        else:
-            cur = self.env.user.company_id.currency_id
-        if aml['payment_id']:
-            caret_type = 'account.payment'
-        else:
-            caret_type = 'account.move'
-
-        if aml['ref'] and aml['name']:
-            title = '%s - %s' % (aml['name'], aml['ref'])
-        elif aml['ref']:
-            title = aml['ref']
-        elif aml['name']:
-            title = aml['name']
-        else:
-            title = ''
-
-        if aml['currency_id']:
-            currency = self.env['res.currency'].browse(aml['currency_id'])
-        else:
-            currency = False
-        columns = [
-            {'name': format_date(self.env, aml['date']), 'class': 'date'},
-            {'name': self._format_aml_name(aml['name'], aml['ref'], aml['move_name']), 'title': title,'class': 'whitespace_print o_account_report_line_ellipsis'},
-            {'name': aml['partner_name'], 'title': aml['partner_name'], 'class': 'whitespace_print'},
-            {'name': self.format_value(aml['debit'], currency=cur, blank_if_zero=True), 'class': 'number'}, #{'name': self.format_value(cur._compute(self.env.user.company_id.currency_id, cur, aml['debit']), currency=cur, blank_if_zero=True), 'class': 'number'},
-            {'name': self.format_value(aml['credit'], currency=cur, blank_if_zero=True), 'class': 'number'}, #{'name': self.format_value(cur._compute(self.env.user.company_id.currency_id, cur, aml['credit']), currency=cur, blank_if_zero=True), 'class': 'number'},
-            {'name': self.format_value(cumulated_balance, currency=cur), 'class': 'number'}, #{'name': self.format_value(cur._compute(self.env.user.company_id.currency_id, cur, cumulated_balance), currency=cur), 'class': 'number'},
-        ]
-        if self.user_has_groups('base.group_multi_currency'):
-            columns.insert(3,{'name': cur and self.format_value(aml['amount_currency'], currency=cur, blank_if_zero=True) or '', 'class': 'number'}) #currency
-        return {
-            'id': aml['id'],
-            'caret_options': caret_type,
-            'class': 'top-vertical-align',
-            'parent_id': 'account_%d' % aml['account_id'],
-            'name': aml['move_name'],
-            'columns': columns,
-            'level': 2,
-        }
-        #return super(ReportGeneralLedger, self)._get_aml_line(options, account, aml, cumulated_balance)'''
 
     @api.model
     def _get_query_sums(self, options_list, expanded_account=None):
         queries, params = super()._get_query_sums(options_list, expanded_account)
         #print('_get_query_sums-queries: ', queries)
+        if (self._context.get('allowed_company_ids')[0] == self.env.user.company_id.id):
+            company = self.env.user.company_id
+        else:
+            company = self.env['res.company'].browse(self._context.get('uid'))
         if 'curr' in self._context:
             cur = self.env['res.currency'].browse(self._context.get('curr'))
         else:
-            cur = self.env.user.company_id.currency_id
-        if (cur.id != self.env.company.currency_id.id):
+            cur = company.currency_id
+        if (cur.id != company.currency_id.id):
             if (queries.find('FROM "account_move_line" LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id")') > 0):
                 queries = queries.replace('COALESCE(SUM(account_move_line.amount_currency), 0.0)   AS amount_currency', 'ROUND(COALESCE(SUM((CASE WHEN account_move_line.currency_id=currency_rate.currency_id THEN ROUND(account_move_line.amount_currency * ROUND((1/currency_rate.rate),4), 2) ELSE account_move_line.amount_currency END) / (ROUND((1/currency_rate.rate),4))), 0.0), 2) AS amount_currency')
                 queries = queries.replace('SUM(ROUND(account_move_line.debit * currency_table.rate, currency_table.precision))   AS debit,', 'SUM(ROUND(ROUND(account_move_line.debit/ROUND((1/currency_rate.rate),4),2) * currency_table.rate, currency_table.precision)) AS debit,')
@@ -106,12 +72,15 @@ class ReportGeneralLedger(models.AbstractModel):
     @api.model
     def _get_query_amls(self, report, options, expanded_account_ids, offset=0, limit=None):
         query, where_params = super()._get_query_amls(report, options, expanded_account_ids, offset, limit)
-        print('_get_query_amls-query: ', query)
+        if (self._context.get('allowed_company_ids')[0] == self.env.user.company_id.id):
+            company = self.env.user.company_id
+        else:
+            company = self.env['res.company'].browse(self._context.get('uid'))
         if 'curr' in self._context:
             cur = self.env['res.currency'].browse(self._context.get('curr'))
         else:
-            cur = self.env.user.company_id.currency_id
-        if (cur.id != self.env.company.currency_id.id):
+            cur = company.currency_id
+        if (cur.id != company.currency_id.id):
             if (query.find('FROM "account_move_line"') > 0):
                 query = query.replace('account_move_line.amount_currency,', 'ROUND(COALESCE((CASE WHEN account_move_line.currency_id=currency_rate.currency_id THEN ROUND(account_move_line.amount_currency * ROUND((1/currency_rate.rate),4), 2) ELSE account_move_line.amount_currency END) / (ROUND((1/currency_rate.rate),4)), 0.0), 2) AS amount_currency,')
                 query = query.replace('ROUND(account_move_line.debit * currency_table.rate, currency_table.precision)   AS debit,','ROUND(ROUND((account_move_line.debit / ROUND((1/currency_rate.rate),4)), 2) * currency_table.rate, currency_table.precision)   AS debit,')

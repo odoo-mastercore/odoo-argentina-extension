@@ -26,8 +26,12 @@ class ReportPartnerLedger(models.AbstractModel):
         super()._custom_options_initializer(report, options, previous_options=previous_options)
         if self.filter_currencys :
             currencies = [] #self.env['res.currency'].search([])
-            currencies.append(self.env.user.company_id.currency_id)
-            currencies.append(self.env.user.company_id.foreign_currency_id)
+            if (self._context.get('allowed_company_ids')[0] == self.env.user.company_id.id):
+                company = self.env.user.company_id
+            else:
+                company = self.env['res.company'].browse(self._context.get('uid'))
+            currencies.append(company.currency_id)
+            currencies.append(company.foreign_currency_id)
             options['currenciess'] = [{'id': c.id, 'name': c.name, 'selected': False} for c in currencies]
             if 'curr' in self._context:
                 for c in options['currenciess']:
@@ -35,17 +39,21 @@ class ReportPartnerLedger(models.AbstractModel):
                         c['selected'] = True
             else:
                 for c in options['currenciess']:
-                    if c['id'] == self.env.user.company_id.currency_id.id:
+                    if c['id'] == company.currency_id.id:
                         c['selected'] = True
 
     def _get_query_sums(self, options):
         #print('_get_query_sums===> ', self)
         query, params = super()._get_query_sums(options)
+        if (self._context.get('allowed_company_ids')[0] == self.env.user.company_id.id):
+            company = self.env.user.company_id
+        else:
+            company = self.env['res.company'].browse(self._context.get('uid'))
         if 'curr' in self._context:
             cur = self.env['res.currency'].browse(self._context.get('curr'))
         else:
-            cur = self.env.user.company_id.currency_id
-        if (cur.id != self.env.company.currency_id.id):
+            cur = company.currency_id
+        if (cur.id != company.currency_id.id):
             if (query.find('FROM "account_move_line" LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id")') > 0):
                 query = query.replace('SUM(ROUND(account_move_line.debit * currency_table.rate, currency_table.precision))   AS debit', 'SUM(ROUND(account_move_line.debit / ROUND((1/currency_rate.rate),4), 2)) AS debit')
                 query = query.replace('SUM(ROUND(account_move_line.credit * currency_table.rate, currency_table.precision))  AS credit', 'SUM(ROUND(account_move_line.credit / ROUND((1/currency_rate.rate),4), 2)) AS credit')
@@ -201,11 +209,15 @@ class ReportPartnerLedger(models.AbstractModel):
         #print('_get_aml_values-query: ', query)
         #print('_get_query_amls-all_params: ', all_params)
         #print('_get_aml_values-find: ', query.find('FROM "account_move_line" LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id")'))
+        if (self._context.get('allowed_company_ids')[0] == self.env.user.company_id.id):
+            company = self.env.user.company_id
+        else:
+            company = self.env['res.company'].browse(self._context.get('uid'))
         if 'curr' in self._context:
             cur = self.env['res.currency'].browse(self._context.get('curr'))
         else:
-            cur = self.env.user.company_id.currency_id
-        if (cur.id != self.env.company.currency_id.id):
+            cur = company.currency_id
+        if (cur.id != company.currency_id.id):
             if (query.find('FROM "account_move_line" LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id")') > 0):
                 query = query.replace('account_move_line.amount_currency,', 'ROUND(COALESCE((CASE WHEN account_move_line.currency_id=currency_rate.currency_id THEN ROUND(account_move_line.amount_currency * ROUND((1/currency_rate.rate),4), 2) ELSE account_move_line.amount_currency END) / (ROUND((1/currency_rate.rate),4)), 0.0), 2) AS amount_currency,')
                 query = query.replace('account_move.name                                                                AS move_name,', 'account_move.name         AS move_name, (select count(distinct am.id) FROM account_move_line aml LEFT JOIN account_move am ON (aml.move_id = am.id) where am.name = account_move.name ) AS count_move_name,')

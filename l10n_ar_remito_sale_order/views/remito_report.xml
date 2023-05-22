@@ -91,7 +91,7 @@
                         </table>
                         <div class="card">
                             <div class="card-body">
-                                <strong class="card-text">Transportista: </strong><t t-out="o.partner_id.name"/>
+                                <strong class="card-text">Transportista: </strong><t t-out="o.driver_id.name"/>
                                 <br/>
                                 <strong><t t-out="o.driver_id.l10n_latam_identification_type_id.name or o.company_id.country_id.vat_label" id="inv_tax_id_label"/>:</strong> <span t-out="o.driver_id.l10n_ar_formatted_vat or o.driver_id.vat"/>
                             </div>

@@ -30,7 +30,7 @@ class ReportGeneralLedger(models.AbstractModel):
             if (self._context.get('allowed_company_ids')[0] == self.env.user.company_id.id):
                 company = self.env.user.company_id
             else:
-                company = self.env['res.company'].browse(self._context.get('uid'))
+                company = self.env['res.company'].browse(self._context.get('allowed_company_ids')[0])
             currencies.append(company.currency_id)
             currencies.append(company.foreign_currency_id)
             options['currenciess'] = [{'id': c.id, 'name': c.name, 'selected': False} for c in currencies]
@@ -50,7 +50,7 @@ class ReportGeneralLedger(models.AbstractModel):
         if (self._context.get('allowed_company_ids')[0] == self.env.user.company_id.id):
             company = self.env.user.company_id
         else:
-            company = self.env['res.company'].browse(self._context.get('uid'))
+            company = self.env['res.company'].browse(self._context.get('allowed_company_ids')[0])
         if 'curr' in self._context:
             cur = self.env['res.currency'].browse(self._context.get('curr'))
         else:
@@ -75,7 +75,7 @@ class ReportGeneralLedger(models.AbstractModel):
         if (self._context.get('allowed_company_ids')[0] == self.env.user.company_id.id):
             company = self.env.user.company_id
         else:
-            company = self.env['res.company'].browse(self._context.get('uid'))
+            company = self.env['res.company'].browse(self._context.get('allowed_company_ids')[0])
         if 'curr' in self._context:
             cur = self.env['res.currency'].browse(self._context.get('curr'))
         else:

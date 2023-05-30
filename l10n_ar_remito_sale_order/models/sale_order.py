@@ -9,6 +9,7 @@
 
 from odoo import models, fields, api, _, Command
 from odoo.exceptions import ValidationError, UserError
+import re
 
 
 class saleOrder(models.Model):
@@ -20,11 +21,28 @@ class saleOrder(models.Model):
         copy=False,
         ondelete='restrict',
     )
-    remito_number = fields.Integer('Número de remito', default=False)
+    remito_number = fields.Char('Número de remito', default=False)
     driver_id = fields.Many2one('res.partner', 
                                 string='Transportista', 
                                 domain="[('is_driver','=', True)]")
 
+    l10n_ar_afip_barcode = fields.Char(compute='_compute_l10n_ar_afip_barcode', string='AFIP Barcode', store=True)
+
+    @api.depends('book_id')
+    def _compute_l10n_ar_afip_barcode(self):
+        for rec in self:
+            barcode = False
+            if rec.book_id.sequence_id.prefix and rec.book_id.l10n_ar_cai_due \
+                    and rec.book_id.l10n_ar_cai and not rec.book_id.lines_per_voucher:
+                cae_due = rec.book_id.l10n_ar_cai_due.strftime('%Y%m%d')
+                pos_number = int(re.sub('[^0-9]', '', rec.book_id.sequence_id.prefix))
+                barcode = ''.join([
+                    str(rec.company_id.partner_id.l10n_ar_vat),
+                    "%03d" % int(rec.book_id.document_type_id.code),
+                    "%05d" % pos_number,
+                    rec.book_id.l10n_ar_cai,
+                    cae_due])
+            rec.l10n_ar_afip_barcode = barcode
 
     def open_pickup(self):
         rec = super(saleOrder, self).open_pickup()

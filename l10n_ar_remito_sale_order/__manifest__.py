@@ -9,12 +9,13 @@
 {
     "name": "l10n ar remito sale order",
     "summary": "",
-    'version': "16.0.0.0.5",
+    'version': "16.0.0.0.6",
     'author': 'SINAPSYS GLOBAL SA || MASTERCORE SAS',
     'website': "http://sinapsys.global",
     'category': "sale",
     "license": "AGPL-3",
     "depends": [
+        "sale_management",
         "l10n_ar_stock"
     ],
     "data": [

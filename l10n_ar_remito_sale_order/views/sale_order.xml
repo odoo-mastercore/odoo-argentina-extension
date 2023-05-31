@@ -16,10 +16,10 @@
                         ('has_pickable_lines','=',True)]
                     }" type="object" class="oe_highlight"/>
             </xpath>
-            <xpath expr="//field[@name='picking_policy']" position="before">
-                <!-- <field name="remito_number" /> -->
-                <field name="book_id" />
+            <xpath expr="//field[@name='sale_order_template_id']" position="after">
+                <field name="book_id" string="Libro" />
                 <field name="driver_id" />
+                <field name="remito_number" readonly="1" string="Número" />
             </xpath>
         </field>
     </record>

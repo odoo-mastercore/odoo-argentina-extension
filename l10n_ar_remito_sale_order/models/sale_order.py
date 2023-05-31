@@ -56,7 +56,6 @@ class saleOrder(models.Model):
             raise ValidationError(_('No se ha seleccionado un libro'))
         if not self.driver_id:
             raise ValidationError(_('No se ha seleccionado un transportista'))
-        if not self.remito_number:
-            company = self.mapped('company_id')
-            self.remito_number = self.env['ir.sequence'].with_company(company).next_by_code('remito.sale.order')
+        if not self.remito_number or self.remito_number == '0':            
+            self.remito_number = self.book_id.sequence_id.next_by_id()
         return self.env.ref('l10n_ar_remito_sale_order.action_report_remito').report_action(self)

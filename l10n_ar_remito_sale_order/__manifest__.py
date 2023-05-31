@@ -9,7 +9,7 @@
 {
     "name": "l10n ar remito sale order",
     "summary": "",
-    'version': "16.0.0.0.7",
+    'version': "16.0.0.0.8",
     'author': 'SINAPSYS GLOBAL SA || MASTERCORE SAS',
     'website': "http://sinapsys.global",
     'category': "sale",

@@ -24,7 +24,7 @@
                                   <!-- IDENTIFICACION (ADQUIRIENTE-LOCATARIO-PRESTARIO) -->
               
                                   <!-- (14) Apellido uy Nombre: Denominicacion o Razon Soclial -->
-                                  <strong>Customer: </strong><span t-field="commercial_partner.name"/>
+                                  <strong>Cliente: </strong><span t-field="commercial_partner.name"/>
               
                                   <!-- (15) Domicilio Comercial -->
                                   <br/>
@@ -33,7 +33,7 @@
                                   <span t-out="partner" t-options="{&quot;widget&quot;: &quot;contact&quot;, &quot;fields&quot;: [&quot;address&quot;, &quot;phone&quot;, &quot;mobile&quot;], &quot;no_marker&quot;: False, &quot;no_tag_br&quot;: True}"/>
               
                                   <!-- (16) Responsabilidad AFIP -->
-                                  <strong>VAT Cond: </strong><span t-field="partner.l10n_ar_afip_responsibility_type_id"/>
+                                  <strong>Cond. IVA: </strong><span t-field="partner.l10n_ar_afip_responsibility_type_id"/>
               
                                   <!-- (17) CUIT -->
                                   <t t-if="partner.vat and partner.l10n_latam_identification_type_id.name and partner.l10n_latam_identification_type_id.name != 'Sigd'">

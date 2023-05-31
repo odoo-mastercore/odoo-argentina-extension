@@ -17,7 +17,7 @@ class saleOrder(models.Model):
 
     book_id = fields.Many2one(
         'stock.book',
-        'Voucher Book',
+        'Talonario de remito',
         copy=False,
         ondelete='restrict',
     )

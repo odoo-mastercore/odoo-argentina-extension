@@ -43,7 +43,6 @@ class ReportPartnerLedger(models.AbstractModel):
                         c['selected'] = True
 
     def _get_query_sums(self, options):
-        #print('_get_query_sums===> ', self)
         query, params = super()._get_query_sums(options)
         if (self._context.get('allowed_company_ids')[0] == self.env.user.company_id.id):
             company = self.env.user.company_id
@@ -53,22 +52,22 @@ class ReportPartnerLedger(models.AbstractModel):
             cur = self.env['res.currency'].browse(self._context.get('curr'))
         else:
             cur = company.currency_id
+        #_logger.info('apl-_get_query_sums-query_find(1): %s', query.find('FROM "account_move_line" LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id")'))
         if (cur.id != company.currency_id.id):
             if (query.find('FROM "account_move_line" LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id")') > 0):
-                query = query.replace('SUM(ROUND(account_move_line.debit * currency_table.rate, currency_table.precision))   AS debit', 'SUM(ROUND(account_move_line.debit / ROUND((1/currency_rate.rate),4), 2)) AS debit')
-                query = query.replace('SUM(ROUND(account_move_line.credit * currency_table.rate, currency_table.precision))  AS credit', 'SUM(ROUND(account_move_line.credit / ROUND((1/currency_rate.rate),4), 2)) AS credit')
-                query = query.replace('SUM(ROUND(account_move_line.balance * currency_table.rate, currency_table.precision)) AS balance', 'SUM(ROUND(account_move_line.balance / ROUND((1/currency_rate.rate),4), 2)) AS balance')
+                query = query.replace('SUM(ROUND(account_move_line.debit * currency_table.rate, currency_table.precision))   AS debit', '(CASE WHEN (SUM(ROUND(account_move_line.debit / ROUND((1/currency_rate.rate),4), 2)) > 0) THEN SUM(ROUND(account_move_line.debit / ROUND((1/currency_rate.rate),4), 2)) ELSE (0.0) END) AS debit')
+                query = query.replace('SUM(ROUND(account_move_line.credit * currency_table.rate, currency_table.precision))  AS credit', '(CASE WHEN (SUM(ROUND(account_move_line.credit / ROUND((1/currency_rate.rate),4), 2)) > 0) THEN SUM(ROUND(account_move_line.credit / ROUND((1/currency_rate.rate),4), 2)) ELSE (0.0) END) AS credit')
+                query = query.replace('SUM(ROUND(account_move_line.balance * currency_table.rate, currency_table.precision)) AS balance', '(CASE WHEN (SUM(ROUND(account_move_line.balance / ROUND((1/currency_rate.rate),4), 2)) > 0) THEN SUM(ROUND(account_move_line.balance / ROUND((1/currency_rate.rate),4), 2)) ELSE (0.0) END) AS balance')
                 query = query.replace('FROM "account_move_line" LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id")', 'FROM "account_move_line" INNER JOIN "res_company" as "company_rate" ON ("account_move_line"."company_id" = "company_rate"."id") LEFT JOIN "res_currency_rate" as "currency_rate" ON ("account_move_line"."date" = "currency_rate"."name" AND "company_rate"."foreign_currency_id" = "currency_rate"."currency_id" AND "company_rate"."id" = "currency_rate"."company_id") LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id") LEFT JOIN account_journal journal ON (journal.id = account_move_line.journal_id) ')
                 query = query.replace('GROUP BY account_move_line.partner_id', ' AND (journal.exclude_report is NULL or journal.exclude_report = False) GROUP BY account_move_line.partner_id')
-                print('apl-_get_query_sums-modif(query)===> ', query)
-                print('apl-_get_query_sums-modif(params)===> ', params)
+                #_logger.info('apl-_get_query_sums- cur !=')
         else:
-            #print('_get_query_sums-else===> ', self)
             if (query.find('FROM "account_move_line" LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id")') > 0):
                 query = query.replace('FROM "account_move_line" LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id")', 'FROM "account_move_line" INNER JOIN "res_company" as "company_rate" ON ("account_move_line"."company_id" = "company_rate"."id") LEFT JOIN "res_currency_rate" as "currency_rate" ON ("account_move_line"."date" = "currency_rate"."name" AND "company_rate"."foreign_currency_id" = "currency_rate"."currency_id" AND "company_rate"."id" = "currency_rate"."company_id") LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id") LEFT JOIN account_journal journal ON (journal.id = account_move_line.journal_id) ')
                 query = query.replace('GROUP BY account_move_line.partner_id', ' AND (journal.exclude_report is NULL or journal.exclude_report = False) GROUP BY account_move_line.partner_id')
-                print('apl-_get_query_sums-modif(query)===> ', query)
-                print('apl-_get_query_sums-modif(params)===> ', params)
+                #_logger.info('apl-_get_query_sums- cur ==')
+        #_logger.info('apl-_get_query_sums-query==>: %s', query)
+        #_logger.info('apl-_get_query_sums-params==>: %s', params)
         return query, params
 
     def _get_aml_values(self, options, partner_ids, offset=0, limit=None):
@@ -220,16 +219,18 @@ class ReportPartnerLedger(models.AbstractModel):
             cur = self.env['res.currency'].browse(self._context.get('curr'))
         else:
             cur = company.currency_id
+        #_logger.info('apl-_get_query_amls-query_find==>: %s', query.find('FROM "account_move_line" LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id")'))
         if (cur.id != company.currency_id.id):
             if (query.find('FROM "account_move_line" LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id")') > 0):
                 query = query.replace('account_move_line.amount_currency,', 'ROUND(COALESCE((CASE WHEN account_move_line.currency_id=currency_rate.currency_id THEN ROUND(account_move_line.amount_currency * ROUND((1/currency_rate.rate),4), 2) ELSE account_move_line.amount_currency END) / (ROUND((1/currency_rate.rate),4)), 0.0), 2) AS amount_currency,')
                 query = query.replace('account_move.name                                                                AS move_name,', 'account_move.name         AS move_name, (select count(distinct am.id) FROM account_move_line aml LEFT JOIN account_move am ON (aml.move_id = am.id) where am.name = account_move.name ) AS count_move_name,')
                 query = query.replace('account_move.name                                                                   AS move_name,', 'account_move.name         AS move_name, (select count(distinct am.id) FROM account_move_line aml LEFT JOIN account_move am ON (aml.move_id = am.id) where am.name = account_move.name ) AS count_move_name,')
-                query = query.replace('ROUND(account_move_line.debit * currency_table.rate, currency_table.precision)   AS debit,','ROUND(ROUND((account_move_line.debit / ROUND((1/currency_rate.rate),4)), 2) * currency_table.rate, currency_table.precision)   AS debit,')
-                query = query.replace('ROUND(account_move_line.credit * currency_table.rate, currency_table.precision)  AS credit,','ROUND(ROUND((account_move_line.credit / ROUND((1/currency_rate.rate),4)), 2) * currency_table.rate, currency_table.precision)  AS credit,')
-                query = query.replace('ROUND(account_move_line.balance * currency_table.rate, currency_table.precision) AS balance,','ROUND(ROUND((account_move_line.balance / ROUND((1/currency_rate.rate),4)), 2) * currency_table.rate, currency_table.precision) AS balance,')
+                query = query.replace('ROUND(account_move_line.debit * currency_table.rate, currency_table.precision)   AS debit,','(CASE WHEN (ROUND(ROUND((account_move_line.debit / ROUND((1/currency_rate.rate),4)), 2) * currency_table.rate, currency_table.precision) > 0) THEN ROUND(ROUND((account_move_line.debit / ROUND((1/currency_rate.rate),4)), 2) * currency_table.rate, currency_table.precision) ELSE (0.0) END)  AS debit,')
+                query = query.replace('ROUND(account_move_line.credit * currency_table.rate, currency_table.precision)  AS credit,','(CASE WHEN (ROUND(ROUND((account_move_line.credit / ROUND((1/currency_rate.rate),4)), 2) * currency_table.rate, currency_table.precision) > 0) THEN ROUND(ROUND((account_move_line.credit / ROUND((1/currency_rate.rate),4)), 2) * currency_table.rate, currency_table.precision) ELSE (0.0) END) AS credit,')
+                query = query.replace('ROUND(account_move_line.balance * currency_table.rate, currency_table.precision) AS balance,','(CASE WHEN (ROUND(ROUND((account_move_line.balance / ROUND((1/currency_rate.rate),4)), 2) * currency_table.rate, currency_table.precision) > 0) THEN ROUND(ROUND((account_move_line.balance / ROUND((1/currency_rate.rate),4)), 2) * currency_table.rate, currency_table.precision) ELSE (0.0) END)AS balance,')
                 query = query.replace('FROM "account_move_line" LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id")', 'FROM "account_move_line" INNER JOIN "res_company" as "company_rate" ON ("account_move_line"."company_id" = "company_rate"."id") LEFT JOIN "res_currency_rate" as "currency_rate" ON ("account_move_line"."date" = "currency_rate"."name" AND "company_rate"."foreign_currency_id" = "currency_rate"."currency_id" AND "company_rate"."id" = "currency_rate"."company_id") LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id")')
                 query = query.replace('ORDER BY account_move_line.date, account_move_line.id', ' AND (journal.exclude_report is NULL or journal.exclude_report = False) ORDER BY account_move_line.date, account_move_line.id')
+                _logger.info('apl-_get_query_amls-cur !=')
         else:
             if (query.find('FROM "account_move_line" LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id")') > 0):
                 query = query.replace('account_move_line.amount_currency,', 'ROUND(COALESCE((CASE WHEN account_move_line.currency_id=currency_rate.currency_id THEN ROUND(account_move_line.amount_currency * ROUND((1/currency_rate.rate),4), 2) ELSE account_move_line.amount_currency END), 0.0), 2) AS amount_currency,')
@@ -237,8 +238,18 @@ class ReportPartnerLedger(models.AbstractModel):
                 query = query.replace('account_move.name                                                                   AS move_name,', 'account_move.name         AS move_name, (select count(distinct am.id) FROM account_move_line aml LEFT JOIN account_move am ON (aml.move_id = am.id) where am.name = account_move.name ) AS count_move_name,')
                 query = query.replace('FROM "account_move_line" LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id")', 'FROM "account_move_line" INNER JOIN "res_company" as "company_rate" ON ("account_move_line"."company_id" = "company_rate"."id") LEFT JOIN "res_currency_rate" as "currency_rate" ON ("account_move_line"."date" = "currency_rate"."name" AND "company_rate"."foreign_currency_id" = "currency_rate"."currency_id" AND "company_rate"."id" = "currency_rate"."company_id") LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id")')
                 query = query.replace('ORDER BY account_move_line.date, account_move_line.id', ' AND (journal.exclude_report is NULL or journal.exclude_report = False) ORDER BY account_move_line.date, account_move_line.id')
-        print('apl-_get_query_amls-query: ', query)
-        print('apl-_get_query_amls-all_params: ', all_params)
+                _logger.info('apl-_get_query_amls-cur ==')
+        #_logger.info('apl-_get_query_amls-query==>: %s', query)
+        #_logger.info('apl-_get_query_amls-query.find(LIMIT)==>: %s', query.find('LIMIT'))
+        if (query.find('LIMIT') > 0):
+            query = query[0:query.find('LIMIT')]
+            all_params.remove(all_params[len(all_params) -1])
+        #_logger.info('apl-_get_query_amls-query[0:query.find(OFFSET)==>: %s', query.find('OFFSET'))
+        if (query.find('OFFSET') > 0):
+            query = query[0:query.find('OFFSET')]
+            all_params.remove(all_params[len(all_params) -1])
+        #_logger.info('apl-_get_query_amls-query==>: %s', query)
+        #_logger.info('apl-_get_query_amls-all_params==>: %s', all_params)
 
         self._cr.execute(query, all_params)
         for aml_result in self._cr.dictfetchall():
@@ -313,16 +324,12 @@ class ReportPartnerLedger(models.AbstractModel):
         gp_balance = 0
         gp_cumulated_init_balance = 0
         gp_cumulated_balance = 0
+        count_move_name = 0
         for result in aml_results:
-            #print('_report_expand_unfoldable_line_partner_ledger-result===> ', result)
             if not self._context.get('print_mode') and report.load_more_limit and treated_results_count == report.load_more_limit:
                 # We loaded one more than the limit on purpose: this way we know we need a "load more" line
                 has_more = True
                 break
-            #print('_report_expand_unfoldable_line_partner_ledger-options===> ', options)
-            #print('_report_expand_unfoldable_line_partner_ledger-line_dict_id===> ', line_dict_id)
-            #print('_report_expand_unfoldable_line_partner_ledger-next_progress===> ', next_progress)
-            #print('_report_expand_unfoldable_line_partner_ledger-level_shift===> ', level_shift)
             if (result['count_move_name'] == 1):
                 count_move_name = 0
                 gp_amount_currency = 0

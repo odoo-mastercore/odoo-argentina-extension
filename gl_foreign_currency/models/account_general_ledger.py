@@ -11,8 +11,8 @@ except ImportError:
     # TODO saas-17: remove the try/except to directly import from misc
     import xlsxwriter
 import io
-
-
+import logging
+_logger = logging.getLogger(__name__)
 
 class ReportGeneralLedger(models.AbstractModel):
     _inherit = "account.general.ledger.report.handler"
@@ -46,7 +46,6 @@ class ReportGeneralLedger(models.AbstractModel):
     @api.model
     def _get_query_sums(self, options_list, expanded_account=None):
         queries, params = super()._get_query_sums(options_list, expanded_account)
-        #print('_get_query_sums-queries: ', queries)
         if (self._context.get('allowed_company_ids')[0] == self.env.user.company_id.id):
             company = self.env.user.company_id
         else:
@@ -55,21 +54,22 @@ class ReportGeneralLedger(models.AbstractModel):
             cur = self.env['res.currency'].browse(self._context.get('curr'))
         else:
             cur = company.currency_id
+        #_logger.info('_get_query_sums-queries_find(1): %s', queries.find('FROM "account_move_line" LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id")'))
         if (cur.id != company.currency_id.id):
             if (queries.find('FROM "account_move_line" LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id")') > 0):
-                queries = queries.replace('COALESCE(SUM(account_move_line.amount_currency), 0.0)   AS amount_currency', 'ROUND(COALESCE(SUM((CASE WHEN account_move_line.currency_id=currency_rate.currency_id THEN ROUND(account_move_line.amount_currency * ROUND((1/currency_rate.rate),4), 2) ELSE account_move_line.amount_currency END) / (ROUND((1/currency_rate.rate),4))), 0.0), 2) AS amount_currency')
-                queries = queries.replace('SUM(ROUND(account_move_line.debit * currency_table.rate, currency_table.precision))   AS debit,', 'SUM(ROUND(ROUND(account_move_line.debit/ROUND((1/currency_rate.rate),4),2) * currency_table.rate, currency_table.precision)) AS debit,')
-                queries = queries.replace('SUM(ROUND(account_move_line.credit * currency_table.rate, currency_table.precision))  AS credit,', 'SUM(ROUND(ROUND(account_move_line.credit/ROUND((1/currency_rate.rate),4),2) * currency_table.rate, currency_table.precision)) AS credit,')
-                queries = queries.replace('SUM(ROUND(account_move_line.balance * currency_table.rate, currency_table.precision)) AS balance', 'SUM(ROUND(ROUND(account_move_line.balance/ROUND((1/currency_rate.rate),4),2) * currency_table.rate, currency_table.precision)) AS balance ')
+                queries = queries.replace('COALESCE(SUM(account_move_line.amount_currency), 0.0)   AS amount_currency,', 'ROUND(COALESCE(SUM((CASE WHEN account_move_line.currency_id=currency_rate.currency_id THEN ROUND(account_move_line.amount_currency * ROUND((1/currency_rate.rate),4), 2) ELSE account_move_line.amount_currency END) / (ROUND((1/currency_rate.rate),4))), 0.0), 2) AS amount_currency,')
+                queries = queries.replace('SUM(ROUND(account_move_line.debit * currency_table.rate, currency_table.precision))   AS debit,', '(CASE WHEN (SUM(ROUND(ROUND(account_move_line.debit/ROUND((1/currency_rate.rate),4),2) * currency_table.rate, currency_table.precision)) > 0) THEN SUM(ROUND(ROUND(account_move_line.debit/ROUND((1/currency_rate.rate),4),2) * currency_table.rate, currency_table.precision)) ELSE (0.0) END) AS debit,')
+                queries = queries.replace('SUM(ROUND(account_move_line.credit * currency_table.rate, currency_table.precision))  AS credit,', '(CASE WHEN (SUM(ROUND(ROUND(account_move_line.credit/ROUND((1/currency_rate.rate),4),2) * currency_table.rate, currency_table.precision)) > 0) THEN SUM(ROUND(ROUND(account_move_line.credit/ROUND((1/currency_rate.rate),4),2) * currency_table.rate, currency_table.precision)) ELSE (0.0) END) AS credit,')
+                queries = queries.replace('SUM(ROUND(account_move_line.balance * currency_table.rate, currency_table.precision)) AS balance', '(CASE WHEN (SUM(ROUND(ROUND(account_move_line.balance/ROUND((1/currency_rate.rate),4),2) * currency_table.rate, currency_table.precision)) > 0) THEN SUM(ROUND(ROUND(account_move_line.balance/ROUND((1/currency_rate.rate),4),2) * currency_table.rate, currency_table.precision)) ELSE (0.0) END) AS balance ')
                 queries = queries.replace('FROM "account_move_line" LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id")', 'FROM "account_move_line" INNER JOIN "res_company" as "company" ON ("account_move_line"."company_id" = "company"."id") LEFT JOIN "res_currency_rate" as "currency_rate" ON ("account_move_line"."date" = "currency_rate"."name" AND "company"."foreign_currency_id" = "currency_rate"."currency_id" AND "company"."id" = "currency_rate"."company_id") LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id")')
-                print('agl-_get_query_sums-modif(queries)===> ', queries)
-                print('agl-_get_query_sums-modif(params)===> ', params)
+                #_logger.info('agl-_get_query_sums-cur !=')
         else:
-            if (queries.find('FROM "account_move_line" LEFT JOIN "account_move" AS "account_move_line__move_id"') > 0):
+            if (queries.find('FROM "account_move_line" LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id")') > 0):
                 queries = queries.replace('COALESCE(SUM(account_move_line.amount_currency), 0.0)   AS amount_currency', 'ROUND(COALESCE(SUM((CASE WHEN account_move_line.currency_id=currency_rate.currency_id THEN ROUND(account_move_line.amount_currency * ROUND((1/currency_rate.rate),4), 2) ELSE account_move_line.amount_currency END)), 0.0), 2) AS amount_currency')
                 queries = queries.replace('FROM "account_move_line" LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id")', 'FROM "account_move_line" INNER JOIN "res_company" as "company" ON ("account_move_line"."company_id" = "company"."id") LEFT JOIN "res_currency_rate" as "currency_rate" ON ("account_move_line"."date" = "currency_rate"."name" AND "company"."foreign_currency_id" = "currency_rate"."currency_id" AND "company"."id" = "currency_rate"."company_id") LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id")')
-                print('agl-_get_query_sums-modif(queries)===> ', queries)
-                print('agl-_get_query_sums-modif(params)===> ', params)
+                #_logger.info('agl-_get_query_sums-cur ==')
+        #_logger.info('agl-_get_query_sums-modif(queries)===>: %s', queries)
+        #_logger.info('agl-_get_query_sums-modif(params)===>: %s', params)
         return queries, params
 
     @api.model
@@ -83,17 +83,18 @@ class ReportGeneralLedger(models.AbstractModel):
             cur = self.env['res.currency'].browse(self._context.get('curr'))
         else:
             cur = company.currency_id
+        #_logger.info('agl-_get_query_amls-query_find(1): %s', query.find('FROM "account_move_line"'))
         if (cur.id != company.currency_id.id):
             if (query.find('FROM "account_move_line"') > 0):
                 query = query.replace('account_move_line.amount_currency,', 'ROUND(COALESCE((CASE WHEN account_move_line.currency_id=currency_rate.currency_id THEN ROUND(account_move_line.amount_currency * ROUND((1/currency_rate.rate),4), 2) ELSE account_move_line.amount_currency END) / (ROUND((1/currency_rate.rate),4)), 0.0), 2) AS amount_currency,')
-                query = query.replace('ROUND(account_move_line.debit * currency_table.rate, currency_table.precision)   AS debit,','ROUND(ROUND((account_move_line.debit / ROUND((1/currency_rate.rate),4)), 2) * currency_table.rate, currency_table.precision)   AS debit,')
-                query = query.replace('ROUND(account_move_line.credit * currency_table.rate, currency_table.precision)  AS credit,','ROUND(ROUND((account_move_line.credit / ROUND((1/currency_rate.rate),4)), 2) * currency_table.rate, currency_table.precision)  AS credit,')
-                query = query.replace('ROUND(account_move_line.balance * currency_table.rate, currency_table.precision) AS balance,','ROUND(ROUND((account_move_line.balance / ROUND((1/currency_rate.rate),4)), 2) * currency_table.rate, currency_table.precision) AS balance,')
+                query = query.replace('ROUND(account_move_line.debit * currency_table.rate, currency_table.precision)   AS debit,','(CASE WHEN (ROUND(ROUND((account_move_line.debit / ROUND((1/currency_rate.rate),4)), 2) * currency_table.rate, currency_table.precision) > 0) THEN (ROUND(ROUND((account_move_line.debit / ROUND((1/currency_rate.rate),4)), 2) * currency_table.rate, currency_table.precision)) ELSE (0.0) END)   AS debit,')
+                query = query.replace('ROUND(account_move_line.credit * currency_table.rate, currency_table.precision)  AS credit,','(CASE WHEN (ROUND(ROUND((account_move_line.credit / ROUND((1/currency_rate.rate),4)), 2) * currency_table.rate, currency_table.precision) > 0) THEN (ROUND(ROUND((account_move_line.credit / ROUND((1/currency_rate.rate),4)), 2) * currency_table.rate, currency_table.precision)) ELSE (0.0) END)  AS credit,')
+                query = query.replace('ROUND(account_move_line.balance * currency_table.rate, currency_table.precision) AS balance,','(CASE WHEN (ROUND(ROUND((account_move_line.balance / ROUND((1/currency_rate.rate),4)), 2) * currency_table.rate, currency_table.precision) > 0) THEN (ROUND(ROUND((account_move_line.balance / ROUND((1/currency_rate.rate),4)), 2) * currency_table.rate, currency_table.precision)) ELSE (0.0) END) AS balance,')
                 query = query.replace('FROM "account_move_line"', 'FROM "account_move_line" INNER JOIN "res_company" as "company_rate" ON ("account_move_line"."company_id" = "company_rate"."id") LEFT JOIN "res_currency_rate" as "currency_rate" ON ("account_move_line"."date" = "currency_rate"."name" AND "company_rate"."foreign_currency_id" = "currency_rate"."currency_id" AND "company_rate"."id" = "currency_rate"."company_id") ')
         else:
             if (query.find('FROM "account_move_line"') > 0):
                 query = query.replace('account_move_line.amount_currency,', 'ROUND(COALESCE((CASE WHEN account_move_line.currency_id=currency_rate.currency_id THEN ROUND(account_move_line.amount_currency * ROUND((1/currency_rate.rate),4), 2) ELSE account_move_line.amount_currency END), 0.0), 2) AS amount_currency,')
                 query = query.replace('FROM "account_move_line"', 'FROM "account_move_line" INNER JOIN "res_company" as "company_rate" ON ("account_move_line"."company_id" = "company_rate"."id") LEFT JOIN "res_currency_rate" as "currency_rate" ON ("account_move_line"."date" = "currency_rate"."name" AND "company_rate"."foreign_currency_id" = "currency_rate"."currency_id" AND "company_rate"."id" = "currency_rate"."company_id") ')
-        print('agl-_get_query_sums-modif(query)===> ', query)
-        print('agl-_get_query_sums-modif(where_params)===> ', where_params)
+        #_logger.info('agl-_get_query_amls-modif(query)===>: %s', query)
+        #_logger.info('agl-_get_query_amls-modif(where_params)===>: %s', where_params)
         return query, where_params

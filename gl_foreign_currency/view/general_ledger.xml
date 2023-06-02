@@ -30,8 +30,8 @@
 			</t>
 		</template>
 
-		<template id="search_template_analytic_currency" inherit_id="account_reports.search_template_extra_options_journal_audit_report" primary="True">
-			<xpath expr="." position="inside">
+		<template id="search_template_analytic_currency" inherit_id="account_reports.search_template" primary="True">
+			<xpath expr="//div[@id='extra_options_dropdown']" position="after">
 				<div id="extra_currencys" class="btn-group dropdown o_account_reports_filter_bool">
 		            <span t-esc="options.get('currencys')"/>
 		            <t t-call="gl_foreign_currency.search_template_currency"/>

@@ -56,6 +56,21 @@ class saleOrder(models.Model):
             raise ValidationError(_('No se ha seleccionado un libro'))
         if not self.driver_id:
             raise ValidationError(_('No se ha seleccionado un transportista'))
-        if not self.remito_number or self.remito_number == '0':            
+        if not self.remito_number or self.remito_number == '0':
             self.remito_number = self.book_id.sequence_id.next_by_id()
         return self.env.ref('l10n_ar_remito_sale_order.action_report_remito').report_action(self)
+    
+    def open_remito_wizard(self):
+        return {
+            'name': 'Remito',
+            'view_mode': 'form',
+            'res_model': 'remito.wizard',
+            'type': 'ir.actions.act_window',
+            'views': [(False, 'form')],
+            'context':{
+                'default_sale_order_id': self.id,
+                'default_has_number': True if self.remito_number else False,
+                'default_book_id': self.book_id.id
+                       },
+            'target': 'new'
+    }

@@ -19,10 +19,12 @@
         "l10n_ar_stock"
     ],
     "data": [
+        'security/ir.model.access.csv',
         'data/ir_sequence_data.xml',
         'data/stock_book.xml',
+        'wizard/remito_wizard.xml',
         'views/sale_order.xml',
         'views/remito_report.xml',
-        'views/res_partner.xml'
+        'views/res_partner.xml',
     ],
 }

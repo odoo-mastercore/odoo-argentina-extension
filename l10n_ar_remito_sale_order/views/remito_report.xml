@@ -34,7 +34,9 @@
               
                                   <!-- (16) Responsabilidad AFIP -->
                                   <strong>Cond. IVA: </strong><span t-field="partner.l10n_ar_afip_responsibility_type_id"/>
-              
+                                  <br/>
+                                  <strong>Dirección de entrega: </strong><span t-field="o.partner_shipping_id.name"/>
+                                  <span t-out="o.partner_shipping_id" t-options="{&quot;widget&quot;: &quot;contact&quot;, &quot;fields&quot;: [&quot;address&quot;, &quot;phone&quot;, &quot;mobile&quot;], &quot;no_marker&quot;: False, &quot;no_tag_br&quot;: True}"/>
                                   <!-- (17) CUIT -->
                                   <t t-if="partner.vat and partner.l10n_latam_identification_type_id.name and partner.l10n_latam_identification_type_id.name != 'Sigd'">
                                       <br/><strong><t t-out="partner.l10n_latam_identification_type_id.name or o.company_id.country_id.vat_label" id="inv_tax_id_label"/>:</strong> <span t-out="partner.l10n_ar_formatted_vat or partner.vat"/>
@@ -123,6 +125,9 @@
                             </table>
                         </table>
                         <t t-set="custom_footer">
+                            <div class="text-center ">
+                                <p class="mb-0" style="font-size: 13px">Todo material adherido al equipo producido por pintura, poliuretano, cemento, cal, material abrasivo, u otros que requieran limpieza o generen daño, deterioro, faltante y/o rotura; Así como también lo producido por mal uso o descuido del usuario, será facturado al finalizar el alquiler del equipo.</p>
+                            </div>
                             <div class="row">
                                 <div name="footer_left_column" class="col-8 text-center">
                                     <img t-if="o.l10n_ar_afip_barcode" t-att-src="'/report/barcode/%s/%s?humanreadable=1' % ('I2of5', o.l10n_ar_afip_barcode)" alt="Barcode"  style="height:80px"/>

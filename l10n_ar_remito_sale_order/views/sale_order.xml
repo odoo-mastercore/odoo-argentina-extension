@@ -7,18 +7,20 @@
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
             <xpath expr="//header" position="inside">
-                <button string="Generar Remito" name="generate_remito" attrs="{'invisible':['|',
+                <button string="Generar Remito" attrs="{'invisible':['|',
                     ('state', 'not in', ['sale', 'done']),
                     '|',
                         ('has_returnable_lines','=',False),
                         '&amp;',
                         ('has_returnable_lines','=',True),
                         ('has_pickable_lines','=',True)]
-                    }" type="object" class="oe_highlight"/>
+                    }" type="object"
+                    name="open_remito_wizard"
+                    class="oe_highlight"/>
             </xpath>
             <xpath expr="//field[@name='sale_order_template_id']" position="after">
                 <field name="book_id"  />
-                <field name="driver_id" />
+                <field name="driver_id" options="{'no_create': True}" />
                 <field name="remito_number" readonly="1"  />
             </xpath>
         </field>

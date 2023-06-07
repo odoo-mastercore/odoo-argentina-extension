@@ -9,13 +9,14 @@
 {
     "name": "l10n ar remito sale order",
     "summary": "",
-    'version': "16.0.0.0.8",
+    'version': "16.0.0.0.9",
     'author': 'SINAPSYS GLOBAL SA || MASTERCORE SAS',
     'website': "http://sinapsys.global",
     'category': "sale",
     "license": "AGPL-3",
     "depends": [
         "sale_management",
+        "l10n_ar",
         "l10n_ar_stock"
     ],
     "data": [
@@ -23,8 +24,10 @@
         'data/ir_sequence_data.xml',
         'data/stock_book.xml',
         'wizard/remito_wizard.xml',
+        'wizard/remito_return_wizard.xml',
         'views/sale_order.xml',
         'views/remito_report.xml',
+        'views/remito_return_report.xml',
         'views/res_partner.xml',
     ],
 }

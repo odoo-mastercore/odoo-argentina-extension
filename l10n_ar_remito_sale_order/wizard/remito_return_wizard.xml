@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="remito_wizard_return_view_form" model="ir.ui.view">
+        <field name="name">remito.return.wizard.view.form</field>
+        <field name="model">remito.return.wizard</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <field name="has_number" invisible="1" />
+                    <div attrs="{'invisible': [('has_number','=',False)]}">
+                        <h3>El comprobante tiene número asignado</h3>
+                    </div>
+                    <group attrs="{'invisible': [('has_number','!=',False)]}">
+                        <field name="book_id" />
+                        <field name="next_voucher_number" />
+                    </group>
+                </sheet>
+                <footer>
+                    <button string="Imprimir" 
+                        name="print" type="object" 
+                        class="oe_highlight"
+                        attrs="{'invisible': [('has_number','=',False)]}" />
+                    <button string="Eliminar número" 
+                        name="clean" type="object" 
+                        class="oe_highlight"
+                        attrs="{'invisible': [('has_number','=',False)]}" />
+                    <button string="Asignar número e imprimir" 
+                        name="assign" type="object" 
+                        class="oe_highlight"
+                        attrs="{'invisible': [('has_number','!=',False)]}" />
+                    <button string="Cerrar" 
+                        special="cancel" type="object" 
+                        class="oe_highlight" />
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_remito_return_sale_order_wizard" model="ir.actions.act_window">
+        <field name="name">Remito</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">remito.return.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="remito_wizard_return_view_form" />
+        <field name="target">new</field>
+    </record>
+
+</odoo>

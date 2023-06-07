@@ -15,7 +15,7 @@
     'website': "http://sinapsys.global",
     'license': 'AGPL-3',
     'category': 'Accounting',
-    'depends': ['base','account','account_reports', 'l10n_latam_foreing_currency'],
+    'depends': ['base','account','account_reports', 'l10n_latam_foreing_currency', 'l10n_ar_ux'],
     'installable': True,
     'auto_install': False,
     'assets': {

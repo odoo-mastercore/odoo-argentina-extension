@@ -74,7 +74,7 @@
 							</t>
 						</t>
 		                <div class="alert alert-info text-center mb-0 no_print" t-if="currency_value == options.get('foreign_currency_id')">
-		                    <span>Lo que usted visualiza al cambiar a moneda secundaria es un</span><strong> INFORME FINANCIERO </strong><span>más no contable, para obtener información los flujos de dinero y su capital de trabajo en divisa.</span>
+		                    <span>Lo que usted visualiza al cambiar a moneda secundaria es un</span><strong> INFORME FINANCIERO </strong><span>más no contable, para obtener información los flujos de dinero y su capital de trabajo expresado en divisa.</span>
 		                </div>
 		            </div>
 		        </xpath>

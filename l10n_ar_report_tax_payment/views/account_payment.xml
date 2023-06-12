@@ -18,6 +18,22 @@
             </tree>
         </field>
     </record>
+
+    <record id="withholding_applied_view_tree_suffered" model="ir.ui.view">
+        <field name="name">withholding.applied.view.tree</field>
+        <field name="model">account.payment</field>
+        <field name="arch" type="xml">
+            <tree string="Retenciones sufridas" edit="false" create="false">
+                <field name="state" invisible="1"></field>
+                 <field name="date" /> 
+                <field name="partner_id"/>
+                <field name="tax_withholding_id" />
+                <field name="withholding_number" />
+                <field name="withholding_base_amount" />
+                <field name="amount" />
+            </tree>
+        </field>
+    </record>
     
     <record id="action_withholdings_applied" model="ir.actions.act_window">
         <field name="name">Retenciones aplicadas</field>
@@ -37,8 +53,8 @@
         <field name="view_mode">tree,form</field>
         <field name="domain">[('state', '=','posted'),('payment_type', '=','inbound'),('journal_id','=',28)]</field>
         <field name="view_ids"
-                   eval="[(5, 0, 0),(0, 0, {'view_mode': 'tree','view_id': ref('l10n_ar_report_tax_payment.withholding_applied_view_tree')})]"/>
-        <field name="view_id" ref="withholding_applied_view_tree"/>
+                   eval="[(5, 0, 0),(0, 0, {'view_mode': 'tree','view_id': ref('l10n_ar_report_tax_payment.withholding_applied_view_tree_suffered')})]"/>
+        <field name="view_id" ref="withholding_applied_view_tree_suffered"/>
     </record> 
 
     <menuitem

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="withholding_applied_view_tree" model="ir.ui.view">
+        <field name="name">withholding.applied.view.tree</field>
+        <field name="model">account.payment</field>
+        <field name="arch" type="xml">
+            <tree string="Retenciones aplicadas" edit="false" create="false">
+                <field name="state" invisible="1"></field>
+                 <field name="date" /> 
+                <field name="partner_id"/>
+                <field name="tax_withholding_id" />
+                <field name="withholding_number" />
+                <field name="withholdable_invoiced_amount" />
+                <field name="withholdable_base_amount" />
+                <field name="computed_withholding_amount" />
+                <field name="ref" />
+            </tree>
+        </field>
+    </record>
+    
+    <record id="action_withholdings_applied" model="ir.actions.act_window">
+        <field name="name">Retenciones aplicadas</field>
+        <field name="res_model">account.payment</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('state', '=','posted'),('payment_type', '=','outbound'),('journal_id','=',28)]</field>
+        <field name="view_ids"
+                   eval="[(5, 0, 0),(0, 0, {'view_mode': 'tree','view_id': ref('l10n_ar_report_tax_payment.withholding_applied_view_tree')})]"/>
+        <field name="view_id" ref="withholding_applied_view_tree"/>
+    </record> 
+
+    <record id="action_withholdings_suffered" model="ir.actions.act_window">
+        <field name="name">Retenciones sufridas</field>
+        <field name="res_model">account.payment</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('state', '=','posted'),('payment_type', '=','inbound'),('journal_id','=',28)]</field>
+        <field name="view_ids"
+                   eval="[(5, 0, 0),(0, 0, {'view_mode': 'tree','view_id': ref('l10n_ar_report_tax_payment.withholding_applied_view_tree')})]"/>
+        <field name="view_id" ref="withholding_applied_view_tree"/>
+    </record> 
+
+    <menuitem
+        id="menu_withholdings_applied"
+        name="Retenciones aplicadas"
+        action="action_withholdings_applied"
+        parent="account.menu_finance_payables"
+        sequence="30"/>
+
+    <menuitem
+        id="menu_withholdings_suffered"
+        name="Retenciones sufridas"
+        action="action_withholdings_suffered"
+        parent="account.menu_finance_receivables"
+        sequence="30"/>
+
+</odoo>

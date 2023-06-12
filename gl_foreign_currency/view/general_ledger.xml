@@ -68,11 +68,14 @@
 	        <field name="arch" type="xml">
 	            <xpath expr="//div[@id='warnings_div']" position="inside">
 					<div id="warnings_gl_cur">
-						<t t-foreach="options['currenciess']" t-as="c">
-							<t t-if="c.get('selected') == True">
-								<t t-set="currency_value" t-value="c.get('id')"/>
-							</t>
-						</t>
+                        <t t-set="currency_value" t-value="0"/>
+                        <t t-if="'currenciess' in options">
+                            <t t-foreach="options['currenciess']" t-as="c">
+    							<t t-if="c.get('selected') == True">
+    								<t t-set="currency_value" t-value="c.get('id')"/>
+    							</t>
+        					</t>
+                        </t>
 		                <div class="alert alert-info text-center mb-0 no_print" t-if="currency_value == options.get('foreign_currency_id')">
 		                    <span>Lo que usted visualiza al cambiar a moneda secundaria es un</span><strong> INFORME FINANCIERO </strong><span>más no contable, para obtener información los flujos de dinero y su capital de trabajo expresado en divisa.</span>
 		                </div>

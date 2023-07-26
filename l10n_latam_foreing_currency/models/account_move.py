@@ -74,7 +74,7 @@ class AccountMoveLine(models.Model):
                 elif rec.move_id.move_type in ['out_refund','in_invoice'] and not rec.move_id.debit_origin_id:
                     _logger.warning('NotaC')
                     if rec.currency_id == rec.company_foreign_currency_id:
-                        rec.price_subtotal_foreign = rec.price_subtotal
+                        rec.price_subtotal_foreign = -1 * rec.price_subtotal
                     else:
                         rec.price_subtotal_foreign = -1 * (rec.currency_id._convert(
                             rec.price_subtotal, rec.company_foreign_currency_id,

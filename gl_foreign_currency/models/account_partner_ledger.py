@@ -56,9 +56,9 @@ class ReportPartnerLedger(models.AbstractModel):
         #_logger.info('apl-_get_query_sums-query_find(1): %s', query.find('FROM "account_move_line" LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id")'))
         if (cur.id != company.currency_id.id):
             if (query.find('FROM "account_move_line" LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id")') > 0):
-                query = query.replace('SUM(ROUND(account_move_line.debit * currency_table.rate, currency_table.precision))   AS debit', '(CASE WHEN (LENGTH(CAST(SUM(ROUND(account_move_line.debit / ROUND((1/currency_rate.rate),4), 6)) AS TEXT)) > 0) THEN SUM(CASE WHEN (account_move_line.aux_inverse_currency_rate IS NOT NULL AND account_move_line.aux_inverse_currency_rate > 1) THEN (ROUND(account_move_line.debit / account_move_line.aux_inverse_currency_rate::numeric, 6)) WHEN (account_move.l10n_ar_currency_rate IS NOT NULL and account_move.l10n_ar_currency_rate > 1) THEN (ROUND(account_move_line.debit / account_move.l10n_ar_currency_rate, 6)) ELSE (ROUND(account_move_line.debit / ROUND((1/currency_rate.rate),4), 6)) END) ELSE (0.0) END) AS debit')
-                query = query.replace('SUM(ROUND(account_move_line.credit * currency_table.rate, currency_table.precision))  AS credit', '(CASE WHEN (LENGTH(CAST(SUM(ROUND(account_move_line.credit / ROUND((1/currency_rate.rate),4), 6)) AS TEXT)) > 0) THEN SUM(CASE WHEN (account_move_line.aux_inverse_currency_rate IS NOT NULL AND account_move_line.aux_inverse_currency_rate > 1) THEN (ROUND(account_move_line.credit / account_move_line.aux_inverse_currency_rate::numeric, 6)) WHEN (account_move.l10n_ar_currency_rate IS NOT NULL and account_move.l10n_ar_currency_rate > 1) THEN (ROUND(account_move_line.credit / account_move.l10n_ar_currency_rate, 6)) ELSE (ROUND(account_move_line.credit / ROUND((1/currency_rate.rate),4), 6)) END) ELSE (0.0) END) AS credit')
-                query = query.replace('SUM(ROUND(account_move_line.balance * currency_table.rate, currency_table.precision)) AS balance', '(CASE WHEN (LENGTH(CAST(SUM(ROUND(account_move_line.balance / ROUND((1/currency_rate.rate),4), 6)) AS TEXT)) > 0) THEN SUM(CASE WHEN (account_move_line.aux_inverse_currency_rate IS NOT NULL AND account_move_line.aux_inverse_currency_rate > 1) THEN (ROUND(account_move_line.balance / account_move_line.aux_inverse_currency_rate::numeric, 6)) WHEN (account_move.l10n_ar_currency_rate IS NOT NULL and account_move.l10n_ar_currency_rate > 1) THEN (ROUND(account_move_line.balance / account_move.l10n_ar_currency_rate, 6)) ELSE (ROUND(account_move_line.balance / ROUND((1/currency_rate.rate),4), 6)) END) ELSE (0.0) END) AS balance')
+                query = query.replace('SUM(ROUND(account_move_line.debit * currency_table.rate, currency_table.precision))   AS debit', '(CASE WHEN (LENGTH(CAST(SUM(ROUND(account_move_line.debit / ROUND((1/currency_table.rate),4), 6)) AS TEXT)) > 0) THEN SUM(CASE WHEN (account_move_line.aux_inverse_currency_rate IS NOT NULL AND account_move_line.aux_inverse_currency_rate > 1) THEN (ROUND(account_move_line.debit / account_move_line.aux_inverse_currency_rate::numeric, 6)) WHEN (account_move.l10n_ar_currency_rate IS NOT NULL and account_move.l10n_ar_currency_rate > 1) THEN (ROUND(account_move_line.debit / account_move.l10n_ar_currency_rate, 6)) ELSE (ROUND(account_move_line.debit / ROUND((1/currency_rate.rate),4), 6)) END) ELSE (0.0) END) AS debit')
+                query = query.replace('SUM(ROUND(account_move_line.credit * currency_table.rate, currency_table.precision))  AS credit', '(CASE WHEN (LENGTH(CAST(SUM(ROUND(account_move_line.credit / ROUND((1/currency_table.rate),4), 6)) AS TEXT)) > 0) THEN SUM(CASE WHEN (account_move_line.aux_inverse_currency_rate IS NOT NULL AND account_move_line.aux_inverse_currency_rate > 1) THEN (ROUND(account_move_line.credit / account_move_line.aux_inverse_currency_rate::numeric, 6)) WHEN (account_move.l10n_ar_currency_rate IS NOT NULL and account_move.l10n_ar_currency_rate > 1) THEN (ROUND(account_move_line.credit / account_move.l10n_ar_currency_rate, 6)) ELSE (ROUND(account_move_line.credit / ROUND((1/currency_rate.rate),4), 6)) END) ELSE (0.0) END) AS credit')
+                query = query.replace('SUM(ROUND(account_move_line.balance * currency_table.rate, currency_table.precision)) AS balance', '(CASE WHEN (LENGTH(CAST(SUM(ROUND(account_move_line.balance / ROUND((1/currency_table.rate),4), 6)) AS TEXT)) > 0) THEN SUM(CASE WHEN (account_move_line.aux_inverse_currency_rate IS NOT NULL AND account_move_line.aux_inverse_currency_rate > 1) THEN (ROUND(account_move_line.balance / account_move_line.aux_inverse_currency_rate::numeric, 6)) WHEN (account_move.l10n_ar_currency_rate IS NOT NULL and account_move.l10n_ar_currency_rate > 1) THEN (ROUND(account_move_line.balance / account_move.l10n_ar_currency_rate, 6)) ELSE (ROUND(account_move_line.balance / ROUND((1/currency_rate.rate),4), 6)) END) ELSE (0.0) END) AS balance')
                 query = query.replace('FROM "account_move_line" LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id")', 'FROM "account_move_line" INNER JOIN "account_move" ON ("account_move"."id" = "account_move_line"."move_id") INNER JOIN "res_company" as "company_rate" ON ("account_move_line"."company_id" = "company_rate"."id") LEFT JOIN "res_currency_rate" as "currency_rate" ON ("account_move_line"."date" = "currency_rate"."name" AND "company_rate"."foreign_currency_id" = "currency_rate"."currency_id" AND "company_rate"."id" = "currency_rate"."company_id") LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id") LEFT JOIN account_journal journal ON (journal.id = account_move_line.journal_id) ')
                 query = query.replace('GROUP BY account_move_line.partner_id', ' AND (journal.exclude_report is NULL or journal.exclude_report = False) GROUP BY account_move_line.partner_id')
                 #_logger.info('apl-_get_query_sums- cur !=')
@@ -227,16 +227,16 @@ class ReportPartnerLedger(models.AbstractModel):
                 query = query.replace('account_move_line.amount_currency,', 'ROUND(COALESCE((CASE WHEN account_move_line.currency_id=currency_rate.currency_id THEN (CASE WHEN (account_move_line.aux_inverse_currency_rate IS NOT NULL and account_move_line.aux_inverse_currency_rate > 1) THEN (ROUND(account_move_line.amount_currency * account_move_line.aux_inverse_currency_rate::numeric, 6)) WHEN (account_move.l10n_ar_currency_rate IS NOT NULL and account_move.l10n_ar_currency_rate > 1) THEN (ROUND(account_move_line.amount_currency * account_move.l10n_ar_currency_rate, 6)) ELSE (ROUND(account_move_line.amount_currency * ROUND((1/currency_rate.rate),4), 6)) END) ELSE account_move_line.amount_currency END) / (CASE WHEN (account_move_line.aux_inverse_currency_rate IS NOT NULL and account_move_line.aux_inverse_currency_rate > 1) THEN (account_move_line.aux_inverse_currency_rate::numeric) WHEN (account_move.l10n_ar_currency_rate IS NOT NULL and account_move.l10n_ar_currency_rate > 1) THEN (account_move.l10n_ar_currency_rate) ELSE (ROUND((1/currency_rate.rate),4)) END), 0.0), 6) AS amount_currency,')
                 query = query.replace('account_move.name                                                                AS move_name,', 'account_move.name         AS move_name, (select count(distinct am.id) FROM account_move_line aml LEFT JOIN account_move am ON (aml.move_id = am.id) where am.name = account_move.name AND aml.partner_id = "account_move_line"."partner_id") AS count_move_name,')
                 query = query.replace('account_move.name                                                                   AS move_name,', 'account_move.name         AS move_name, (select count(distinct am.id) FROM account_move_line aml LEFT JOIN account_move am ON (aml.move_id = am.id) where am.name = account_move.name AND aml.partner_id = "account_move_line"."partner_id") AS count_move_name,')
-                query = query.replace('ROUND(account_move_line.debit * currency_table.rate, currency_table.precision)   AS debit,','(CASE WHEN (LENGTH(CAST(ROUND(ROUND((account_move_line.debit / ROUND((1/currency_rate.rate),4)), 6) * currency_table.rate, currency_table.precision) AS TEXT)) > 0) THEN (CASE WHEN (account_move_line.aux_inverse_currency_rate IS NOT NULL and account_move_line.aux_inverse_currency_rate > 1) THEN (ROUND(ROUND((account_move_line.debit / account_move_line.aux_inverse_currency_rate::numeric), 6) * currency_table.rate, currency_table.precision)) WHEN (account_move.l10n_ar_currency_rate IS NOT NULL and account_move.l10n_ar_currency_rate > 1) THEN (ROUND(ROUND((account_move_line.debit / account_move.l10n_ar_currency_rate), 6) * currency_table.rate, currency_table.precision)) ELSE (ROUND(ROUND((account_move_line.debit / ROUND((1/currency_rate.rate),4)), 6) * currency_table.rate, currency_table.precision)) END) ELSE (0.0) END) AS debit,')
-                query = query.replace('ROUND(account_move_line.credit * currency_table.rate, currency_table.precision)  AS credit,','(CASE WHEN (LENGTH(CAST(ROUND(ROUND((account_move_line.credit / ROUND((1/currency_rate.rate),4)), 6) * currency_table.rate, currency_table.precision) AS TEXT)) > 0) THEN (CASE WHEN (account_move_line.aux_inverse_currency_rate IS NOT NULL and account_move_line.aux_inverse_currency_rate > 1) THEN (ROUND(ROUND((account_move_line.credit / account_move_line.aux_inverse_currency_rate::numeric), 6) * currency_table.rate, currency_table.precision)) WHEN (account_move.l10n_ar_currency_rate IS NOT NULL and account_move.l10n_ar_currency_rate > 1) THEN (ROUND(ROUND((account_move_line.credit / account_move.l10n_ar_currency_rate), 6) * currency_table.rate, currency_table.precision)) ELSE (ROUND(ROUND((account_move_line.credit / ROUND((1/currency_rate.rate),4)), 6) * currency_table.rate, currency_table.precision)) END) ELSE (0.0) END) AS credit,')
-                query = query.replace('ROUND(account_move_line.balance * currency_table.rate, currency_table.precision) AS balance,','(CASE WHEN (LENGTH(CAST(ROUND(ROUND((account_move_line.balance / ROUND((1/currency_rate.rate),4)), 6) * currency_table.rate, currency_table.precision) AS TEXT)) > 0) THEN (CASE WHEN (account_move_line.aux_inverse_currency_rate IS NOT NULL and account_move_line.aux_inverse_currency_rate > 1) THEN (ROUND(ROUND((account_move_line.balance / account_move_line.aux_inverse_currency_rate::numeric), 6) * currency_table.rate, currency_table.precision)) WHEN (account_move.l10n_ar_currency_rate IS NOT NULL and account_move.l10n_ar_currency_rate > 1) THEN (ROUND(ROUND((account_move_line.balance / account_move.l10n_ar_currency_rate), 6) * currency_table.rate, currency_table.precision)) ELSE (ROUND(ROUND((account_move_line.balance / ROUND((1/currency_rate.rate),4)), 6) * currency_table.rate, currency_table.precision)) END) ELSE (0.0) END) AS balance,')
+                query = query.replace('ROUND(account_move_line.debit * currency_table.rate, currency_table.precision)   AS debit,','(CASE WHEN (account_move_line.debit > 0) THEN (CASE WHEN (account_move_line.aux_inverse_currency_rate IS NOT NULL and account_move_line.aux_inverse_currency_rate > 1) THEN (ROUND(ROUND((account_move_line.debit / account_move_line.aux_inverse_currency_rate::numeric), 6) * currency_table.rate, currency_table.precision)) WHEN (account_move.l10n_ar_currency_rate IS NOT NULL and account_move.l10n_ar_currency_rate > 1) THEN (ROUND(ROUND((account_move_line.debit / account_move.l10n_ar_currency_rate), 6) * currency_table.rate, currency_table.precision)) WHEN (currency_rate.rate > 0) THEN (ROUND(ROUND((account_move_line.debit / ROUND((1/currency_rate.rate),4)), 6) * currency_table.rate, currency_table.precision)) ELSE (0.0) END) ELSE (0.0) END) AS debit,')
+                query = query.replace('ROUND(account_move_line.credit * currency_table.rate, currency_table.precision)  AS credit,','(CASE WHEN (account_move_line.credit > 0) THEN (CASE WHEN (account_move_line.aux_inverse_currency_rate IS NOT NULL and account_move_line.aux_inverse_currency_rate > 1) THEN (ROUND(ROUND((account_move_line.credit / account_move_line.aux_inverse_currency_rate::numeric), 6) * currency_table.rate, currency_table.precision)) WHEN (account_move.l10n_ar_currency_rate IS NOT NULL and account_move.l10n_ar_currency_rate > 1) THEN (ROUND(ROUND((account_move_line.credit / account_move.l10n_ar_currency_rate), 6) * currency_table.rate, currency_table.precision)) WHEN (currency_rate.rate > 0) THEN (ROUND(ROUND((account_move_line.credit / ROUND((1/currency_rate.rate),4)), 6) * currency_table.rate, currency_table.precision)) ELSE (0.0) END) ELSE (0.0) END) AS credit,')
+                query = query.replace('ROUND(account_move_line.balance * currency_table.rate, currency_table.precision) AS balance,','(CASE WHEN (account_move_line.balance > 0) THEN (CASE WHEN (account_move_line.aux_inverse_currency_rate IS NOT NULL and account_move_line.aux_inverse_currency_rate > 1) THEN (ROUND(ROUND((account_move_line.balance / account_move_line.aux_inverse_currency_rate::numeric), 6) * currency_table.rate, currency_table.precision)) WHEN (account_move.l10n_ar_currency_rate IS NOT NULL and account_move.l10n_ar_currency_rate > 1) THEN (ROUND(ROUND((account_move_line.balance / account_move.l10n_ar_currency_rate), 6) * currency_table.rate, currency_table.precision)) WHEN (currency_rate.rate > 0) THEN (ROUND(ROUND((account_move_line.balance / ROUND((1/currency_rate.rate),4)), 6) * currency_table.rate, currency_table.precision)) ELSE (0.0) END) ELSE (0.0) END) AS balance,')
                 query = query.replace('FROM "account_move_line" LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id")', 'FROM "account_move_line" INNER JOIN "res_currency" ON ("account_move_line"."currency_id" = "res_currency"."id") INNER JOIN "res_company" as "company_rate" ON ("account_move_line"."company_id" = "company_rate"."id") LEFT JOIN "res_currency_rate" as "currency_rate" ON ("account_move_line"."date" = "currency_rate"."name" AND "company_rate"."foreign_currency_id" = "currency_rate"."currency_id" AND "company_rate"."id" = "currency_rate"."company_id") LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id")')
                 query = query.replace('ORDER BY account_move_line.date, account_move_line.id', ' AND (journal.exclude_report is NULL or journal.exclude_report = False) ORDER BY account_move_line.date, account_move_line.id')
                 #_logger.info('apl-_get_query_amls-cur !=')
         else:
             if (query.find('FROM "account_move_line" LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id")') > 0):
                 query = query.replace('account_move_line.currency_id,', "account_move_line.currency_id, res_currency.name AS aml_currency_name,")
-                query = query.replace('account_move_line.amount_currency,', "ROUND(COALESCE((CASE WHEN account_move_line.currency_id=currency_rate.currency_id THEN (CASE WHEN (move_type = 'in_invoice' or move_type = 'out_invoice') THEN (account_move_line.balance) ELSE (CASE WHEN (account_move.l10n_ar_currency_rate IS NOT NULL and account_move.l10n_ar_currency_rate > 1) THEN (ROUND(account_move_line.amount_currency * account_move.l10n_ar_currency_rate, 6)) ELSE (ROUND(account_move_line.amount_currency * ROUND((1/currency_rate.rate),4), 6)) END) END) ELSE account_move_line.amount_currency END), 0.0), 6) AS amount_currency,")
+                query = query.replace('account_move_line.amount_currency,', "ROUND(COALESCE((CASE WHEN account_move_line.currency_id=currency_rate.currency_id THEN (CASE WHEN (move_type = 'in_invoice' or move_type = 'out_invoice') THEN (account_move_line.balance) ELSE (CASE WHEN (account_move_line.aux_inverse_currency_rate IS NOT NULL and account_move_line.aux_inverse_currency_rate > 1) THEN (ROUND(account_move_line.amount_currency * account_move_line.aux_inverse_currency_rate::numeric, 6)) WHEN (account_move.l10n_ar_currency_rate IS NOT NULL and account_move.l10n_ar_currency_rate > 1) THEN (ROUND(account_move_line.amount_currency * account_move.l10n_ar_currency_rate, 6)) ELSE (ROUND(account_move_line.amount_currency * ROUND((1/currency_rate.rate),4), 6)) END) END) ELSE account_move_line.amount_currency END), 0.0), 6) AS amount_currency,")
                 query = query.replace('account_move.name                                                                AS move_name,', 'account_move.name         AS move_name, (select count(distinct am.id) FROM account_move_line aml LEFT JOIN account_move am ON (aml.move_id = am.id) where am.name = account_move.name  AND aml.partner_id = "account_move_line"."partner_id") AS count_move_name,')
                 query = query.replace('account_move.name                                                                   AS move_name,', 'account_move.name         AS move_name, (select count(distinct am.id) FROM account_move_line aml LEFT JOIN account_move am ON (aml.move_id = am.id) where am.name = account_move.name AND aml.partner_id = "account_move_line"."partner_id") AS count_move_name,')
                 query = query.replace('FROM "account_move_line" LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id")', 'FROM "account_move_line" INNER JOIN "res_currency" ON ("account_move_line"."currency_id" = "res_currency"."id") INNER JOIN "res_company" as "company_rate" ON ("account_move_line"."company_id" = "company_rate"."id") LEFT JOIN "res_currency_rate" as "currency_rate" ON ("account_move_line"."date" = "currency_rate"."name" AND "company_rate"."foreign_currency_id" = "currency_rate"."currency_id" AND "company_rate"."id" = "currency_rate"."company_id") LEFT JOIN "account_account" AS "account_move_line__account_id" ON ("account_move_line"."account_id" = "account_move_line__account_id"."id")')
@@ -256,6 +256,7 @@ class ReportPartnerLedger(models.AbstractModel):
 
         self._cr.execute(query, all_params)
         for aml_result in self._cr.dictfetchall():
+            _logger.info('apl-_get_query_amls-aml_result: %s', aml_result)
             if aml_result['key'] == 'indirectly_linked_aml':
 
                 # Append the line to the partner found through the reconciliation.
@@ -431,3 +432,69 @@ class ReportPartnerLedger(models.AbstractModel):
             'caret_options': caret_type,
             'level': 2 + level_shift,
         }
+
+    def _query_partners(self, options):
+        def assign_sum(row):
+            fields_to_assign = ['balance', 'debit', 'credit']
+            for field in fields_to_assign:
+                #_logger.info('apl-assign_sum-field==>: %s', field)
+                #_logger.info('apl-assign_sum-row[field]==>: %s', row[field])
+                if row[field] is None:
+                    row[field] = 0.0
+                    #_logger.info('apl-assign_sum-row[field]-force==>: %s', row[field])
+            if any(not company_currency.is_zero(row[field]) for field in fields_to_assign):
+                groupby_partners.setdefault(row['groupby'], defaultdict(lambda: defaultdict(float)))
+                for field in fields_to_assign:
+                    groupby_partners[row['groupby']][row['column_group_key']][field] += row[field]
+
+        company_currency = self.env.company.currency_id
+
+        # Execute the queries and dispatch the results.
+        query, params = self._get_query_sums(options)
+
+        groupby_partners = {}
+
+        self._cr.execute(query, params)
+        for res in self._cr.dictfetchall():
+            assign_sum(res)
+
+        # Correct the sums per partner, for the lines without partner reconciled with a line having a partner
+        query, params = self._get_sums_without_partner(options)
+
+        self._cr.execute(query, params)
+        totals = {}
+        for total_field in ['debit', 'credit', 'balance']:
+            totals[total_field] = {col_group_key: 0 for col_group_key in options['column_groups']}
+
+        for row in self._cr.dictfetchall():
+            totals['debit'][row['column_group_key']] += row['debit']
+            totals['credit'][row['column_group_key']] += row['credit']
+            totals['balance'][row['column_group_key']] += row['balance']
+
+            if row['groupby'] not in groupby_partners:
+                continue
+
+            assign_sum(row)
+
+        if None in groupby_partners:
+            # Debit/credit are inverted for the unknown partner as the computation is made regarding the balance of the known partner
+            for column_group_key in options['column_groups']:
+                groupby_partners[None][column_group_key]['debit'] += totals['credit'][column_group_key]
+                groupby_partners[None][column_group_key]['credit'] += totals['debit'][column_group_key]
+                groupby_partners[None][column_group_key]['balance'] -= totals['balance'][column_group_key]
+
+        # Retrieve the partners to browse.
+        # groupby_partners.keys() contains all account ids affected by:
+        # - the amls in the current period.
+        # - the amls affecting the initial balance.
+        if groupby_partners:
+            # Note a search is done instead of a browse to preserve the table ordering.
+            partners = self.env['res.partner'].with_context(active_test=False).search([('id', 'in', list(groupby_partners.keys()))])
+        else:
+            partners = []
+
+        # Add 'Partner Unknown' if needed
+        if None in groupby_partners.keys():
+            partners = [p for p in partners] + [None]
+
+        return [(partner, groupby_partners[partner.id if partner else None]) for partner in partners]

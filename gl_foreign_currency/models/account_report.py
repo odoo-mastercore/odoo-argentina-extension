@@ -27,10 +27,14 @@ class AccountReport(models.AbstractModel):
             return ''
 
         if figure_type == 'monetary':
+            if (self._context.get('allowed_company_ids')[0] == self.env.user.company_id.id):
+                company = self.env.user.company_id
+            else:
+                company = self.env['res.company'].browse(self._context.get('allowed_company_ids')[0])
             if 'curr' in self._context:
                 cur = self.env['res.currency'].browse(self._context.get('curr'))
             else:
-                cur = self.env.user.company_id.currency_id
+                cur = company.currency_id
             currency = cur
             digits = None
         elif figure_type == 'integer':

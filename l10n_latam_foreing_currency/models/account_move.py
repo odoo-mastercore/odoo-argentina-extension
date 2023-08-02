@@ -26,26 +26,72 @@ class AccountMove(models.Model):
     def _compute_foreigns(self):
         for rec in self:
             if rec.move_type in ['out_invoice','out_refund','in_invoice','in_refund'] and not rec.debit_origin_id:
-                _logger.warning('Factura')
                 if rec.currency_id == rec.company_foreign_currency_id:
-                    rec.amount_total_foreign = rec.amount_total
-                    rec.amount_residual_foreign = rec.amount_residual
-                    rec.amount_untaxed_foreign = rec.amount_untaxed
+                    if rec.move_type in ['out_invoice', 'in_refund']:
+                        rec.amount_total_foreign = rec.amount_total
+                        rec.amount_residual_foreign = rec.amount_residual
+                        rec.amount_untaxed_foreign = rec.amount_untaxed
+                    else:
+                        rec.amount_total_foreign = -1 * rec.amount_total
+                        rec.amount_residual_foreign = -1 * rec.amount_residual
+                        rec.amount_untaxed_foreign = -1 * rec.amount_untaxed
                 else:
-                    rec.amount_total_foreign = rec.currency_id._convert(
-                        rec.amount_total, rec.company_foreign_currency_id,
-                        rec.company_id, rec.date)
-                    rec.amount_residual_foreign = rec.currency_id._convert(
-                        rec.amount_residual, rec.company_foreign_currency_id,
-                        rec.company_id, rec.date)
-                    rec.amount_untaxed_foreign = rec.currency_id._convert(
-                        rec.amount_untaxed, rec.company_foreign_currency_id,
-                        rec.company_id, rec.date)
-            else:
-                _logger.warning('nota de debito')
-                rec.amount_total_foreign = 0
-                rec.amount_residual_foreign = 0
-                rec.amount_untaxed_foreign = 0
+                    if rec.move_type in ['out_invoice', 'in_refund']:
+                        rec.amount_total_foreign = rec.currency_id._convert(
+                            rec.amount_total, rec.company_foreign_currency_id,
+                            rec.company_id, rec.date)
+                        rec.amount_residual_foreign = rec.currency_id._convert(
+                            rec.amount_residual, rec.company_foreign_currency_id,
+                            rec.company_id, rec.date)
+                        rec.amount_untaxed_foreign = rec.currency_id._convert(
+                            rec.amount_untaxed, rec.company_foreign_currency_id,
+                            rec.company_id, rec.date)
+                    else:
+                        rec.amount_total_foreign = -1 * rec.currency_id._convert(
+                            rec.amount_total, rec.company_foreign_currency_id,
+                            rec.company_id, rec.date)
+                        rec.amount_residual_foreign = -1 * rec.currency_id._convert(
+                            rec.amount_residual, rec.company_foreign_currency_id,
+                            rec.company_id, rec.date)
+                        rec.amount_untaxed_foreign = -1 * rec.currency_id._convert(
+                            rec.amount_untaxed, rec.company_foreign_currency_id,
+                            rec.company_id, rec.date)
+            elif rec.move_type in ['out_invoice','in_invoice'] and rec.debit_origin_id:
+                if self.env['ir.config_parameter'].sudo().get_param('compute.foreign.debit.note', 'False') == 'True':
+                    if rec.currency_id == rec.company_foreign_currency_id:
+                        if rec.move_type in ['out_invoice']:
+                            rec.amount_total_foreign = rec.amount_total
+                            rec.amount_residual_foreign = rec.amount_residual
+                            rec.amount_untaxed_foreign = rec.amount_untaxed
+                        else:
+                            rec.amount_total_foreign = -1 * rec.amount_total
+                            rec.amount_residual_foreign = -1 * rec.amount_residual
+                            rec.amount_untaxed_foreign = -1 * rec.amount_untaxed
+                    else:
+                        if rec.move_type in ['out_invoice']:
+                            rec.amount_total_foreign = rec.currency_id._convert(
+                                rec.amount_total, rec.company_foreign_currency_id,
+                                rec.company_id, rec.date)
+                            rec.amount_residual_foreign = rec.currency_id._convert(
+                                rec.amount_residual, rec.company_foreign_currency_id,
+                                rec.company_id, rec.date)
+                            rec.amount_untaxed_foreign = rec.currency_id._convert(
+                                rec.amount_untaxed, rec.company_foreign_currency_id,
+                                rec.company_id, rec.date)
+                        else:
+                            rec.amount_total_foreign = -1 * rec.currency_id._convert(
+                                rec.amount_total, rec.company_foreign_currency_id,
+                                rec.company_id, rec.date)
+                            rec.amount_residual_foreign = -1 * rec.currency_id._convert(
+                                rec.amount_residual, rec.company_foreign_currency_id,
+                                rec.company_id, rec.date)
+                            rec.amount_untaxed_foreign = -1 * rec.currency_id._convert(
+                                rec.amount_untaxed, rec.company_foreign_currency_id,
+                                rec.company_id, rec.date)
+                else:
+                    rec.amount_total_foreign = 0
+                    rec.amount_residual_foreign = 0
+                    rec.amount_untaxed_foreign = 0
 
 
 class AccountMoveLine(models.Model):
@@ -64,7 +110,7 @@ class AccountMoveLine(models.Model):
         for rec in self:
             if rec.product_id:
                 if rec.move_id.move_type in ['out_invoice','in_refund'] and not rec.move_id.debit_origin_id:
-                    _logger.warning('Factura')
+                    #_logger.warning('Factura a Cliente / Nota de Crédito Proveedor')
                     if rec.currency_id == rec.company_foreign_currency_id:
                         rec.price_subtotal_foreign = rec.price_subtotal
                     else:
@@ -72,15 +118,36 @@ class AccountMoveLine(models.Model):
                             rec.price_subtotal, rec.company_foreign_currency_id,
                             rec.company_id, rec.date)
                 elif rec.move_id.move_type in ['out_refund','in_invoice'] and not rec.move_id.debit_origin_id:
-                    _logger.warning('NotaC')
+                    #_logger.warning('Nota de Crédito a Cliente / Factura de Proveedor')
                     if rec.currency_id == rec.company_foreign_currency_id:
                         rec.price_subtotal_foreign = -1 * rec.price_subtotal
                     else:
                         rec.price_subtotal_foreign = -1 * (rec.currency_id._convert(
                             rec.price_subtotal, rec.company_foreign_currency_id,
                             rec.company_id, rec.date))
+                elif rec.move_id.move_type in ['out_invoice'] and rec.move_id.debit_origin_id:
+                    #_logger.warning('Nota de Débito a Cliente')
+                    if self.env['ir.config_parameter'].sudo().get_param('compute.foreign.debit.note', 'False') == 'True':
+                        if rec.currency_id == rec.company_foreign_currency_id:
+                            rec.price_subtotal_foreign = rec.price_subtotal
+                        else:
+                            rec.price_subtotal_foreign = rec.currency_id._convert(
+                                rec.price_subtotal, rec.company_foreign_currency_id,
+                                rec.company_id, rec.date)
+                    else:
+                        rec.price_subtotal_foreign = 0
+                elif rec.move_id.move_type in ['in_invoice'] and rec.move_id.debit_origin_id:
+                    #_logger.warning('Nota de Débito de Proveedor')
+                    if self.env['ir.config_parameter'].sudo().get_param('compute.foreign.debit.note', 'False') == 'True':
+                        if rec.currency_id == rec.company_foreign_currency_id:
+                            rec.price_subtotal_foreign = -1 * rec.price_subtotal
+                        else:
+                            rec.price_subtotal_foreign = -1 * (rec.currency_id._convert(
+                                rec.price_subtotal, rec.company_foreign_currency_id,
+                                rec.company_id, rec.date))
+                    else:
+                        rec.price_subtotal_foreign = 0
                 else:
-                    _logger.warning('nota de debito')
                     rec.price_subtotal_foreign = 0
 
 

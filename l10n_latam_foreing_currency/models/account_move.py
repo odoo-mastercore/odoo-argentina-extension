@@ -59,11 +59,11 @@ class AccountMoveLine(models.Model):
         currency_field='company_foreign_currency_id'
     )
 
-    @api.depends('price_subtotal', 'move_id.amount_untaxed')
+    @api.depends('product_id','quantity','price_subtotal', 'move_id.amount_untaxed')
     def _compute_line_foreigns(self):
         for rec in self:
             if rec.prodcut_id:
-                if rec.move_id.move_type in ['out_invoice','out_refund','in_invoice','in_refund'] and not rec.move_id.debit_origin_id:
+                if rec.move_id.move_type in ['out_invoice','in_refund'] and not rec.move_id.debit_origin_id:
                     _logger.warning('Factura')
                     if rec.currency_id == rec.company_foreign_currency_id:
                         rec.price_subtotal_foreign = rec.price_subtotal
@@ -71,6 +71,14 @@ class AccountMoveLine(models.Model):
                         rec.price_subtotal_foreign = rec.currency_id._convert(
                             rec.price_subtotal, rec.company_foreign_currency_id,
                             rec.company_id, rec.date)
+                elif rec.move_id.move_type in ['out_refund','in_invoice'] and not rec.move_id.debit_origin_id:
+                    _logger.warning('NotaC')
+                    if rec.currency_id == rec.company_foreign_currency_id:
+                        rec.price_subtotal_foreign = rec.price_subtotal
+                    else:
+                        rec.price_subtotal_foreign = -1 * (rec.currency_id._convert(
+                            rec.price_subtotal, rec.company_foreign_currency_id,
+                            rec.company_id, rec.date))
                 else:
                     _logger.warning('nota de debito')
                     rec.price_subtotal_foreign = 0

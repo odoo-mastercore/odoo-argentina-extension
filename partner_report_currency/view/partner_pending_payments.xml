@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+
+	<template id="tmp_partner_pending_payments">
+      <t t-call="web.html_container">
+        <!--<t t-call="account_cashbox.internal_layout_account_cashbox">-->
+          <t t-foreach="company" t-as="doc">
+            <div class="header">
+              <div style="height: 25px; background-color: #84898c; margin-top: 0px;"></div>
+              <div class="row" style="margin-top: 10px;">
+                <div class="col-12" name="logo" style="text-align: center;">
+                  <span>
+                    <strong></strong>
+                    <span t-esc="doc['vat']"/>
+                  </span><br/>
+                  <span>
+                    <strong></strong>
+                    <span t-esc="doc['name']"/>
+                  </span><br/>
+                  <span>
+                    <strong></strong>
+                    <span t-esc="doc['email']"/>
+                  </span><br/>
+                  <span>
+                    <strong></strong>
+                    <span t-esc="doc['phone']" />
+                  </span><br/>
+                  <span>
+                    <strong></strong>
+                    <span t-esc="doc['mobile']" />
+                  </span><br/>
+                  <!--<span>
+                    <strong>Website: </strong>
+                    <span t-esc="doc['website']" />
+                  </span><br/>-->
+                </div>
+              </div>
+            </div>
+            <div class="page" t-att-style="doc['font']">
+              <div class="row" style="margin-top: 0px; font-size: 80%;">
+                  <div class="col-12" style="text-align: center;">
+                    <h2>Pagos pendientes</h2>
+                  </div>
+              	  <div class="col-12" style="text-align: left;">
+                    <strong style="color: #333333; padding-right: 10px;">Cliente: </strong>
+                    <span t-esc="partner_name" />
+                  </div>
+	              <div class="col-12" style="text-align: left;">
+                    <strong style="color: #333333; padding-right: 10px;">Fecha: </strong>
+                    <span t-esc="date" />
+                  </div>
+                  <t t-set="index" t-value="0"/>
+                  <t t-foreach="by_currency" t-as="by_cur">
+                    <t t-if="index > 0">
+                      <div class="col-12" style="text-align: center; margin-top: 30px;"></div>
+                    </t>
+                  	<div class="col-12" style="text-align: center; margin-top: 10px;">
+                      <t t-set="index" t-value="index + 1"/>
+	                    <table class="table table-hover" style="border-collapse: collapse; text-indent: initial; display: table; border-spacing: 2px; border-color: gray;font-size: 100%;">
+	                      <thead>
+	                        <tr style="border-bottom:1pt solid black;">
+	                          <th style="width: 108px; word-wrap: break-word;"><strong style="color: #333333; padding-right: 10px;">Fecha</strong></th>
+	                          <th style="width: 108px; word-wrap: break-word;"><strong style="color: #333333; padding-right: 10px;">Fecha vencimiento</strong></th>
+	                          <th style="width: 108px; word-wrap: break-word;"><strong style="color: #333333; padding-right: 10px;">Referencia </strong></th>
+	                          <th style="width: 108px; word-wrap: break-word;"><strong style="color: #333333; padding-right: 10px;">Tipo</strong></th>
+	                          <th style="width: 108px; word-wrap: break-word;"><strong style="color: #333333; padding-right: 10px;">Total</strong></th>
+	                          <th style="width: 108px; word-wrap: break-word;"><strong style="color: #333333; padding-right: 10px;">Pendiente</strong></th>
+	                          <th style="width: 108px; word-wrap: break-word;"><strong style="color: #333333; padding-right: 10px;">Pagado</strong></th>
+	                        </tr>
+	                      </thead>
+	                      <tbody>
+	                        	<t t-foreach="by_currency_moves[by_cur['currency_name']]" t-as="by_moves">
+		                          <tr style="border-bottom:1pt solid black; border-color: #C0C0C0;">
+		                            <td style="text-align: center; padding: 2px; padding-right: 10px; width: 108px; word-wrap: break-word;"><span t-esc="by_moves['invoice_date']" /></td>
+		                            <td style="text-align: center; padding: 2px; text-align: center; padding-right: 10px; width: 108px; word-wrap: break-word;" class="text-center"><span t-esc="by_moves['invoice_date_due']" /></td>
+		                            <td style="text-align: center; padding: 2px; text-align: center; padding-right: 10px; width: 108px; word-wrap: break-word;"><span t-esc="by_moves['name']" /></td>
+		                            <td style="text-align: center; padding: 2px; text-align: center; padding-right: 10px; width: 108px; word-wrap: break-word;"><span t-esc="by_moves['move_type']" /></td>
+		                            <td style="padding: 2px; text-align: right; padding-right: 10px; width: 108px; word-wrap: break-word;"><span t-esc="by_moves['amount_total']" /></td>
+		                            <td style="padding: 2px; text-align: right; padding-right: 10px; width: 108px; word-wrap: break-word;"><span t-esc="by_moves['amount_residual']" /></td>
+		                            <td style="padding: 2px; text-align: right; padding-right: 10px; width: 108px; word-wrap: break-word;"><span t-esc="by_moves['amount_payment']" /></td>
+		                          </tr>
+	                          	</t>
+	                          	<tr style="border-bottom:1pt solid black; border-color: #C0C0C0;">
+	                          		<td colspan="4"></td>
+	                          		<td><strong style="color: #333333; padding-right: 10px;">Subtotal: </strong></td>
+	                          		<td style="padding: 2px; text-align: right; padding-right: 10px; width: 108px; word-wrap: break-word;">
+	                          			<span t-esc="by_currency_moves_acumulated[by_cur['currency_name']]['amount_residual']" />
+	                          		</td>
+	                          		<td style="padding: 2px; text-align: right; padding-right: 10px; width: 108px; word-wrap: break-word;">
+	                          			<span t-esc="by_currency_moves_acumulated[by_cur['currency_name']]['amount_payment']" />
+	                          		</td>
+	                          	</tr>
+	                          	<tr>
+	                          		<td colspan="4"></td>
+	                          		<td><strong style="color: #333333; padding-right: 10px;">Saldo: </strong></td>
+	                          		<td style="padding: 2px; text-align: right; padding-right: 10px; width: 108px; word-wrap: break-word;">
+	                          			<span t-esc="by_currency_moves_acumulated[by_cur['currency_name']]['amount_residual']" />
+	                          		</td>
+	                          		<td style="padding: 2px; text-align: right; padding-right: 10px; width: 108px; word-wrap: break-word;">
+
+	                          		</td>
+	                          	</tr>
+	                      </tbody>
+	                    </table>
+                    </div>
+                  </t>
+              </div>
+            </div>
+          </t>
+        <!--</t>-->
+      </t>
+    </template>
+
+	</data>
+</odoo>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+
+		<record id="custom_paperformat_partner_pending_payments" model="report.paperformat">
+	      <field name="name">A4 Partner Pending Payments</field>
+	      <field name="default" eval="True"/>
+	      <field name="format">custom</field>
+	      <field name="page_height">210</field>
+	      <field name="page_width">297</field>
+	      <field name="orientation">Landscape</field>
+	      <field name="margin_top">40</field>
+	      <field name="margin_bottom">20</field>
+	      <field name="margin_left">10</field>
+	      <field name="margin_right">10</field>
+	      <field name="header_line" eval="False"/>
+	      <field name="header_spacing">35</field>
+	      <field name="dpi">90</field>
+	    </record>
+
+	    <record id="action_partner_pending_payments" model="ir.actions.report">
+	      <field name="name">Pagos pendientes</field>
+	      <field name="model">res.partner</field>
+	      <field name="report_type">qweb-pdf</field>
+	      <field name="report_name">partner_report_currency.tmp_partner_pending_payments</field>
+	      <field name="print_report_name">(object._get_report_base_filename())</field>
+	      <field name="paperformat_id" ref="partner_report_currency.custom_paperformat_partner_pending_payments"/>
+	    </record>
+
+	    <record id="partner_view_buttons_prc" model="ir.ui.view">
+            <field name="name">partner_view_buttons_prc</field>
+            <field name="model">res.partner</field>
+            <field name="inherit_id" ref="account_reports.partner_view_buttons" />
+            <field name="priority" eval="14"/>
+            <field name="arch" type="xml">
+                <div name="button_box" position="inside">
+                    <button type="object"
+                        groups="account.group_account_invoice"
+                        class="oe_stat_button"
+                        id="partner_pending_payments_button"
+                        icon="fa-pencil-square-o"
+                        name="show_partner_pending_payments"
+                        string="Pagos pendientes"
+                        title="Pagos pendientes"
+                        context="{'default_partner_id': active_id}">
+                    </button>
+                </div>
+            </field>
+        </record>
+	</data>
+</odoo>

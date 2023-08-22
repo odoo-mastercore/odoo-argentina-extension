@@ -22,8 +22,11 @@
         #'web.assets_backend': ['gl_foreign_currency/static/src/js/account_reports.js'],
         },
     'data': [
+        'security/ir.model.access.csv',
         'view/views_actions.xml',
         'view/partner_pending_payments.xml',
+        'view/partner_account_status.xml',
+        'wizard/partner_account_status_report.xml',
     ],
     'application': False,
 }

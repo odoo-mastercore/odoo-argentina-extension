@@ -2,7 +2,7 @@
 <odoo>
 	<data>
 
-		<record id="custom_paperformat_partner_pending_payments" model="report.paperformat">
+		<record id="custom_paperformat_tmp_prc" model="report.paperformat">
 	      <field name="name">A4 Partner Pending Payments</field>
 	      <field name="default" eval="True"/>
 	      <field name="format">custom</field>
@@ -24,7 +24,16 @@
 	      <field name="report_type">qweb-pdf</field>
 	      <field name="report_name">partner_report_currency.tmp_partner_pending_payments</field>
 	      <field name="print_report_name">(object._get_report_base_filename())</field>
-	      <field name="paperformat_id" ref="partner_report_currency.custom_paperformat_partner_pending_payments"/>
+	      <field name="paperformat_id" ref="partner_report_currency.custom_paperformat_tmp_prc"/>
+	    </record>
+
+	    <record id="action_partner_account_status" model="ir.actions.report">
+	      <field name="name">Estado de cuenta</field>
+	      <field name="model">partner.account.status.report</field>
+	      <field name="report_type">qweb-pdf</field>
+	      <field name="report_name">partner_report_currency.tmp_partner_account_status</field>
+	      <field name="print_report_name">(object._get_report_base_filename())</field>
+	      <field name="paperformat_id" ref="partner_report_currency.custom_paperformat_tmp_prc"/>
 	    </record>
 
 	    <record id="partner_view_buttons_prc" model="ir.ui.view">
@@ -42,6 +51,18 @@
                         name="show_partner_pending_payments"
                         string="Pagos pendientes"
                         title="Pagos pendientes"
+                        context="{'default_partner_id': active_id}">
+                    </button>
+                </div>
+                <div name="button_box" position="inside">
+                    <button type="object"
+                        groups="account.group_account_invoice"
+                        class="oe_stat_button"
+                        id="partner_account_status_report_button"
+                        icon="fa-file-text-o"
+                        name="show_partner_account_status_report"
+                        string="Estado de cuenta"
+                        title="Estado de cuenta"
                         context="{'default_partner_id': active_id}">
                     </button>
                 </div>

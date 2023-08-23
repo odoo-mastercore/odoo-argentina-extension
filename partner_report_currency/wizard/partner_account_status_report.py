@@ -152,7 +152,7 @@ class partnerAccountStatusReport(models.TransientModel):
                         rate = (1/c_rate.rate)
                     else:
                         rate = 1
-                _logger.info('line_id.rate %s', rate)
+                #_logger.info('line_id.rate %s', rate)
 
                 if (line_id.debit != 0.0):
                     by_currency_moves_acumulated[line_id.currency_id.name]['balance'] = by_currency_moves_acumulated[line_id.currency_id.name]['balance'] + (line_id.debit/rate)

@@ -8,7 +8,7 @@ odoo.define('gl_foreign_currency.account_report', function (require) {
     var _t = core._t;
     var AbstractAction = require('web.AbstractAction');
 
-    var AccountReportWidget = require('account_reports.account_report');
+    var AccountReportWidget = require('account_reports.account_report').accountReportsWidget;
 
     AccountReportWidget.include({
 

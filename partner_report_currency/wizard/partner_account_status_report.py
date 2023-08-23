@@ -45,11 +45,10 @@ class partnerAccountStatusReport(models.TransientModel):
             self.start_date = self.end_date
 
     def generate_partner_account_status_report(self):
-        #data = {'date_start': self.start_date, 'date_stop': self.end_date, 'partner_id': self.partner_id}
-        print('generate_partner_account_status_report-self: ', self)
-        print('generate_partner_account_status_report-partner_id: ', self.partner_id)
-        print('generate_partner_account_status_report-start_date: ', self.start_date)
-        print('generate_partner_account_status_report-end_date: ', self.end_date)
+        #print('generate_partner_account_status_report-self: ', self)
+        #print('generate_partner_account_status_report-partner_id: ', self.partner_id)
+        #print('generate_partner_account_status_report-start_date: ', self.start_date)
+        #print('generate_partner_account_status_report-end_date: ', self.end_date)
         company = []
         by_currency = []
         by_currency_moves = {}
@@ -142,20 +141,33 @@ class partnerAccountStatusReport(models.TransientModel):
                         by_currency_moves_acumulated[line_id.currency_id.name]['balance'] = round(balance_initial, 2)
                         #print('generate_partner_account_status_report-by_currency_moves-if: ', by_currency_moves_acumulated[move_id.currency_id.name])
 
-                if (line_id.debit != 0.0):
-                    by_currency_moves_acumulated[line_id.currency_id.name]['balance'] = by_currency_moves_acumulated[line_id.currency_id.name]['balance'] + (line_id.debit/(line_id.debit/line_id.amount_currency))
+                if (line_id.amount_currency != 0.0):
+                    if (line_id.debit != 0.0):
+                        rate = (line_id.debit/line_id.amount_currency)
+                    else:
+                        rate = (line_id.credit/line_id.amount_currency)
                 else:
-                    by_currency_moves_acumulated[line_id.currency_id.name]['balance'] = by_currency_moves_acumulated[line_id.currency_id.name]['balance'] + (line_id.credit/(line_id.credit/line_id.amount_currency))
+                    c_rate = self.env['res.currency.rate'].search([('company_id', '=', self.company_id.id), ('name', '<=', str(line_id.date)), ('currency_id', '=', line_id.currency_id.id)], order='name desc', limit=1)
+                    if (len(c_rate) > 0):
+                        rate = (1/c_rate.rate)
+                    else:
+                        rate = 1
+                _logger.info('line_id.rate %s', rate)
+
+                if (line_id.debit != 0.0):
+                    by_currency_moves_acumulated[line_id.currency_id.name]['balance'] = by_currency_moves_acumulated[line_id.currency_id.name]['balance'] + (line_id.debit/rate)
+                else:
+                    by_currency_moves_acumulated[line_id.currency_id.name]['balance'] = by_currency_moves_acumulated[line_id.currency_id.name]['balance'] + (line_id.credit/rate)
 
                 by_currency_moves[line_id.currency_id.name].append({
                     'move_id': line_id.id,
                     'currency_id': line_id.currency_id.id,
                     'currency_name': line_id.currency_id.name,
                     'date': str(line_id.date),
-                    'line_name': (line_id.name if (line_id.move_type != 'entry') else line_id.ref),
+                    'line_name': line_id.name, #(line_id.name if (line_id.move_type != 'entry') else line_id.ref),
                     'move_type': 'Factura' if (line_id.move_type == 'out_invoice') else ('Nota de crédito' if (line_id.move_type == 'out_refund') else 'Recibo'),
-                    'debit': str("{0:.2f}".format(round(((line_id.debit/(line_id.debit/line_id.amount_currency)) if (line_id.debit != 0.0) else line_id.debit), 2))).replace('.',','),
-                    'credit': str("{0:.2f}".format(round(((line_id.credit/(line_id.credit/line_id.amount_currency)) if (line_id.credit != 0.0) else line_id.credit), 2))).replace('.',','),
+                    'debit': str("{0:.2f}".format(round(((line_id.debit/rate) if (line_id.debit != 0.0) else line_id.debit), 2))).replace('.',','),
+                    'credit': str("{0:.2f}".format(round(((line_id.credit/rate) if (line_id.credit != 0.0) else line_id.credit), 2))).replace('.',','),
                     'balance': str("{0:.2f}".format(round(by_currency_moves_acumulated[line_id.currency_id.name]['balance'], 2))).replace('.',','),
                 })
 

@@ -53,8 +53,8 @@ class accountPayment(models.Model):
             vals.update({
                 'l10n_latam_check_bank_id_aux': vals.get('l10n_latam_check_bank_id', False)
             })
-        if not vals.get('l10n_latam_check_bank_id', False) and self.l10n_latam_check_bank_id_aux:
+        if not vals.get('l10n_latam_check_bank_id', False) and vals.get('l10n_latam_check_bank_id_aux', False):
             vals.update({
-                'l10n_latam_check_bank_id': self.l10n_latam_check_bank_id_aux            
+                'l10n_latam_check_bank_id': vals.get('l10n_latam_check_bank_id_aux')
             })
         return super(accountPayment, self).write(vals)

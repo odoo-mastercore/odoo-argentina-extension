@@ -74,15 +74,21 @@ class partnerAccountStatusReport(models.TransientModel):
             params = []
             params.append(self.partner_id.id)
             params.append(self.company_id.id)
-            params.append(('line_section', 'line_note'))
-            params.append('asset_receivable')
+            params.append(('out_invoice', 'out_refund', 'out_receipt'))
+            #params.append(('line_section', 'line_note'))
+            #params.append('asset_receivable')
             params.append('posted')
             params.append(self.start_date.strftime("%Y-%m-%d"))
-            self._cr.execute("""
+            '''self._cr.execute("""
                                     SELECT aml.currency_id, rc.name, sum(amount_currency) FROM account_move_line aml INNER JOIN account_account aa ON aml.account_id=aa.id
                                      INNER JOIN res_currency rc ON aml.currency_id=rc.id
                                      where aml.partner_id = %s AND aml.company_id = %s AND aml.display_type not in %s AND aa.account_type = %s
                                      AND aml.parent_state = %s AND aml.date < %s GROUP BY aml.currency_id, rc.name ORDER BY aml.currency_id
+                                """, params)'''
+            self._cr.execute("""
+                                    SELECT am.currency_id, rc.name, sum(CASE WHEN (am.move_type = 'out_refund') THEN (am.amount_residual * (-1)) ELSE (am.amount_residual) END) FROM account_move am INNER JOIN res_currency rc
+                                    ON am.currency_id = rc.id WHERE am.partner_id = %s AND am.company_id = %s AND am.move_type IN %s
+                                     AND am.state = %s AND am.invoice_date < %s GROUP BY am.currency_id, rc.name ORDER BY am.currency_id
                                 """, params)
             receivable_id = self._cr.fetchall()
             print('generate_partner_account_status_report-receivable_id: ', receivable_id)
@@ -114,22 +120,35 @@ class partnerAccountStatusReport(models.TransientModel):
                 ('account_id.account_type','in', ['asset_receivable', 'liability_payable']),
                 ('parent_state', '=', 'posted'),
                 ('date','<=', self.end_date.strftime("%Y-%m-%d")),
-                ('date','>=', self.start_date.strftime("%Y-%m-%d"))], order="currency_id, date, id")
+                ('date','>=', self.start_date.strftime("%Y-%m-%d"))], order="date asc, id asc")
             #print('generate_partner_account_status_report-move_line_ids: ', move_line_ids)
             for line_id in move_line_ids:
-                if (line_id.currency_id.name not in by_currency_moves):
-                    by_currency_moves[line_id.currency_id.name] = []
-                    by_currency_moves_acumulated[line_id.currency_id.name] = {}
-                    by_currency.append({ 'currency_id': line_id.currency_id.id, 'currency_name': line_id.currency_id.name })
+                print('generate_partner_account_status_report-line_id: ', line_id)
+                #print('generate_partner_account_status_report-date: ', line_id.date)
+                #print('generate_partner_account_status_report-move_id: ', line_id.move_id)
+                #print('generate_partner_account_status_report-reconciled_invoice_ids: ', line_id.payment_id.reconciled_invoice_ids if line_id.payment_id != False else 'N/A')
+                #print('generate_partner_account_status_report-reconciled_bill_ids: ', line_id.payment_id.reconciled_bill_ids if line_id.payment_id != False else 'N/A')
+                #print('generate_partner_account_status_report-payment_id: ', line_id.payment_id)
+                #print('generate_partner_account_status_report-payment_group_id: ', line_id.payment_id.payment_group_id)
+                #print('generate_partner_account_status_report-selected_debt_currency_id: ', line_id.payment_id.payment_group_id.selected_debt_currency_id)
+                if (line_id.move_type == 'entry'):
+                    currency_group = (line_id.payment_id.payment_group_id.selected_debt_currency_id.name if (len(line_id.payment_id.payment_group_id.selected_debt_currency_id) > 0) else self.company_id.currency_id.name)
+                else:
+                    currency_group = line_id.currency_id.name
+                #print('generate_partner_account_status_report-currency_group: ', currency_group)
+                if (currency_group not in by_currency_moves):
+                    by_currency_moves[currency_group] = []
+                    by_currency_moves_acumulated[currency_group] = {}
+                    by_currency.append({ 'currency_id': line_id.currency_id.id, 'currency_name': currency_group })
                     balance_initial = 0.0
                     for rec in receivable_id:
                         if (rec[0] == line_id.currency_id.id):
                             balance_initial = rec[2]
 
-                    by_currency_moves[line_id.currency_id.name].append({
+                    by_currency_moves[currency_group].append({
                         'move_id': 0,
                         'currency_id': line_id.currency_id.id,
-                        'currency_name': line_id.currency_id.name,
+                        'currency_name': currency_group,
                         'date': str(self.start_date),
                         'line_name': 'Balance inicial',
                         'move_type': '',
@@ -137,38 +156,52 @@ class partnerAccountStatusReport(models.TransientModel):
                         'credit': '',
                         'balance': str("{0:.2f}".format(round(balance_initial, 2))).replace('.',','),
                     })
-                    if ('balance' not in by_currency_moves_acumulated[line_id.currency_id.name]):
-                        by_currency_moves_acumulated[line_id.currency_id.name]['balance'] = round(balance_initial, 2)
+                    if ('balance' not in by_currency_moves_acumulated[currency_group]):
+                        by_currency_moves_acumulated[currency_group]['balance'] = round(balance_initial, 2)
                         #print('generate_partner_account_status_report-by_currency_moves-if: ', by_currency_moves_acumulated[move_id.currency_id.name])
-
-                if (line_id.amount_currency != 0.0):
-                    if (line_id.debit != 0.0):
-                        rate = (line_id.debit/line_id.amount_currency)
+                #_logger.info('line_id.line_id.currency_id.name %s', line_id.currency_id.name)
+                if (currency_group == line_id.currency_id.name):
+                    if ((line_id.amount_currency != 0.0) or (self.company_id.currency_id.name == currency_group)):
+                        if (line_id.debit != 0.0):
+                            rate = (line_id.debit/line_id.amount_currency)
+                        else:
+                            rate = (line_id.credit/line_id.amount_currency)
                     else:
-                        rate = (line_id.credit/line_id.amount_currency)
+                        c_rate = self.env['res.currency.rate'].search([('company_id', '=', self.company_id.id), ('name', '<=', str(line_id.date)), ('currency_id', '=', line_id.currency_id.id)], order='name desc', limit=1)
+                        if (len(c_rate) > 0):
+                            rate = (1/c_rate.rate)
+                        else:
+                            rate = 1
                 else:
-                    c_rate = self.env['res.currency.rate'].search([('company_id', '=', self.company_id.id), ('name', '<=', str(line_id.date)), ('currency_id', '=', line_id.currency_id.id)], order='name desc', limit=1)
-                    if (len(c_rate) > 0):
-                        rate = (1/c_rate.rate)
+                    if (('aux_inverse_currency_rate' in line_id) and (line_id.aux_inverse_currency_rate != False) and (line_id.aux_inverse_currency_rate > 1)):
+                        rate = line_id.aux_inverse_currency_rate
+                    elif ((len(line_id.payment_id.reconciled_invoice_ids) > 0) and ('l10n_ar_currency_rate' in line_id.payment_id.reconciled_invoice_ids[0]) and (line_id.payment_id.reconciled_invoice_ids[0].l10n_ar_currency_rate > 1)):
+                        rate = line_id.payment_id.reconciled_invoice_ids[0].l10n_ar_currency_rate
                     else:
-                        rate = 1
+                        c_rate = self.env['res.currency.rate'].search([('company_id', '=', self.company_id.id), ('name', '<=', str(line_id.date)), ('currency_id.name', '=', currency_group)], order='name desc', limit=1)
+                        if (len(c_rate) > 0):
+                            rate = (1/c_rate.rate)
+                        else:
+                            rate = 1
+                    if (line_id.amount_currency < 0):
+                        rate = rate * (-1)
                 #_logger.info('line_id.rate %s', rate)
 
                 if (line_id.debit != 0.0):
-                    by_currency_moves_acumulated[line_id.currency_id.name]['balance'] = by_currency_moves_acumulated[line_id.currency_id.name]['balance'] + (line_id.debit/rate)
+                    by_currency_moves_acumulated[currency_group]['balance'] = by_currency_moves_acumulated[currency_group]['balance'] + (line_id.debit/rate)
                 else:
-                    by_currency_moves_acumulated[line_id.currency_id.name]['balance'] = by_currency_moves_acumulated[line_id.currency_id.name]['balance'] + (line_id.credit/rate)
+                    by_currency_moves_acumulated[currency_group]['balance'] = by_currency_moves_acumulated[currency_group]['balance'] + (line_id.credit/rate)
 
-                by_currency_moves[line_id.currency_id.name].append({
+                by_currency_moves[currency_group].append({
                     'move_id': line_id.id,
                     'currency_id': line_id.currency_id.id,
-                    'currency_name': line_id.currency_id.name,
+                    'currency_name': currency_group,
                     'date': str(line_id.date),
                     'line_name': line_id.name, #(line_id.name if (line_id.move_type != 'entry') else line_id.ref),
                     'move_type': 'Factura' if (line_id.move_type == 'out_invoice') else ('Nota de crédito' if (line_id.move_type == 'out_refund') else 'Recibo'),
                     'debit': str("{0:.2f}".format(round(((line_id.debit/rate) if (line_id.debit != 0.0) else line_id.debit), 2))).replace('.',','),
                     'credit': str("{0:.2f}".format(round(((line_id.credit/rate) if (line_id.credit != 0.0) else line_id.credit), 2))).replace('.',','),
-                    'balance': str("{0:.2f}".format(round(by_currency_moves_acumulated[line_id.currency_id.name]['balance'], 2))).replace('.',','),
+                    'balance': str("{0:.2f}".format(round(by_currency_moves_acumulated[currency_group]['balance'], 2))).replace('.',','),
                 })
 
                 #print('generate_partner_account_status_report-by_currency_moves-for: ', by_currency_moves[move_id.currency_id.name])

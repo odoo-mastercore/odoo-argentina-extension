@@ -16,7 +16,7 @@ class AccounTpaymentAddChecks(models.TransientModel):
                     + " el marcador de tipo de cambio con un valor distinto"
                     + " a cero, antes de agregar una linea"))
                 vals_list = [{
-                    'l10n_latam_check_bank_id': check.l10n_latam_check_bank_id,
+                    'l10n_latam_check_bank_id': check.l10n_latam_check_bank_id.id,
                     'l10n_latam_check_number': check.l10n_latam_check_number,
                     'l10n_latam_check_payment_date': check.l10n_latam_check_payment_date,
                     'l10n_latam_check_type': check.l10n_latam_check_type,
@@ -35,7 +35,7 @@ class AccounTpaymentAddChecks(models.TransientModel):
                 self.env['account.payment'].create(vals_list)
             else:
                 vals_list = [{
-                    'l10n_latam_check_bank_id': check.l10n_latam_check_bank_id,
+                    'l10n_latam_check_bank_id': check.l10n_latam_check_bank_id.id,
                     'l10n_latam_check_number': check.l10n_latam_check_number,
                     'l10n_latam_check_payment_date': check.l10n_latam_check_payment_date,
                     'l10n_latam_check_type': check.l10n_latam_check_type,

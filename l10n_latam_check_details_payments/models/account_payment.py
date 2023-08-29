@@ -32,7 +32,7 @@ class accountPayment(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
-        records = super().create(vals_list)
+        records = super(accountPayment, self).create(vals_list)
         for index, rec in enumerate(records):
             if vals_list[index].get('l10n_latam_check_number', False):
                 rec.number_check_aux = vals_list[index].get('l10n_latam_check_number')

@@ -9,7 +9,9 @@
 
 from odoo import models, fields, api, _, Command
 from odoo.exceptions import ValidationError, UserError
+import logging
 
+_logger = logging.getLogger(__name__)
 
 class accountPayment(models.Model):
     _inherit = 'account.payment'
@@ -32,16 +34,12 @@ class accountPayment(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
-        records = super(accountPayment, self).create(vals_list)
+        records = super().create(vals_list)
         for index, rec in enumerate(records):
             if vals_list[index].get('l10n_latam_check_number', False):
                 rec.number_check_aux = vals_list[index].get('l10n_latam_check_number')
             if vals_list[index].get('l10n_latam_check_bank_id', False):
                 rec.l10n_latam_check_bank_id_aux = vals_list[index].get('l10n_latam_check_bank_id')
-            if vals_list[index].get('check_number', False) == False and vals_list[index].get('l10n_latam_check_number', False):
-                rec.check_number = vals_list[index].get('l10n_latam_check_number')
-            if vals_list[index].get('l10n_latam_check_bank_id', False) == False and vals_list[index].get('l10n_latam_check_bank_id_aux', False):
-                rec.l10n_latam_check_bank_id = vals_list[index].get('l10n_latam_check_bank_id_aux')
         return records
     
     def write(self, vals):
@@ -52,9 +50,5 @@ class accountPayment(models.Model):
         if vals.get('l10n_latam_check_bank_id', False):
             vals.update({
                 'l10n_latam_check_bank_id_aux': vals.get('l10n_latam_check_bank_id', False)
-            })
-        if not vals.get('l10n_latam_check_bank_id', False) and vals.get('l10n_latam_check_bank_id_aux', False):
-            vals.update({
-                'l10n_latam_check_bank_id': vals.get('l10n_latam_check_bank_id_aux')
             })
         return super(accountPayment, self).write(vals)

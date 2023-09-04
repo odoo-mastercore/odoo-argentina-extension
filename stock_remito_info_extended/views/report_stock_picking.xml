@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="report_stock_picking" name="Report picking info extended" inherit_id="stock_picking_report_conf.report_stock_picking">
+        <xpath expr="div[hasclass('htmlcontent')]" position="before">
+            <div style="margin-left:2.2cm;">
+                <strong>Orden:</strong> <span t-esc="picking.origin"/>
+                <strong>Picking:</strong> <span t-esc="picking.name"/>
+            </div>
+        </xpath>
+    </template>
+
+</odoo>

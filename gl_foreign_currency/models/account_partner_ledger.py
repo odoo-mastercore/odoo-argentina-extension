@@ -244,8 +244,15 @@ class ReportPartnerLedger(models.AbstractModel):
                 #_logger.info('apl-_get_query_amls-cur ==')
         #_logger.info('apl-_get_query_amls-query==>: %s', query)
         #_logger.info('apl-_get_query_amls-query.find(LIMIT)==>: %s', query.find('LIMIT'))
-        if (query.find('LIMIT') > 0):
-            query = query[0:query.find('LIMIT')]
+        #_logger.info('apl-_get_query_amls-query.find(LIMIT)==>: %s', query.find('LIMIT'))
+        x = int(query.find('LIMIT')) + 5
+        #_logger.info('apl-_get_query_amls-query.find(x)==>: %s', x)
+        #_logger.info('apl-_get_query_amls-query.find(LIMIT, x)==>: %s', query.find('LIMIT', x))
+        y = int(query.find('LIMIT', x)) + 5
+        #_logger.info('apl-_get_query_amls-query.find(y)==>: %s', y)
+        #_logger.info('apl-_get_query_amls-query.find(LIMIT, y)==>: %s', query.find('LIMIT', y))
+        if (query.find('LIMIT', y) > 0):
+            query = query[0:query.find('LIMIT', y)]
             all_params.remove(all_params[len(all_params) -1])
         #_logger.info('apl-_get_query_amls-query[0:query.find(OFFSET)==>: %s', query.find('OFFSET'))
         if (query.find('OFFSET') > 0):

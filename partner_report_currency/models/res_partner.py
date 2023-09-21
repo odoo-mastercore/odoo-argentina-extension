@@ -30,7 +30,7 @@ class ResPartner(models.Model):
             company.append({
                 'name': comp.name,
                 'company_registry': comp.company_registry,
-                'vat': (comp.l10n_latam_identification_type_id.l10n_ve_code if (len(comp.l10n_latam_identification_type_id) > 0) else '') + comp.vat,
+                'vat': (comp.l10n_latam_identification_type_id.l10n_ve_code if ('l10n_latam_identification_type_id' in comp and len(comp.l10n_latam_identification_type_id) > 0) else '') + comp.vat,
                 'logo': comp.logo,
                 'phone': comp.phone,
                 'mobile': comp.mobile,

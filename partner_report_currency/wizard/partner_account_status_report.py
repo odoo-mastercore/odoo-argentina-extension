@@ -45,10 +45,10 @@ class partnerAccountStatusReport(models.TransientModel):
             self.start_date = self.end_date
 
     def generate_partner_account_status_report(self):
-        #print('generate_partner_account_status_report-self: ', self)
-        #print('generate_partner_account_status_report-partner_id: ', self.partner_id)
-        #print('generate_partner_account_status_report-start_date: ', self.start_date)
-        #print('generate_partner_account_status_report-end_date: ', self.end_date)
+        #_logger.info('generate_partner_account_status_report-self: %s', self)
+        #_logger.info('generate_partner_account_status_report-partner_id: %s', self.partner_id)
+        #_logger.info('generate_partner_account_status_report-start_date: %s', self.start_date)
+        #_logger.info('generate_partner_account_status_report-end_date: %s', self.end_date)
         company = []
         by_currency = []
         by_currency_moves = {}
@@ -79,6 +79,7 @@ class partnerAccountStatusReport(models.TransientModel):
             #params.append('asset_receivable')
             params.append('posted')
             params.append(self.start_date.strftime("%Y-%m-%d"))
+            #_logger.info('generate_partner_account_status_report-params: %s', params)
             '''self._cr.execute("""
                                     SELECT aml.currency_id, rc.name, sum(amount_currency) FROM account_move_line aml INNER JOIN account_account aa ON aml.account_id=aa.id
                                      INNER JOIN res_currency rc ON aml.currency_id=rc.id
@@ -91,7 +92,7 @@ class partnerAccountStatusReport(models.TransientModel):
                                      AND am.state = %s AND am.invoice_date < %s GROUP BY am.currency_id, rc.name ORDER BY am.currency_id
                                 """, params)
             receivable_id = self._cr.fetchall()
-            print('generate_partner_account_status_report-receivable_id: ', receivable_id)
+            #_logger.info('generate_partner_account_status_report-receivable_id: %s', receivable_id)
             balance_initial = 0.0
             for rec in receivable_id:
                 balance_initial = rec[2]
@@ -121,21 +122,21 @@ class partnerAccountStatusReport(models.TransientModel):
                 ('parent_state', '=', 'posted'),
                 ('date','<=', self.end_date.strftime("%Y-%m-%d")),
                 ('date','>=', self.start_date.strftime("%Y-%m-%d"))], order="date asc, id asc")
-            #print('generate_partner_account_status_report-move_line_ids: ', move_line_ids)
+            #_logger.info('generate_partner_account_status_report-move_line_ids: %s', move_line_ids)
             for line_id in move_line_ids:
-                print('generate_partner_account_status_report-line_id: ', line_id)
-                #print('generate_partner_account_status_report-date: ', line_id.date)
-                #print('generate_partner_account_status_report-move_id: ', line_id.move_id)
-                #print('generate_partner_account_status_report-reconciled_invoice_ids: ', line_id.payment_id.reconciled_invoice_ids if line_id.payment_id != False else 'N/A')
-                #print('generate_partner_account_status_report-reconciled_bill_ids: ', line_id.payment_id.reconciled_bill_ids if line_id.payment_id != False else 'N/A')
-                #print('generate_partner_account_status_report-payment_id: ', line_id.payment_id)
-                #print('generate_partner_account_status_report-payment_group_id: ', line_id.payment_id.payment_group_id)
-                #print('generate_partner_account_status_report-selected_debt_currency_id: ', line_id.payment_id.payment_group_id.selected_debt_currency_id)
+                #_logger.info('generate_partner_account_status_report-line_id: %s', line_id)
+                #_logger.info('generate_partner_account_status_report-date: %s', line_id.date)
+                #_logger.info('generate_partner_account_status_report-move_id: %s', line_id.move_id)
+                #_logger.info('generate_partner_account_status_report-reconciled_invoice_ids: %s', line_id.payment_id.reconciled_invoice_ids if line_id.payment_id != False else 'N/A')
+                #_logger.info('generate_partner_account_status_report-reconciled_bill_ids: %s', line_id.payment_id.reconciled_bill_ids if line_id.payment_id != False else 'N/A')
+                #_logger.info('generate_partner_account_status_report-payment_id: %s', line_id.payment_id)
+                #_logger.info('generate_partner_account_status_report-payment_group_id: %s', line_id.payment_id.payment_group_id)
+                #_logger.info('generate_partner_account_status_report-selected_debt_currency_id: %s', line_id.payment_id.payment_group_id.selected_debt_currency_id)
                 if (line_id.move_type == 'entry'):
                     currency_group = (line_id.payment_id.payment_group_id.selected_debt_currency_id.name if (len(line_id.payment_id.payment_group_id.selected_debt_currency_id) > 0) else self.company_id.currency_id.name)
                 else:
                     currency_group = line_id.currency_id.name
-                #print('generate_partner_account_status_report-currency_group: ', currency_group)
+                #_logger.info('generate_partner_account_status_report-currency_group: %s', currency_group)
                 if (currency_group not in by_currency_moves):
                     by_currency_moves[currency_group] = []
                     by_currency_moves_acumulated[currency_group] = {}
@@ -158,7 +159,7 @@ class partnerAccountStatusReport(models.TransientModel):
                     })
                     if ('balance' not in by_currency_moves_acumulated[currency_group]):
                         by_currency_moves_acumulated[currency_group]['balance'] = round(balance_initial, 2)
-                        #print('generate_partner_account_status_report-by_currency_moves-if: ', by_currency_moves_acumulated[move_id.currency_id.name])
+
                 #_logger.info('line_id.line_id.currency_id.name %s', line_id.currency_id.name)
                 if (currency_group == line_id.currency_id.name):
                     if ((line_id.amount_currency != 0.0) or (self.company_id.currency_id.name == currency_group)):
@@ -204,12 +205,9 @@ class partnerAccountStatusReport(models.TransientModel):
                     'balance': str("{0:.2f}".format(round(by_currency_moves_acumulated[currency_group]['balance'], 2))).replace('.',','),
                 })
 
-                #print('generate_partner_account_status_report-by_currency_moves-for: ', by_currency_moves[move_id.currency_id.name])
-                #print('generate_partner_account_status_report-by_currency_moves_acumulated-for: ', by_currency_moves_acumulated[move_id.currency_id.name])
-
-            #print('generate_partner_account_status_report-by_currency: ', by_currency)
-            #print('generate_partner_account_status_report-by_currency_moves: ', by_currency_moves)
-            #print('generate_partner_account_status_report-by_currency_moves_acumulated(r): ', by_currency_moves_acumulated)
+            #_logger.info('generate_partner_account_status_report-by_currency: %s', by_currency)
+            #_logger.info('generate_partner_account_status_report-by_currency_moves: %s', by_currency_moves)
+            #_logger.info('generate_partner_account_status_report-by_currency_moves_acumulated(r): %s', by_currency_moves_acumulated)
             for by_cur in by_currency:
                 by_currency_moves[by_cur['currency_name']].append({
                     'move_id': 0,
@@ -236,7 +234,7 @@ class partnerAccountStatusReport(models.TransientModel):
                 'by_currency_moves_acumulated': by_currency_moves_acumulated,
                 'name': 'Estado_de_cuenta' + '_' + self.partner_id.name.replace(' ', '_'),
             }
-            #print('generate_partner_account_status_report-data: ', data)
+            #_logger.info('generate_partner_account_status_report-data: %s', data)
             return self.env.ref(
                 'partner_report_currency.action_partner_account_status'
             ).report_action(self, data=data)

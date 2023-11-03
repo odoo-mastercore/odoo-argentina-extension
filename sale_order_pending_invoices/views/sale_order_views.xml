@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_sale_order_form_inherit" model="ir.ui.view">
+        <field name="name">view.sale.order.form.inherit</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_pending_invoice" type="object" class="oe_stat_button" icon="fa-pencil-square-o" attrs="{'invisible': [('pending_invoice_count', '=', 0)]}">
+                    <field name="pending_invoice_count" widget="statinfo" string="Facturas Vencidas"/>
+                </button>
+            </xpath>
+        </field>
+    </record>
+    
+    <!-- <record id="view_pending_invoice_tree" model="ir.ui.view">
+        <field name="name">pending.invoice.tree</field>
+        <field name="model">account.move</field>
+        <field name="arch" type="xml">
+            <tree string="Facturas Pendientes"
+                    js_class="account_tree"
+                    decoration-info="state == 'draft'"
+                    decoration-muted="state == 'cancel'"
+                    expand="context.get('expand', False)"
+                    sample="1">
+                <field name="made_sequence_hole" invisible="1"/>
+                <field name="state" invisible="1"/>
+                <field name="name" decoration-bf="1" string="Nro. de factura" decoration-danger="made_sequence_hole"/>
+                <field name="invoice_partner_display_name" istring="Cliente" nvisible="context.get('default_move_type') not in ('out_invoice', 'out_refund','out_receipt')" groups="base.group_user" string="Customer" />
+                <field name="invoice_date" invisible="context.get('default_move_type') not in ('out_invoice', 'out_refund','out_receipt')" string="Fecha de factura"/>
+                <field name="invoice_date_due" string="Fecha de vencimiento" widget="remaining_days" />
+                <field name="invoice_origin"  string="Documento origen"/>
+                <field name="amount_total_signed" string="Total" sum="Total" decoration-bf="1" />
+                <field name="amount_total_in_currency_signed" string="Total en divisa" groups="base.group_multi_currency"/>
+                <field name="amount_residual_signed" string="Importe adeudado" sum="Amount Due" />
+                <field name="payment_state"
+                        widget="badge"
+                        string="Estado de pago"
+                        decoration-danger="payment_state == 'not_paid'"
+                        decoration-warning="payment_state in ('partial', 'in_payment')"
+                        decoration-success="payment_state in ('paid', 'reversed')"
+                        attrs="{'invisible': [('payment_state', 'in', ('invoicing_legacy'))]}"/>
+                
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_pending_invoice" model="ir.actions.act_window">
+        <field name="name">Invoices</field>
+        <field name="res_model">account.move</field>
+        <field name="view_mode">tree</field>
+        <field name="view_id" ref="view_pending_invoice_tree"/>
+        <field name="domain">[('move_type', '=', 'out_invoice')]</field>
+        <field name="context">{'default_move_type': 'out_invoice'}</field>
+    </record> -->
+    
+</odoo>

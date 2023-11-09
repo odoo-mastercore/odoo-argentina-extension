@@ -51,7 +51,14 @@
                     <span t-esc="date" />
                   </div>
                   <t t-set="index" t-value="0"/>
+                  <t t-set="company_id" t-value="0"/>
                   <t t-foreach="by_currency" t-as="by_cur">
+                    <t t-if="company_id == 0 or company_id != by_cur['company_id']">
+                        <t t-set="company_id" t-value="by_cur['company_id']"/>
+                        <div class="col-12" style="text-align: center; margin-top: 30px;">
+                          <h3 t-esc="by_cur['company_name']"/>
+                        </div>
+                    </t>
                     <t t-if="index > 0">
                       <div class="col-12" style="text-align: center; margin-top: 30px;"></div>
                     </t>
@@ -70,7 +77,7 @@
 	                        </tr>
 	                      </thead>
 	                      <tbody>
-	                        	<t t-foreach="by_currency_moves[by_cur['currency_name']]" t-as="by_moves">
+	                        	<t t-foreach="by_currency_moves[by_cur['key']]" t-as="by_moves">
 		                          <tr style="border-bottom:1pt solid black; border-color: #C0C0C0;">
 		                            <td style="text-align: center; padding: 2px; padding-right: 10px; width: 108px; word-wrap: break-word;"><span t-esc="by_moves['invoice_date']" /></td>
 		                            <td style="text-align: center; padding: 2px; text-align: center; padding-right: 10px; width: 108px; word-wrap: break-word;" class="text-center"><span t-esc="by_moves['invoice_date_due']" /></td>
@@ -85,17 +92,17 @@
 	                          		<td colspan="4"></td>
 	                          		<td><strong style="color: #333333; padding-right: 10px;">Subtotal: </strong></td>
 	                          		<td style="padding: 2px; text-align: right; padding-right: 10px; width: 108px; word-wrap: break-word;">
-	                          			<span t-esc="by_currency_moves_acumulated[by_cur['currency_name']]['amount_residual']" />
+	                          			<span t-esc="by_currency_moves_acumulated[by_cur['key']]['amount_residual']" />
 	                          		</td>
 	                          		<td style="padding: 2px; text-align: right; padding-right: 10px; width: 108px; word-wrap: break-word;">
-	                          			<span t-esc="by_currency_moves_acumulated[by_cur['currency_name']]['amount_payment']" />
+	                          			<span t-esc="by_currency_moves_acumulated[by_cur['key']]['amount_payment']" />
 	                          		</td>
 	                          	</tr>
 	                          	<tr>
 	                          		<td colspan="4"></td>
 	                          		<td><strong style="color: #333333; padding-right: 10px;">Saldo: </strong></td>
 	                          		<td style="padding: 2px; text-align: right; padding-right: 10px; width: 108px; word-wrap: break-word;">
-	                          			<span t-esc="by_currency_moves_acumulated[by_cur['currency_name']]['amount_residual']" />
+	                          			<span t-esc="by_currency_moves_acumulated[by_cur['key']]['amount_residual']" />
 	                          		</td>
 	                          		<td style="padding: 2px; text-align: right; padding-right: 10px; width: 108px; word-wrap: break-word;">
 
@@ -107,11 +114,18 @@
                   </t>
 
                   <t t-if="payment_unmatched">
-                    <div class="col-12" style="text-align: center;">
+                    <div class="col-12" style="text-align: center; margin-top: 30px;">
                       <h2>Pagos no conciliados</h2>
                     </div>
                     <t t-set="index" t-value="0"/>
+                    <t t-set="company_id" t-value="0"/>
                     <t t-foreach="by_currency_pay" t-as="by_cur">
+                      <t t-if="company_id == 0 or company_id != by_cur['company_id']">
+                          <t t-set="company_id" t-value="by_cur['company_id']"/>
+                          <div class="col-12" style="text-align: center; margin-top: 30px;">
+                            <h3 t-esc="by_cur['company_name']"/>
+                          </div>
+                      </t>
                       <t t-if="index > 0">
                         <div class="col-12" style="text-align: center; margin-top: 30px;"></div>
                       </t>
@@ -130,7 +144,7 @@
                             </tr>
                           </thead>
                           <tbody>
-                              <t t-foreach="by_payment_unmatched[by_cur['currency_name']]" t-as="by_payment">
+                              <t t-foreach="by_payment_unmatched[by_cur['key']]" t-as="by_payment">
                                 <tr style="border-bottom:1pt solid black; border-color: #C0C0C0;">
                                   <td style="text-align: center; padding: 2px; padding-right: 10px; width: 108px; word-wrap: break-word;"><span t-esc="by_payment['company_name']" /></td>
                                   <td style="text-align: center; padding: 2px; text-align: center; padding-right: 10px; width: 108px; word-wrap: break-word;" class="text-center"><span t-esc="by_payment['date']" /></td>
@@ -148,7 +162,7 @@
 
                                   </td>
                                   <td style="padding: 2px; text-align: right; padding-right: 10px; width: 158px; word-wrap: break-word;">
-                                    <span t-esc="by_payment_unmatched_acumulated[by_cur['currency_name']]['amount']" />
+                                    <span t-esc="by_payment_unmatched_acumulated[by_cur['key']]['amount']" />
                                   </td>
                                 </tr>
                           </tbody>

@@ -49,15 +49,15 @@ class ResPartner(models.Model):
             move_ids = self.env['account.move'].search([('partner_id', '=', self.id),
                 ('move_type','in',['out_invoice','out_receipt', 'out_refund', 'in_invoice', 'in_receipt', 'in_refund']),
                 ('state', '=', 'posted'),
-                ('payment_state', '!=','paid')], order="currency_id, invoice_date")
+                ('payment_state', '!=','paid')], order="company_id, currency_id, invoice_date")
             #print('show_partner_pending_payments-move_ids: ', move_ids)
             for move_id in move_ids:
-                if (move_id.currency_id.name not in by_currency_moves):
-                    by_currency_moves[move_id.currency_id.name] = []
-                    by_currency_moves_acumulated[move_id.currency_id.name] = {}
-                    by_currency.append({ 'currency_name': move_id.currency_id.name, 'currency_symbol': move_id.currency_id.symbol, 'currency_position': move_id.currency_id.position })
+                if (('c' + str(move_id.company_id.id) + '_' + move_id.currency_id.name) not in by_currency_moves):
+                    by_currency_moves[('c' + str(move_id.company_id.id) + '_' + move_id.currency_id.name)] = []
+                    by_currency_moves_acumulated[('c' + str(move_id.company_id.id) + '_' + move_id.currency_id.name)] = {}
+                    by_currency.append({ 'company_id': move_id.company_id.id, 'key': ('c' + str(move_id.company_id.id) + '_' + move_id.currency_id.name), 'company_name': move_id.company_id.name, 'currency_name': move_id.currency_id.name, 'currency_symbol': move_id.currency_id.symbol, 'currency_position': move_id.currency_id.position })
 
-                by_currency_moves[move_id.currency_id.name].append({
+                by_currency_moves[('c' + str(move_id.company_id.id) + '_' + move_id.currency_id.name)].append({
                     'move_id': move_id.id,
                     'currency_id': move_id.currency_id.id,
                     'currency_name': move_id.currency_id.name,
@@ -70,38 +70,38 @@ class ResPartner(models.Model):
                     'amount_payment': move_id.currency_id.name + ' ' + str("{0:.2f}".format(round((move_id.amount_total - move_id.amount_residual), 2))).replace('.',','), #((move_id.currency_id.symbol + ' ') if (move_id.currency_id.position == 'before') else '') + str(round((move_id.amount_total - move_id.amount_residual), 2)) + ((' ' + move_id.currency_id.symbol) if (move_id.currency_id.position == 'after') else ''),
                 })
 
-                #print('show_partner_pending_payments-by_currency_moves_acumulated(p): ', by_currency_moves_acumulated[move_id.currency_id.name])
-                #print('show_partner_pending_payments-currency_id.name in: ', ('amount_total' not in by_currency_moves_acumulated[move_id.currency_id.name]))
-                if ('amount_total' not in by_currency_moves_acumulated[move_id.currency_id.name]):
-                    by_currency_moves_acumulated[move_id.currency_id.name]['amount_total'] = move_id.amount_total
-                    by_currency_moves_acumulated[move_id.currency_id.name]['amount_residual'] = move_id.amount_residual
-                    by_currency_moves_acumulated[move_id.currency_id.name]['amount_payment'] = round((move_id.amount_total - move_id.amount_residual), 2)
-                    #print('show_partner_pending_payments-by_currency_moves-if: ', by_currency_moves_acumulated[move_id.currency_id.name])
+                #print('show_partner_pending_payments-by_currency_moves_acumulated(p): ', by_currency_moves_acumulated[('c' + str(move_id.company_id.id) + '_' + move_id.currency_id.name)])
+                #print('show_partner_pending_payments-currency_id.name in: ', ('amount_total' not in by_currency_moves_acumulated[('c' + str(move_id.company_id.id) + '_' + move_id.currency_id.name)]))
+                if ('amount_total' not in by_currency_moves_acumulated[('c' + str(move_id.company_id.id) + '_' + move_id.currency_id.name)]):
+                    by_currency_moves_acumulated[('c' + str(move_id.company_id.id) + '_' + move_id.currency_id.name)]['amount_total'] = move_id.amount_total
+                    by_currency_moves_acumulated[('c' + str(move_id.company_id.id) + '_' + move_id.currency_id.name)]['amount_residual'] = move_id.amount_residual
+                    by_currency_moves_acumulated[('c' + str(move_id.company_id.id) + '_' + move_id.currency_id.name)]['amount_payment'] = round((move_id.amount_total - move_id.amount_residual), 2)
+                    #print('show_partner_pending_payments-by_currency_moves-if: ', by_currency_moves_acumulated[('c' + str(move_id.company_id.id) + '_' + move_id.currency_id.name)])
                 else:
-                    #print('show_partner_pending_payments-by_currency_moves-else: ', by_currency_moves_acumulated[move_id.currency_id.name])
-                    by_currency_moves_acumulated[move_id.currency_id.name]['amount_total'] = by_currency_moves_acumulated[move_id.currency_id.name]['amount_total'] + move_id.amount_total
-                    by_currency_moves_acumulated[move_id.currency_id.name]['amount_residual'] = by_currency_moves_acumulated[move_id.currency_id.name]['amount_residual'] + move_id.amount_residual
-                    by_currency_moves_acumulated[move_id.currency_id.name]['amount_payment'] = by_currency_moves_acumulated[move_id.currency_id.name]['amount_payment'] + round((move_id.amount_total - move_id.amount_residual), 2)
+                    #print('show_partner_pending_payments-by_currency_moves-else: ', by_currency_moves_acumulated[('c' + str(move_id.company_id.id) + '_' + move_id.currency_id.name)])
+                    by_currency_moves_acumulated[('c' + str(move_id.company_id.id) + '_' + move_id.currency_id.name)]['amount_total'] = by_currency_moves_acumulated[('c' + str(move_id.company_id.id) + '_' + move_id.currency_id.name)]['amount_total'] + move_id.amount_total
+                    by_currency_moves_acumulated[('c' + str(move_id.company_id.id) + '_' + move_id.currency_id.name)]['amount_residual'] = by_currency_moves_acumulated[('c' + str(move_id.company_id.id) + '_' + move_id.currency_id.name)]['amount_residual'] + move_id.amount_residual
+                    by_currency_moves_acumulated[('c' + str(move_id.company_id.id) + '_' + move_id.currency_id.name)]['amount_payment'] = by_currency_moves_acumulated[('c' + str(move_id.company_id.id) + '_' + move_id.currency_id.name)]['amount_payment'] + round((move_id.amount_total - move_id.amount_residual), 2)
 
-                #print('show_partner_pending_payments-by_currency_moves-for: ', by_currency_moves[move_id.currency_id.name])
-                #print('show_partner_pending_payments-by_currency_moves_acumulated-for: ', by_currency_moves_acumulated[move_id.currency_id.name])
+                #print('show_partner_pending_payments-by_currency_moves-for: ', by_currency_moves[('c' + str(move_id.company_id.id) + '_' + move_id.currency_id.name)])
+                #print('show_partner_pending_payments-by_currency_moves_acumulated-for: ', by_currency_moves_acumulated[('c' + str(move_id.company_id.id) + '_' + move_id.currency_id.name)])
 
             #print('show_partner_pending_payments-by_currency: ', by_currency)
             #print('show_partner_pending_payments-by_currency_moves: ', by_currency_moves)
             for by_cur in by_currency:
-                by_currency_moves_acumulated[by_cur['currency_name']]['amount_total'] = by_cur['currency_name'] + ' ' + str("{0:.2f}".format(by_currency_moves_acumulated[by_cur['currency_name']]['amount_total'])).replace('.',',') #((by_cur['currency_symbol'] + ' ') if (by_cur['currency_position'] == 'before') else '') + str(round(by_currency_moves_acumulated[by_cur['currency_name']]['amount_total'], 2)) + ((' ' + by_cur['currency_symbol']) if (by_cur['currency_position'] == 'after') else '')
-                by_currency_moves_acumulated[by_cur['currency_name']]['amount_residual'] = by_cur['currency_name'] + ' ' + str("{0:.2f}".format(by_currency_moves_acumulated[by_cur['currency_name']]['amount_residual'])).replace('.',',') #((by_cur['currency_symbol'] + ' ') if (by_cur['currency_position'] == 'before') else '') + str(round(by_currency_moves_acumulated[by_cur['currency_name']]['amount_residual'], 2)) + ((' ' + by_cur['currency_symbol']) if (by_cur['currency_position'] == 'after') else '')
-                by_currency_moves_acumulated[by_cur['currency_name']]['amount_payment'] = by_cur['currency_name'] + ' ' + str("{0:.2f}".format(by_currency_moves_acumulated[by_cur['currency_name']]['amount_payment'])).replace('.',',') #((by_cur['currency_symbol'] + ' ') if (by_cur['currency_position'] == 'before') else '') + str(round(by_currency_moves_acumulated[by_cur['currency_name']]['amount_payment'], 2)) + ((' ' + by_cur['currency_symbol']) if (by_cur['currency_position'] == 'after') else '')
+                by_currency_moves_acumulated[by_cur['key']]['amount_total'] = by_cur['currency_name'] + ' ' + str("{0:.2f}".format(by_currency_moves_acumulated[by_cur['key']]['amount_total'])).replace('.',',') #((by_cur['currency_symbol'] + ' ') if (by_cur['currency_position'] == 'before') else '') + str(round(by_currency_moves_acumulated[by_cur['key']]['amount_total'], 2)) + ((' ' + by_cur['currency_symbol']) if (by_cur['currency_position'] == 'after') else '')
+                by_currency_moves_acumulated[by_cur['key']]['amount_residual'] = by_cur['currency_name'] + ' ' + str("{0:.2f}".format(by_currency_moves_acumulated[by_cur['key']]['amount_residual'])).replace('.',',') #((by_cur['currency_symbol'] + ' ') if (by_cur['currency_position'] == 'before') else '') + str(round(by_currency_moves_acumulated[by_cur['key']]['amount_residual'], 2)) + ((' ' + by_cur['currency_symbol']) if (by_cur['currency_position'] == 'after') else '')
+                by_currency_moves_acumulated[by_cur['key']]['amount_payment'] = by_cur['currency_name'] + ' ' + str("{0:.2f}".format(by_currency_moves_acumulated[by_cur['key']]['amount_payment'])).replace('.',',') #((by_cur['currency_symbol'] + ' ') if (by_cur['currency_position'] == 'before') else '') + str(round(by_currency_moves_acumulated[by_cur['key']]['amount_payment'], 2)) + ((' ' + by_cur['currency_symbol']) if (by_cur['currency_position'] == 'after') else '')
 
             payment_unmatched = self.env['account.payment'].search([('partner_id', '=', self.id), ('is_reconciled','=', False), ('state', '=', 'posted')], order="company_id, currency_id, date")
 
             for payment_id in payment_unmatched:
-                if (payment_id.currency_id.name not in by_payment_unmatched):
-                    by_payment_unmatched[payment_id.currency_id.name] = []
-                    by_payment_unmatched_acumulated[payment_id.currency_id.name] = {}
-                    by_currency_pay.append({ 'currency_name': payment_id.currency_id.name, 'currency_symbol': payment_id.currency_id.symbol, 'currency_position': payment_id.currency_id.position })
+                if (('c' + str(payment_id.company_id.id) + '_' + payment_id.currency_id.name) not in by_payment_unmatched):
+                    by_payment_unmatched[('c' + str(payment_id.company_id.id) + '_' + payment_id.currency_id.name)]= []
+                    by_payment_unmatched_acumulated[('c' + str(payment_id.company_id.id) + '_' + payment_id.currency_id.name)]= {}
+                    by_currency_pay.append({  'company_id': payment_id.company_id.id, 'key': ('c' + str(payment_id.company_id.id) + '_' + payment_id.currency_id.name), 'company_name': payment_id.company_id.name, 'currency_name': payment_id.currency_id.name, 'currency_symbol': payment_id.currency_id.symbol, 'currency_position': payment_id.currency_id.position })
 
-                by_payment_unmatched[payment_id.currency_id.name].append({
+                by_payment_unmatched[('c' + str(payment_id.company_id.id) + '_' + payment_id.currency_id.name)].append({
                     'payment_id': payment_id.id,
                     'company_id': payment_id.company_id.id,
                     'company_name': payment_id.company_id.name,
@@ -116,25 +116,25 @@ class ResPartner(models.Model):
                     'ref': payment_id.ref,
                 })
 
-                #print('show_partner_pending_payments-by_payment_unmatched_acumulated(p): ', by_payment_unmatched_acumulated[move_id.currency_id.name])
-                #print('show_partner_pending_payments-currency_id.name in: ', ('amount_total' not in by_payment_unmatched_acumulated[move_id.currency_id.name]))
-                if ('amount' not in by_payment_unmatched_acumulated[payment_id.currency_id.name]):
-                    by_payment_unmatched_acumulated[payment_id.currency_id.name]['amount'] = payment_id.amount
-                    by_payment_unmatched_acumulated[payment_id.currency_id.name]['amount_company_currency'] = payment_id.amount_company_currency
-                    #print('show_partner_pending_payments-by_payment_unmatched-if: ', by_payment_unmatched_acumulated[move_id.currency_id.name])
+                #print('show_partner_pending_payments-by_payment_unmatched_acumulated(p): ', by_payment_unmatched_acumulated[('c' + str(move_id.company_id.id) + '_' + move_id.currency_id.name)])
+                #print('show_partner_pending_payments-currency_id.name in: ', ('amount_total' not in by_payment_unmatched_acumulated[('c' + str(move_id.company_id.id) + '_' + move_id.currency_id.name)]))
+                if ('amount' not in by_payment_unmatched_acumulated[('c' + str(payment_id.company_id.id) + '_' + payment_id.currency_id.name)]):
+                    by_payment_unmatched_acumulated[('c' + str(payment_id.company_id.id) + '_' + payment_id.currency_id.name)]['amount'] = payment_id.amount
+                    by_payment_unmatched_acumulated[('c' + str(payment_id.company_id.id) + '_' + payment_id.currency_id.name)]['amount_company_currency'] = payment_id.amount_company_currency
+                    #print('show_partner_pending_payments-by_payment_unmatched-if: ', by_payment_unmatched_acumulated[('c' + str(move_id.company_id.id) + '_' + move_id.currency_id.name)])
                 else:
-                    #print('show_partner_pending_payments-by_payment_unmatched-else: ', by_payment_unmatched_acumulated[move_id.currency_id.name])
-                    by_payment_unmatched_acumulated[payment_id.currency_id.name]['amount'] = by_payment_unmatched_acumulated[payment_id.currency_id.name]['amount'] + payment_id.amount
-                    by_payment_unmatched_acumulated[payment_id.currency_id.name]['amount_company_currency'] = by_payment_unmatched_acumulated[payment_id.currency_id.name]['amount_company_currency'] + payment_id.amount_company_currency
+                    #print('show_partner_pending_payments-by_payment_unmatched-else: ', by_payment_unmatched_acumulated[('c' + str(move_id.company_id.id) + '_' + move_id.currency_id.name)])
+                    by_payment_unmatched_acumulated[('c' + str(payment_id.company_id.id) + '_' + payment_id.currency_id.name)]['amount'] = by_payment_unmatched_acumulated[('c' + str(payment_id.company_id.id) + '_' + payment_id.currency_id.name)]['amount'] + payment_id.amount
+                    by_payment_unmatched_acumulated[('c' + str(payment_id.company_id.id) + '_' + payment_id.currency_id.name)]['amount_company_currency'] = by_payment_unmatched_acumulated[('c' + str(payment_id.company_id.id) + '_' + payment_id.currency_id.name)]['amount_company_currency'] + payment_id.amount_company_currency
 
-                #print('show_partner_pending_payments-by_payment_unmatched-for: ', by_payment_unmatched[move_id.currency_id.name])
-                #print('show_partner_pending_payments-by_payment_unmatched_acumulated-for: ', by_payment_unmatched_acumulated[move_id.currency_id.name])
+                #print('show_partner_pending_payments-by_payment_unmatched-for: ', by_payment_unmatched[('c' + str(move_id.company_id.id) + '_' + move_id.currency_id.name)])
+                #print('show_partner_pending_payments-by_payment_unmatched_acumulated-for: ', by_payment_unmatched_acumulated[('c' + str(move_id.company_id.id) + '_' + move_id.currency_id.name)])
 
             #print('show_partner_pending_payments-by_currency: ', by_currency)
             #print('show_partner_pending_payments-by_currency_moves: ', by_currency_moves)
             for by_cur_pay in by_currency_pay:
-                by_payment_unmatched_acumulated[by_cur_pay['currency_name']]['amount'] = by_cur_pay['currency_name'] + ' ' + str("{0:.2f}".format(by_payment_unmatched_acumulated[by_cur_pay['currency_name']]['amount'])).replace('.',',')
-                by_payment_unmatched_acumulated[by_cur_pay['currency_name']]['amount_company_currency'] = by_cur_pay['currency_name'] + ' ' + str("{0:.2f}".format(by_payment_unmatched_acumulated[by_cur_pay['currency_name']]['amount_company_currency'])).replace('.',',')
+                by_payment_unmatched_acumulated[by_cur_pay['key']]['amount'] = by_cur_pay['currency_name'] + ' ' + str("{0:.2f}".format(by_payment_unmatched_acumulated[by_cur_pay['key']]['amount'])).replace('.',',')
+                by_payment_unmatched_acumulated[by_cur_pay['key']]['amount_company_currency'] = by_cur_pay['currency_name'] + ' ' + str("{0:.2f}".format(by_payment_unmatched_acumulated[by_cur_pay['key']]['amount_company_currency'])).replace('.',',')
 
             #print('show_partner_pending_payments-by_currency_moves_acumulated(r): ', by_currency_moves_acumulated)
             data = {

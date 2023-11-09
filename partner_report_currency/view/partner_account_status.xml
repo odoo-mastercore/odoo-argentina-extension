@@ -43,7 +43,7 @@
                     <h2>Estados de cuenta</h2>
                   </div>
               	  <div class="col-12" style="text-align: left;">
-                    <strong style="color: #333333; padding-right: 10px;">Cliente: </strong>
+                    <strong style="color: #333333; padding-right: 10px;" t-esc="partner_type"/>
                     <span t-esc="partner_name" />
                   </div>
 	                <div class="col-12" style="text-align: left;">

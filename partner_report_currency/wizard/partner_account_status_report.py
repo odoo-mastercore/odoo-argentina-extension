@@ -74,7 +74,7 @@ class partnerAccountStatusReport(models.TransientModel):
             params = []
             params.append(self.partner_id.id)
             params.append(self.company_id.id)
-            params.append(('out_invoice', 'out_refund', 'out_receipt'))
+            params.append(('out_invoice', 'out_refund', 'out_receipt', 'in_invoice', 'in_receipt', 'in_refund'))
             #params.append(('line_section', 'line_note'))
             #params.append('asset_receivable')
             params.append('posted')
@@ -87,7 +87,7 @@ class partnerAccountStatusReport(models.TransientModel):
                                      AND aml.parent_state = %s AND aml.date < %s GROUP BY aml.currency_id, rc.name ORDER BY aml.currency_id
                                 """, params)'''
             self._cr.execute("""
-                                    SELECT am.currency_id, rc.name, sum(CASE WHEN (am.move_type = 'out_refund') THEN (am.amount_residual * (-1)) ELSE (am.amount_residual) END) FROM account_move am INNER JOIN res_currency rc
+                                    SELECT am.currency_id, rc.name, sum(CASE WHEN (am.move_type = 'out_refund' OR am.move_type = 'in_refund') THEN (am.amount_residual * (-1)) ELSE (am.amount_residual) END) FROM account_move am INNER JOIN res_currency rc
                                     ON am.currency_id = rc.id WHERE am.partner_id = %s AND am.company_id = %s AND am.move_type IN %s
                                      AND am.state = %s AND am.invoice_date < %s GROUP BY am.currency_id, rc.name ORDER BY am.currency_id
                                 """, params)
@@ -198,8 +198,8 @@ class partnerAccountStatusReport(models.TransientModel):
                     'currency_id': line_id.currency_id.id,
                     'currency_name': currency_group,
                     'date': str(line_id.date),
-                    'line_name': line_id.name, #(line_id.name if (line_id.move_type != 'entry') else line_id.ref),
-                    'move_type': 'Factura' if (line_id.move_type == 'out_invoice') else ('Nota de crédito' if (line_id.move_type == 'out_refund') else 'Recibo'),
+                    'line_name': line_id.move_id.name if (line_id.move_type == 'out_invoice' or line_id.move_type == 'in_invoice') else line_id.name, #(line_id.name if (line_id.move_type != 'entry') else line_id.ref),
+                    'move_type': 'Factura' if (line_id.move_type == 'out_invoice' or line_id.move_type == 'in_invoice') else ('Nota de crédito' if (line_id.move_type == 'out_refund' or line_id.move_type == 'in_refund') else 'Recibo'),
                     'debit': str("{0:.2f}".format(round(((line_id.debit/rate) if (line_id.debit != 0.0) else line_id.debit), 2))).replace('.',','),
                     'credit': str("{0:.2f}".format(round(((line_id.credit/rate) if (line_id.credit != 0.0) else line_id.credit), 2))).replace('.',','),
                     'balance': str("{0:.2f}".format(round(by_currency_moves_acumulated[currency_group]['balance'], 2))).replace('.',','),
@@ -228,6 +228,7 @@ class partnerAccountStatusReport(models.TransientModel):
                 'start_date': self.start_date,
                 'end_date': self.end_date,
                 'partner_name': self.partner_id.name,
+                'partner_type': 'Cliente: ' if (self.partner_id.customer_rank >= self.partner_id.supplier_rank) else 'Proveedor: ',
                 'company': company,
                 'by_currency': by_currency,
                 'by_currency_moves': by_currency_moves,

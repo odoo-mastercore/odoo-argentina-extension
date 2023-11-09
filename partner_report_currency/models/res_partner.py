@@ -23,8 +23,11 @@ class ResPartner(models.Model):
         #print('show_partner_pending_payments-self: ', self)
         company = []
         by_currency = []
+        by_currency_pay = []
         by_currency_moves = {}
+        by_payment_unmatched = {}
         by_currency_moves_acumulated = {}
+        by_payment_unmatched_acumulated = {}
         try:
             comp = (self.company_id) if (len(self.company_id) > 0) else self.env.company
             company.append({
@@ -44,7 +47,7 @@ class ResPartner(models.Model):
             })
             now = datetime.now()
             move_ids = self.env['account.move'].search([('partner_id', '=', self.id),
-                ('move_type','in',['out_invoice','out_receipt', 'out_refund']),
+                ('move_type','in',['out_invoice','out_receipt', 'out_refund', 'in_invoice', 'in_receipt', 'in_refund']),
                 ('state', '=', 'posted'),
                 ('payment_state', '!=','paid')], order="currency_id, invoice_date")
             #print('show_partner_pending_payments-move_ids: ', move_ids)
@@ -61,7 +64,7 @@ class ResPartner(models.Model):
                     'invoice_date': str(move_id.invoice_date),
                     'invoice_date_due': str(move_id.invoice_date_due),
                     'name': move_id.name,
-                    'move_type': 'Factura' if (move_id.move_type == 'out_invoice') else ('Nota de crédito' if (move_id.move_type == 'out_refund') else 'Recibo'),
+                    'move_type': 'Factura' if (move_id.move_type == 'out_invoice' or move_id.move_type == 'in_invoice') else ('Nota de crédito' if (move_id.move_type == 'out_refund' or move_id.move_type == 'in_refund') else 'Recibo'),
                     'amount_total': move_id.currency_id.name + ' ' + str("{0:.2f}".format(round(move_id.amount_total, 2))).replace('.',','), #((move_id.currency_id.symbol + ' ') if (move_id.currency_id.position == 'before') else '') + str(round(move_id.amount_total, 2)) + ((' ' + move_id.currency_id.symbol) if (move_id.currency_id.position == 'after') else ''),
                     'amount_residual': move_id.currency_id.name + ' ' + str("{0:.2f}".format(round(move_id.amount_residual, 2))).replace('.',','), #((move_id.currency_id.symbol + ' ') if (move_id.currency_id.position == 'before') else '') + str(round(move_id.amount_residual, 2)) + ((' ' + move_id.currency_id.symbol) if (move_id.currency_id.position == 'after') else ''),
                     'amount_payment': move_id.currency_id.name + ' ' + str("{0:.2f}".format(round((move_id.amount_total - move_id.amount_residual), 2))).replace('.',','), #((move_id.currency_id.symbol + ' ') if (move_id.currency_id.position == 'before') else '') + str(round((move_id.amount_total - move_id.amount_residual), 2)) + ((' ' + move_id.currency_id.symbol) if (move_id.currency_id.position == 'after') else ''),
@@ -90,16 +93,64 @@ class ResPartner(models.Model):
                 by_currency_moves_acumulated[by_cur['currency_name']]['amount_residual'] = by_cur['currency_name'] + ' ' + str("{0:.2f}".format(by_currency_moves_acumulated[by_cur['currency_name']]['amount_residual'])).replace('.',',') #((by_cur['currency_symbol'] + ' ') if (by_cur['currency_position'] == 'before') else '') + str(round(by_currency_moves_acumulated[by_cur['currency_name']]['amount_residual'], 2)) + ((' ' + by_cur['currency_symbol']) if (by_cur['currency_position'] == 'after') else '')
                 by_currency_moves_acumulated[by_cur['currency_name']]['amount_payment'] = by_cur['currency_name'] + ' ' + str("{0:.2f}".format(by_currency_moves_acumulated[by_cur['currency_name']]['amount_payment'])).replace('.',',') #((by_cur['currency_symbol'] + ' ') if (by_cur['currency_position'] == 'before') else '') + str(round(by_currency_moves_acumulated[by_cur['currency_name']]['amount_payment'], 2)) + ((' ' + by_cur['currency_symbol']) if (by_cur['currency_position'] == 'after') else '')
 
+            payment_unmatched = self.env['account.payment'].search([('partner_id', '=', self.id), ('is_reconciled','=', False), ('state', '=', 'posted')], order="company_id, currency_id, date")
+
+            for payment_id in payment_unmatched:
+                if (payment_id.currency_id.name not in by_payment_unmatched):
+                    by_payment_unmatched[payment_id.currency_id.name] = []
+                    by_payment_unmatched_acumulated[payment_id.currency_id.name] = {}
+                    by_currency_pay.append({ 'currency_name': payment_id.currency_id.name, 'currency_symbol': payment_id.currency_id.symbol, 'currency_position': payment_id.currency_id.position })
+
+                by_payment_unmatched[payment_id.currency_id.name].append({
+                    'payment_id': payment_id.id,
+                    'company_id': payment_id.company_id.id,
+                    'company_name': payment_id.company_id.name,
+                    'name': payment_id.name,
+                    'date': str(payment_id.date),
+                    'currency_id': payment_id.currency_id.id,
+                    'currency_name': payment_id.currency_id.name,
+                    'journal_id': payment_id.journal_id.name,
+                    'payment_type': 'Enviar' if (payment_id.payment_type == 'outbound') else 'Recibir',
+                    'amount': payment_id.currency_id.name + ' ' + str("{0:.2f}".format(round(payment_id.amount, 2))).replace('.',','),
+                    'amount_company_currency': payment_id.company_id.currency_id.name + ' ' + str("{0:.2f}".format(round(payment_id.amount_company_currency, 2))).replace('.',','),
+                    'ref': payment_id.ref,
+                })
+
+                #print('show_partner_pending_payments-by_payment_unmatched_acumulated(p): ', by_payment_unmatched_acumulated[move_id.currency_id.name])
+                #print('show_partner_pending_payments-currency_id.name in: ', ('amount_total' not in by_payment_unmatched_acumulated[move_id.currency_id.name]))
+                if ('amount' not in by_payment_unmatched_acumulated[payment_id.currency_id.name]):
+                    by_payment_unmatched_acumulated[payment_id.currency_id.name]['amount'] = payment_id.amount
+                    by_payment_unmatched_acumulated[payment_id.currency_id.name]['amount_company_currency'] = payment_id.amount_company_currency
+                    #print('show_partner_pending_payments-by_payment_unmatched-if: ', by_payment_unmatched_acumulated[move_id.currency_id.name])
+                else:
+                    #print('show_partner_pending_payments-by_payment_unmatched-else: ', by_payment_unmatched_acumulated[move_id.currency_id.name])
+                    by_payment_unmatched_acumulated[payment_id.currency_id.name]['amount'] = by_payment_unmatched_acumulated[payment_id.currency_id.name]['amount'] + payment_id.amount
+                    by_payment_unmatched_acumulated[payment_id.currency_id.name]['amount_company_currency'] = by_payment_unmatched_acumulated[payment_id.currency_id.name]['amount_company_currency'] + payment_id.amount_company_currency
+
+                #print('show_partner_pending_payments-by_payment_unmatched-for: ', by_payment_unmatched[move_id.currency_id.name])
+                #print('show_partner_pending_payments-by_payment_unmatched_acumulated-for: ', by_payment_unmatched_acumulated[move_id.currency_id.name])
+
+            #print('show_partner_pending_payments-by_currency: ', by_currency)
+            #print('show_partner_pending_payments-by_currency_moves: ', by_currency_moves)
+            for by_cur_pay in by_currency_pay:
+                by_payment_unmatched_acumulated[by_cur_pay['currency_name']]['amount'] = by_cur_pay['currency_name'] + ' ' + str("{0:.2f}".format(by_payment_unmatched_acumulated[by_cur_pay['currency_name']]['amount'])).replace('.',',')
+                by_payment_unmatched_acumulated[by_cur_pay['currency_name']]['amount_company_currency'] = by_cur_pay['currency_name'] + ' ' + str("{0:.2f}".format(by_payment_unmatched_acumulated[by_cur_pay['currency_name']]['amount_company_currency'])).replace('.',',')
+
             #print('show_partner_pending_payments-by_currency_moves_acumulated(r): ', by_currency_moves_acumulated)
             data = {
                 'id': self.id,
                 'model': self._name,
                 'date': datetime.now(),
                 'partner_name': self.name,
+                'partner_type': 'Cliente: ' if (self.customer_rank >= self.supplier_rank) else 'Proveedor: ',
                 'company': company,
                 'by_currency': by_currency,
                 'by_currency_moves': by_currency_moves,
                 'by_currency_moves_acumulated': by_currency_moves_acumulated,
+                'payment_unmatched': True if (len(by_currency_pay) > 0) else False,
+                'by_currency_pay': by_currency_pay,
+                'by_payment_unmatched': by_payment_unmatched,
+                'by_payment_unmatched_acumulated': by_payment_unmatched_acumulated,
                 'name': 'Pagos_pendientes' + '_' + self.name.replace(' ', '_'),
             }
             #print('show_partner_pending_payments-data: ', data)

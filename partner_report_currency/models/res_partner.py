@@ -49,6 +49,7 @@ class ResPartner(models.Model):
             move_ids = self.env['account.move'].search([('partner_id', '=', self.id),
                 ('move_type','in',['out_invoice','out_receipt', 'out_refund', 'in_invoice', 'in_receipt', 'in_refund']),
                 ('state', '=', 'posted'),
+                ('amount_residual', '!=', 0.0),
                 ('payment_state', '!=','paid')], order="company_id, currency_id, invoice_date")
             #print('show_partner_pending_payments-move_ids: ', move_ids)
             for move_id in move_ids:

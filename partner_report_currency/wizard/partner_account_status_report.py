@@ -133,7 +133,10 @@ class partnerAccountStatusReport(models.TransientModel):
                 #_logger.info('generate_partner_account_status_report-payment_group_id: %s', line_id.payment_id.payment_group_id)
                 #_logger.info('generate_partner_account_status_report-selected_debt_currency_id: %s', line_id.payment_id.payment_group_id.selected_debt_currency_id)
                 if (line_id.move_type == 'entry'):
-                    currency_group = (line_id.payment_id.payment_group_id.selected_debt_currency_id.name if (len(line_id.payment_id.payment_group_id.selected_debt_currency_id) > 0) else self.company_id.currency_id.name)
+                    if (line_id.amount_residual != 0.0):
+                        currency_group = line_id.currency_id.name
+                    else:
+                        currency_group = (line_id.payment_id.payment_group_id.selected_debt_currency_id.name if (len(line_id.payment_id.payment_group_id.selected_debt_currency_id) > 0) else self.company_id.currency_id.name)
                 else:
                     currency_group = line_id.currency_id.name
                 #_logger.info('generate_partner_account_status_report-currency_group: %s', currency_group)

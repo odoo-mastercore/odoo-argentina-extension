@@ -88,8 +88,8 @@ class partnerAccountStatusReport(models.TransientModel):
                                 """, params)'''
             self._cr.execute("""
                                     SELECT am.currency_id, rc.name, sum(CASE WHEN (am.move_type = 'out_refund' OR am.move_type = 'in_refund') THEN (am.amount_residual * (-1)) ELSE (am.amount_residual) END) FROM account_move am INNER JOIN res_currency rc
-                                    ON am.currency_id = rc.id WHERE am.partner_id = %s AND am.company_id = %s AND am.move_type IN %s
-                                     AND am.state = %s AND am.invoice_date < %s GROUP BY am.currency_id, rc.name ORDER BY am.currency_id
+                                    ON am.currency_id = rc.id INNER JOIN account_journal aj ON aj.id = am.journal_id WHERE am.partner_id = %s AND am.company_id = %s AND am.move_type IN %s
+                                     AND am.state = %s AND am.invoice_date < %s aj.exclude_report_acc_status = False GROUP BY am.currency_id, rc.name ORDER BY am.currency_id
                                 """, params)
             receivable_id = self._cr.fetchall()
             #_logger.info('generate_partner_account_status_report-receivable_id: %s', receivable_id)
@@ -119,6 +119,7 @@ class partnerAccountStatusReport(models.TransientModel):
                 ('company_id', '=', self.company_id.id),
                 ('display_type', 'not in', ['line_section', 'line_note']),
                 ('account_id.account_type','in', ['asset_receivable', 'liability_payable']),
+                ('journal_id.exclude_report_acc_status','=', False),
                 ('parent_state', '=', 'posted'),
                 ('date','<=', self.end_date.strftime("%Y-%m-%d")),
                 ('date','>=', self.start_date.strftime("%Y-%m-%d"))], order="date asc, id asc")

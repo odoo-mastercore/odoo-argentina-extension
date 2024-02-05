@@ -62,7 +62,7 @@ class AccountMoveLine(models.Model):
     @api.depends('product_id','quantity','price_subtotal', 'move_id.amount_untaxed')
     def _compute_line_foreigns(self):
         for rec in self:
-            if rec.prodcut_id:
+            if rec.product_id:
                 if rec.move_id.move_type in ['out_invoice','in_refund'] and not rec.move_id.debit_origin_id:
                     _logger.warning('Factura')
                     if rec.currency_id == rec.company_foreign_currency_id:

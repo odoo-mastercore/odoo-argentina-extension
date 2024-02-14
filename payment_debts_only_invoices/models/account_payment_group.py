@@ -15,5 +15,5 @@ class AccountPaymentGroup(models.Model):
 
     def _get_to_pay_move_lines_domain(self):
         rec = super(AccountPaymentGroup, self)._get_to_pay_move_lines_domain()
-        rec.append(('move_type','in',['out_invoice','out_refund']))
+        rec.append(('move_type','in',['out_invoice','out_refund','in_invoice','in_refund']))
         return rec

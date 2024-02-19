@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="view_currency_tree_ccc" model="ir.ui.view">
+        <field name="name">view_currency_tree_ccc</field>
+        <field name="model">res.currency</field>
+        <field name="inherit_id" ref="base.view_currency_tree"/>
+        <field name="arch" type="xml">
+            <field name="inverse_rate" position="after">
+                <field name="code"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="view_currency_form_ccc" model="ir.ui.view">
+        <field name="name">view_currency_form_ccc</field>
+        <field name="model">res.currency</field>
+        <field name="inherit_id" ref="base.view_currency_form"/>
+        <field name="arch" type="xml">
+            <field name="full_name" position="after">
+                <field name="code"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="view_move_line_tree_ccc" model="ir.ui.view">
+        <field name="name">view_move_line_tree_ccc</field>
+        <field name="model">account.move.line</field>
+        <field name="inherit_id" ref="account.view_move_line_tree"/>
+        <field name="arch" type="xml">
+            <field name="currency_id" position="after">
+                <field name="currency_code"/>
+                <field name="currency_rate"/>
+            </field>
+            <field name="account_id" position="after">
+                <field name="account_id_code"/>
+                <field name="account_id_name"/>
+            </field>
+            <field name="credit" position="after">
+                <field name="debit_currency"/>
+                <field name="credit_currency"/>
+            </field>
+        </field>
+    </record>
+</odoo>

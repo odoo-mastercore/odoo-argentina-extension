@@ -14,7 +14,7 @@ class AccountMoveLine(models.Model):
     currency_code = fields.Char(string='Código de la moneda', compute="_compute_currency_code")
     account_id_code = fields.Char(string='Codigo de la cuenta', related='account_id.code')
     account_id_name = fields.Char(string='Nombre de la cuenta', related='account_id.name')
-    currency_rate = fields.Monetary(string='Tasa de cambio', compute='_compute_currency_code', currency_field='company_currency_id')
+    custom_currency_rate = fields.Monetary(string='Tasa de cambio', compute='_compute_currency_code', currency_field='company_currency_id')
     debit_currency = fields.Monetary(string='Importe en Debito', compute='_compute_currency_code', currency_field='currency_id')
     credit_currency = fields.Monetary(string='Importe en Credito', compute='_compute_currency_code', currency_field='currency_id')
 
@@ -26,20 +26,20 @@ class AccountMoveLine(models.Model):
             aml.currency_code = (aml.currency_id.code if (len(aml.currency_id) > 0) else self.env.company.currency_id.code)
             if (aml.company_currency_id != aml.currency_id):
                 if (aml.debit != 0.0 and aml.amount_currency != 0.0):
-                    aml.currency_rate = round((aml.debit / aml.amount_currency), 2)
+                    aml.custom_currency_rate = round((aml.debit / aml.amount_currency), 2)
                 if (aml.debit != 0.0):
                     aml.debit_currency = (aml.amount_currency if (aml.amount_currency > 0) else (aml.amount_currency * (-1)))
                     aml.credit_currency = 0.0
                 if (aml.credit != 0.0 and aml.amount_currency != 0.0):
-                    aml.currency_rate = round((aml.credit / aml.amount_currency), 2)
+                    aml.custom_currency_rate = round((aml.credit / aml.amount_currency), 2)
                 if (aml.credit != 0.0):
                     aml.credit_currency = (aml.amount_currency if (aml.amount_currency > 0) else (aml.amount_currency * (-1)))
                     aml.debit_currency = 0.0
-                if (aml.currency_rate == False):
-                    aml.currency_rate = 0.0
-                if (aml.currency_rate < 0.0):
-                    aml.currency_rate = aml.currency_rate * (-1)
+                if (aml.custom_currency_rate == False):
+                    aml.custom_currency_rate = 0.0
+                if (aml.custom_currency_rate < 0.0):
+                    aml.custom_currency_rate = aml.custom_currency_rate * (-1)
             else:
-                aml.currency_rate = 0.0
+                aml.custom_currency_rate = 0.0
                 aml.debit_currency = 0.0
                 aml.credit_currency = 0.0

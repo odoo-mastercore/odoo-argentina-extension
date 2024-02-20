@@ -29,7 +29,7 @@
         <field name="arch" type="xml">
             <field name="currency_id" position="after">
                 <field name="currency_code"/>
-                <field name="currency_rate"/>
+                <field name="custom_currency_rate"/>
             </field>
             <field name="account_id" position="after">
                 <field name="account_id_code"/>

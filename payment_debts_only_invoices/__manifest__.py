@@ -19,5 +19,6 @@
         "account_payment_group",
     ],
     "data": [
+        "views/account_payment_group.xml"
     ],
 }

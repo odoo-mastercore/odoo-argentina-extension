@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<record id="payment_multi_inherit" model="ir.ui.view">
+        <field name="name">payment.multi.inherit</field>
+        <field name="model">account.payment.group</field>
+        <field name="inherit_id" ref="account_payment_group.view_account_payment_group_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[3]//field[@name='to_pay_move_line_ids']" position="attributes">
+                <attribute name="domain">
+                    [('reconciled', '=', False), ('full_reconcile_id', '=', False),('move_id.state', '=', 'posted'),('company_id','=',company_id),('partner_id','=',partner_id),('move_type','in',['out_invoice','out_refund'])]
+                </attribute>
+
+            </xpath>
+        </field>
+    </record>
+</odoo>

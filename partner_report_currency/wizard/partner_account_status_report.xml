@@ -11,6 +11,7 @@
                 </p>
                 <group>
                     <field name="company_id"/>
+                    <field name="report_type"/>
                     <field name="partner_id" invisible="1"/>
                     <field name="start_date"/>
                     <field name="end_date"/>

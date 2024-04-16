@@ -24,6 +24,7 @@ class partnerAccountStatusReport(models.TransientModel):
 
     partner_id = fields.Many2one('res.partner', string='Partner')
     company_id = fields.Many2one('res.company', string='Compañía')
+    report_type = fields.Selection([('customer', 'Cliente'), ('supplier', 'Proveedor')], required=True, default='customer', string='Tipo de reporte')
 
     def _get_report_base_filename(self):
         return 'Estado_de_cuenta' + '_' + self.partner_id.name.replace(' ', '_')
@@ -74,7 +75,10 @@ class partnerAccountStatusReport(models.TransientModel):
             params = []
             params.append(self.partner_id.id)
             params.append(self.company_id.id)
-            params.append(('out_invoice', 'out_refund', 'out_receipt', 'in_invoice', 'in_receipt', 'in_refund'))
+            if (self.report_type == 'customer'):
+                params.append(('out_invoice', 'out_refund', 'out_receipt'))
+            else:
+                params.append(('in_invoice', 'in_receipt', 'in_refund'))
             #params.append(('line_section', 'line_note'))
             #params.append('asset_receivable')
             params.append('posted')

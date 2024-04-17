@@ -24,7 +24,7 @@ class partnerAccountStatusReport(models.TransientModel):
 
     partner_id = fields.Many2one('res.partner', string='Partner')
     company_id = fields.Many2one('res.company', string='Compañía')
-    report_type = fields.Selection([('customer', 'Cliente'), ('supplier', 'Proveedor')], required=True, default='customer', string='Tipo de reporte')
+    report_type = fields.Selection([('customer', 'Cliente'), ('supplier', 'Proveedor')], required=True, default='customer')
 
     def _get_report_base_filename(self):
         return 'Estado_de_cuenta' + '_' + self.partner_id.name.replace(' ', '_')
@@ -34,7 +34,7 @@ class partnerAccountStatusReport(models.TransientModel):
 
     start_date = fields.Date(string='Fecha de inicio', required=True, default=_default_start_date)
     end_date = fields.Date(string='Fecha fin', required=True, default=fields.Datetime.now)
-    
+
     @api.onchange('start_date')
     def _onchange_start_date(self):
         if self.start_date and self.end_date and self.end_date < self.start_date:
@@ -119,15 +119,17 @@ class partnerAccountStatusReport(models.TransientModel):
                         by_currency_moves_acumulated[rec[1]]['balance'] = round(balance_initial, 2)
 
             move_line_ids = self.env['account.move.line'].search([('partner_id', '=', self.partner_id.id),
-                #('move_id.move_type','in',['out_invoice','out_receipt', 'entry']),
+                ('move_id.move_type','in', (['out_invoice', 'out_refund', 'out_receipt', 'entry'] if (self.report_type == 'customer') else ['in_invoice', 'in_receipt', 'in_refund', 'entry'])),
                 ('company_id', '=', self.company_id.id),
                 ('display_type', 'not in', ['line_section', 'line_note']),
                 ('account_id.account_type','in', ['asset_receivable', 'liability_payable']),
                 ('journal_id.exclude_report_acc_status','=', False),
+                ('journal_id.type','!=', ('purchase' if (self.report_type == 'customer') else 'sale')),
+                ('payment_id.payment_type','!=', ('outbound' if (self.report_type == 'customer') else 'inbound')),
                 ('parent_state', '=', 'posted'),
                 ('date','<=', self.end_date.strftime("%Y-%m-%d")),
                 ('date','>=', self.start_date.strftime("%Y-%m-%d"))], order="date asc, id asc")
-            #_logger.info('generate_partner_account_status_report-move_line_ids: %s', move_line_ids)
+            #_logger.warning('generate_partner_account_status_report-move_line_ids: %s', move_line_ids)
             for line_id in move_line_ids:
                 #_logger.info('generate_partner_account_status_report-line_id: %s', line_id)
                 #_logger.info('generate_partner_account_status_report-date: %s', line_id.date)

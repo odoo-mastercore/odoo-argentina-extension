@@ -19,6 +19,9 @@ class ResPartner(models.Model):
     def _get_report_base_filename(self):
         return 'Pagos_pendientes' + '_' + self.name.replace(' ', '_')
 
+    def formatString(self, value):
+        return value.replace('\xa0', ' ').replace('Á', 'A').replace('á', 'a').replace('É', 'E').replace('é', 'e').replace('Í', 'I').replace('í', 'i').replace('Ó', 'O').replace('ó', 'o').replace('Ú', 'U').replace('ú', 'u').replace('Ñ', 'N').replace('ñ', 'n').replace('Ü', 'U').replace('ü', 'u')
+
     def show_partner_pending_payments(self):
         #print('show_partner_pending_payments-self: ', self)
         company = []
@@ -56,7 +59,7 @@ class ResPartner(models.Model):
                 if (('c' + str(move_id.company_id.id) + '_' + move_id.currency_id.name) not in by_currency_moves):
                     by_currency_moves[('c' + str(move_id.company_id.id) + '_' + move_id.currency_id.name)] = []
                     by_currency_moves_acumulated[('c' + str(move_id.company_id.id) + '_' + move_id.currency_id.name)] = {}
-                    by_currency.append({ 'company_id': move_id.company_id.id, 'key': ('c' + str(move_id.company_id.id) + '_' + move_id.currency_id.name), 'company_name': move_id.company_id.name, 'currency_name': move_id.currency_id.name, 'currency_symbol': move_id.currency_id.symbol, 'currency_position': move_id.currency_id.position })
+                    by_currency.append({ 'company_id': move_id.company_id.id, 'key': ('c' + str(move_id.company_id.id) + '_' + move_id.currency_id.name), 'company_name': self.formatString(move_id.company_id.name), 'currency_name': move_id.currency_id.name, 'currency_symbol': move_id.currency_id.symbol, 'currency_position': move_id.currency_id.position })
 
                 by_currency_moves[('c' + str(move_id.company_id.id) + '_' + move_id.currency_id.name)].append({
                     'move_id': move_id.id,
@@ -100,12 +103,12 @@ class ResPartner(models.Model):
                 if (('c' + str(payment_id.company_id.id) + '_' + payment_id.currency_id.name) not in by_payment_unmatched):
                     by_payment_unmatched[('c' + str(payment_id.company_id.id) + '_' + payment_id.currency_id.name)]= []
                     by_payment_unmatched_acumulated[('c' + str(payment_id.company_id.id) + '_' + payment_id.currency_id.name)]= {}
-                    by_currency_pay.append({  'company_id': payment_id.company_id.id, 'key': ('c' + str(payment_id.company_id.id) + '_' + payment_id.currency_id.name), 'company_name': payment_id.company_id.name, 'currency_name': payment_id.currency_id.name, 'currency_symbol': payment_id.currency_id.symbol, 'currency_position': payment_id.currency_id.position })
+                    by_currency_pay.append({  'company_id': payment_id.company_id.id, 'key': ('c' + str(payment_id.company_id.id) + '_' + payment_id.currency_id.name), 'company_name': self.formatString(payment_id.company_id.name), 'currency_name': payment_id.currency_id.name, 'currency_symbol': payment_id.currency_id.symbol, 'currency_position': payment_id.currency_id.position })
 
                 by_payment_unmatched[('c' + str(payment_id.company_id.id) + '_' + payment_id.currency_id.name)].append({
                     'payment_id': payment_id.id,
                     'company_id': payment_id.company_id.id,
-                    'company_name': payment_id.company_id.name,
+                    'company_name': self.formatString(payment_id.company_id.name),
                     'name': payment_id.name,
                     'date': str(payment_id.date),
                     'currency_id': payment_id.currency_id.id,

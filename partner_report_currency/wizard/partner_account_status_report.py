@@ -45,6 +45,9 @@ class partnerAccountStatusReport(models.TransientModel):
         if self.end_date and self.end_date < self.start_date:
             self.start_date = self.end_date
 
+    def formatString(self, value):
+        return value.replace('\xa0', ' ').replace('Á', 'A').replace('á', 'a').replace('É', 'E').replace('é', 'e').replace('Í', 'I').replace('í', 'i').replace('Ó', 'O').replace('ó', 'o').replace('Ú', 'U').replace('ú', 'u').replace('Ñ', 'N').replace('ñ', 'n').replace('Ü', 'U').replace('ü', 'u')
+
     def generate_partner_account_status_report(self):
         #_logger.info('generate_partner_account_status_report-self: %s', self)
         #_logger.info('generate_partner_account_status_report-partner_id: %s', self.partner_id)
@@ -113,7 +116,7 @@ class partnerAccountStatusReport(models.TransientModel):
                         'move_type': '',
                         'debit': '',
                         'credit': '',
-                        'balance': str("{0:.2f}".format(round(balance_initial, 2))).replace('.',','),
+                        'balance': str("{:,.2f}".format(round(balance_initial, 2)).replace(",", "@").replace(".", ",").replace("@", ".")),
                     })
                     if ('balance' not in by_currency_moves_acumulated[rec[1]]):
                         by_currency_moves_acumulated[rec[1]]['balance'] = round(balance_initial, 2)
@@ -165,7 +168,7 @@ class partnerAccountStatusReport(models.TransientModel):
                         'move_type': '',
                         'debit': '',
                         'credit': '',
-                        'balance': str("{0:.2f}".format(round(balance_initial, 2))).replace('.',','),
+                        'balance': str("{:,.2f}".format(round(balance_initial, 2)).replace(",", "@").replace(".", ",").replace("@", ".")),
                     })
                     if ('balance' not in by_currency_moves_acumulated[currency_group]):
                         by_currency_moves_acumulated[currency_group]['balance'] = round(balance_initial, 2)
@@ -208,15 +211,15 @@ class partnerAccountStatusReport(models.TransientModel):
                     'currency_id': line_id.currency_id.id,
                     'currency_name': currency_group,
                     'date': str(line_id.date),
-                    'line_name': line_id.move_id.name if (line_id.move_type == 'out_invoice' or line_id.move_type == 'in_invoice') else line_id.name, #(line_id.name if (line_id.move_type != 'entry') else line_id.ref),
+                    'line_name': self.formatString(line_id.move_id.name) if (line_id.move_type == 'out_invoice' or line_id.move_type == 'in_invoice') else self.formatString(line_id.name), #(line_id.name if (line_id.move_type != 'entry') else line_id.ref),
                     'move_type': 'Factura' if (line_id.move_type == 'out_invoice' or line_id.move_type == 'in_invoice') else ('Nota de crédito' if (line_id.move_type == 'out_refund' or line_id.move_type == 'in_refund') else 'Recibo'),
-                    'debit': str("{0:.2f}".format(round(((line_id.debit/rate) if (line_id.debit != 0.0) else line_id.debit), 2))).replace('.',','),
-                    'credit': str("{0:.2f}".format(round(((line_id.credit/rate) if (line_id.credit != 0.0) else line_id.credit), 2))).replace('.',','),
-                    'balance': str("{0:.2f}".format(round(by_currency_moves_acumulated[currency_group]['balance'], 2))).replace('.',','),
+                    'debit': str("{:,.2f}".format(round(((line_id.debit/rate) if (line_id.debit != 0.0) else line_id.debit), 2)).replace(",", "@").replace(".", ",").replace("@", ".")),
+                    'credit': str("{:,.2f}".format(round(((line_id.credit/rate) if (line_id.credit != 0.0) else line_id.credit), 2)).replace(",", "@").replace(".", ",").replace("@", ".")),
+                    'balance': str("{:,.2f}".format(round(by_currency_moves_acumulated[currency_group]['balance'], 2)).replace(",", "@").replace(".", ",").replace("@", ".")),
                 })
 
             #_logger.info('generate_partner_account_status_report-by_currency: %s', by_currency)
-            #_logger.info('generate_partner_account_status_report-by_currency_moves: %s', by_currency_moves)
+            _logger.info('generate_partner_account_status_report-by_currency_moves: %s', by_currency_moves)
             #_logger.info('generate_partner_account_status_report-by_currency_moves_acumulated(r): %s', by_currency_moves_acumulated)
             for by_cur in by_currency:
                 by_currency_moves[by_cur['currency_name']].append({
@@ -228,7 +231,7 @@ class partnerAccountStatusReport(models.TransientModel):
                     'move_type': '',
                     'debit': '',
                     'credit': '',
-                    'balance': str("{0:.2f}".format(by_currency_moves_acumulated[by_cur['currency_name']]['balance'])).replace('.',','),
+                    'balance': str("{:,.2f}".format(by_currency_moves_acumulated[by_cur['currency_name']]['balance']).replace(",", "@").replace(".", ",").replace("@", ".")),
                 })
 
             data = {
@@ -237,13 +240,13 @@ class partnerAccountStatusReport(models.TransientModel):
                 'date': datetime.now(),
                 'start_date': self.start_date,
                 'end_date': self.end_date,
-                'partner_name': self.partner_id.name,
+                'partner_name': self.formatString(self.partner_id.name),
                 'partner_type': 'Cliente: ' if (self.partner_id.customer_rank >= self.partner_id.supplier_rank) else 'Proveedor: ',
                 'company': company,
                 'by_currency': by_currency,
                 'by_currency_moves': by_currency_moves,
                 'by_currency_moves_acumulated': by_currency_moves_acumulated,
-                'name': 'Estado_de_cuenta' + '_' + self.partner_id.name.replace(' ', '_'),
+                'name': 'Estado_de_cuenta' + '_' + self.formatString(self.partner_id.name).replace(' ', '_'),
             }
             #_logger.info('generate_partner_account_status_report-data: %s', data)
             return self.env.ref(

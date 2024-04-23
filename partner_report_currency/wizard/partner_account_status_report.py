@@ -24,6 +24,7 @@ class partnerAccountStatusReport(models.TransientModel):
 
     partner_id = fields.Many2one('res.partner', string='Partner')
     company_id = fields.Many2one('res.company', string='Compañía')
+    report_type = fields.Selection([('customer', 'Cliente'), ('supplier', 'Proveedor')], required=True, default='customer')
 
     def _get_report_base_filename(self):
         return 'Estado_de_cuenta' + '_' + self.partner_id.name.replace(' ', '_')
@@ -33,7 +34,7 @@ class partnerAccountStatusReport(models.TransientModel):
 
     start_date = fields.Date(string='Fecha de inicio', required=True, default=_default_start_date)
     end_date = fields.Date(string='Fecha fin', required=True, default=fields.Datetime.now)
-    
+
     @api.onchange('start_date')
     def _onchange_start_date(self):
         if self.start_date and self.end_date and self.end_date < self.start_date:
@@ -43,6 +44,9 @@ class partnerAccountStatusReport(models.TransientModel):
     def _onchange_end_date(self):
         if self.end_date and self.end_date < self.start_date:
             self.start_date = self.end_date
+
+    def formatString(self, value):
+        return value.replace('\xa0', ' ').replace('Á', 'A').replace('á', 'a').replace('É', 'E').replace('é', 'e').replace('Í', 'I').replace('í', 'i').replace('Ó', 'O').replace('ó', 'o').replace('Ú', 'U').replace('ú', 'u').replace('Ñ', 'N').replace('ñ', 'n').replace('Ü', 'U').replace('ü', 'u')
 
     def generate_partner_account_status_report(self):
         #_logger.info('generate_partner_account_status_report-self: %s', self)
@@ -74,7 +78,10 @@ class partnerAccountStatusReport(models.TransientModel):
             params = []
             params.append(self.partner_id.id)
             params.append(self.company_id.id)
-            params.append(('out_invoice', 'out_refund', 'out_receipt', 'in_invoice', 'in_receipt', 'in_refund'))
+            if (self.report_type == 'customer'):
+                params.append(('out_invoice', 'out_refund', 'out_receipt'))
+            else:
+                params.append(('in_invoice', 'in_receipt', 'in_refund'))
             #params.append(('line_section', 'line_note'))
             #params.append('asset_receivable')
             params.append('posted')
@@ -109,21 +116,23 @@ class partnerAccountStatusReport(models.TransientModel):
                         'move_type': '',
                         'debit': '',
                         'credit': '',
-                        'balance': str("{0:.2f}".format(round(balance_initial, 2))).replace('.',','),
+                        'balance': str("{:,.2f}".format(round(balance_initial, 2)).replace(",", "@").replace(".", ",").replace("@", ".")),
                     })
                     if ('balance' not in by_currency_moves_acumulated[rec[1]]):
                         by_currency_moves_acumulated[rec[1]]['balance'] = round(balance_initial, 2)
 
             move_line_ids = self.env['account.move.line'].search([('partner_id', '=', self.partner_id.id),
-                #('move_id.move_type','in',['out_invoice','out_receipt', 'entry']),
+                ('move_id.move_type','in', (['out_invoice', 'out_refund', 'out_receipt', 'entry'] if (self.report_type == 'customer') else ['in_invoice', 'in_receipt', 'in_refund', 'entry'])),
                 ('company_id', '=', self.company_id.id),
                 ('display_type', 'not in', ['line_section', 'line_note']),
                 ('account_id.account_type','in', ['asset_receivable', 'liability_payable']),
                 ('journal_id.exclude_report_acc_status','=', False),
+                ('journal_id.type','!=', ('purchase' if (self.report_type == 'customer') else 'sale')),
+                ('payment_id.payment_type','!=', ('outbound' if (self.report_type == 'customer') else 'inbound')),
                 ('parent_state', '=', 'posted'),
                 ('date','<=', self.end_date.strftime("%Y-%m-%d")),
                 ('date','>=', self.start_date.strftime("%Y-%m-%d"))], order="date asc, id asc")
-            #_logger.info('generate_partner_account_status_report-move_line_ids: %s', move_line_ids)
+            #_logger.warning('generate_partner_account_status_report-move_line_ids: %s', move_line_ids)
             for line_id in move_line_ids:
                 #_logger.info('generate_partner_account_status_report-line_id: %s', line_id)
                 #_logger.info('generate_partner_account_status_report-date: %s', line_id.date)
@@ -159,7 +168,7 @@ class partnerAccountStatusReport(models.TransientModel):
                         'move_type': '',
                         'debit': '',
                         'credit': '',
-                        'balance': str("{0:.2f}".format(round(balance_initial, 2))).replace('.',','),
+                        'balance': str("{:,.2f}".format(round(balance_initial, 2)).replace(",", "@").replace(".", ",").replace("@", ".")),
                     })
                     if ('balance' not in by_currency_moves_acumulated[currency_group]):
                         by_currency_moves_acumulated[currency_group]['balance'] = round(balance_initial, 2)
@@ -202,15 +211,15 @@ class partnerAccountStatusReport(models.TransientModel):
                     'currency_id': line_id.currency_id.id,
                     'currency_name': currency_group,
                     'date': str(line_id.date),
-                    'line_name': line_id.move_id.name if (line_id.move_type == 'out_invoice' or line_id.move_type == 'in_invoice') else line_id.name, #(line_id.name if (line_id.move_type != 'entry') else line_id.ref),
+                    'line_name': self.formatString(line_id.move_id.name) if (line_id.move_type == 'out_invoice' or line_id.move_type == 'in_invoice') else self.formatString(line_id.name), #(line_id.name if (line_id.move_type != 'entry') else line_id.ref),
                     'move_type': 'Factura' if (line_id.move_type == 'out_invoice' or line_id.move_type == 'in_invoice') else ('Nota de crédito' if (line_id.move_type == 'out_refund' or line_id.move_type == 'in_refund') else 'Recibo'),
-                    'debit': str("{0:.2f}".format(round(((line_id.debit/rate) if (line_id.debit != 0.0) else line_id.debit), 2))).replace('.',','),
-                    'credit': str("{0:.2f}".format(round(((line_id.credit/rate) if (line_id.credit != 0.0) else line_id.credit), 2))).replace('.',','),
-                    'balance': str("{0:.2f}".format(round(by_currency_moves_acumulated[currency_group]['balance'], 2))).replace('.',','),
+                    'debit': str("{:,.2f}".format(round(((line_id.debit/rate) if (line_id.debit != 0.0) else line_id.debit), 2)).replace(",", "@").replace(".", ",").replace("@", ".")),
+                    'credit': str("{:,.2f}".format(round(((line_id.credit/rate) if (line_id.credit != 0.0) else line_id.credit), 2)).replace(",", "@").replace(".", ",").replace("@", ".")),
+                    'balance': str("{:,.2f}".format(round(by_currency_moves_acumulated[currency_group]['balance'], 2)).replace(",", "@").replace(".", ",").replace("@", ".")),
                 })
 
             #_logger.info('generate_partner_account_status_report-by_currency: %s', by_currency)
-            #_logger.info('generate_partner_account_status_report-by_currency_moves: %s', by_currency_moves)
+            _logger.info('generate_partner_account_status_report-by_currency_moves: %s', by_currency_moves)
             #_logger.info('generate_partner_account_status_report-by_currency_moves_acumulated(r): %s', by_currency_moves_acumulated)
             for by_cur in by_currency:
                 by_currency_moves[by_cur['currency_name']].append({
@@ -222,7 +231,7 @@ class partnerAccountStatusReport(models.TransientModel):
                     'move_type': '',
                     'debit': '',
                     'credit': '',
-                    'balance': str("{0:.2f}".format(by_currency_moves_acumulated[by_cur['currency_name']]['balance'])).replace('.',','),
+                    'balance': str("{:,.2f}".format(by_currency_moves_acumulated[by_cur['currency_name']]['balance']).replace(",", "@").replace(".", ",").replace("@", ".")),
                 })
 
             data = {
@@ -231,13 +240,13 @@ class partnerAccountStatusReport(models.TransientModel):
                 'date': datetime.now(),
                 'start_date': self.start_date,
                 'end_date': self.end_date,
-                'partner_name': self.partner_id.name,
+                'partner_name': self.formatString(self.partner_id.name),
                 'partner_type': 'Cliente: ' if (self.partner_id.customer_rank >= self.partner_id.supplier_rank) else 'Proveedor: ',
                 'company': company,
                 'by_currency': by_currency,
                 'by_currency_moves': by_currency_moves,
                 'by_currency_moves_acumulated': by_currency_moves_acumulated,
-                'name': 'Estado_de_cuenta' + '_' + self.partner_id.name.replace(' ', '_'),
+                'name': 'Estado_de_cuenta' + '_' + self.formatString(self.partner_id.name).replace(' ', '_'),
             }
             #_logger.info('generate_partner_account_status_report-data: %s', data)
             return self.env.ref(

@@ -13,7 +13,7 @@
         for Argentina by introducing support for different check types 
         specific to the region. It allows businesses to manage and process 
         various types of checks, ensuring compliance with local financial regulations. 
-    """
+    """,
     'version': "16.0.1.1",
     'author': "Mastercore Sinapsys Global®",
     'website': "https://www.mastercore.us",

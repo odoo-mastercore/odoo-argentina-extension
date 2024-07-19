@@ -59,6 +59,16 @@ class AccountPaymentGroup(models.Model):
             moves = self.env['account.move'].browse(moves_to_reverse)
             if moves:
                 self._reverse_automatic_move(moves)
+            # else:
+            #     # Verificar Diferencias de cambios en comprobantes imputados
+            #     move_lines = self.mapped('matched_move_line_ids').filtered(lambda l: l.journal_id.id == journal_id.id)
+            #     moves = []
+            #     if move_lines:
+            #         for line in move_lines:
+            #             moves.append(line.move_id.id)
+            #     if moves:
+            #         moves_to_reversed = self.env['account.move'].browse(moves)
+            #         self._reverse_automatic_move(moves_to_reversed)
         return res
 
     def _reverse_automatic_move(self, move_id):

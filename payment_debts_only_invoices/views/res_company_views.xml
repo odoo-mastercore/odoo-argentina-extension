@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<record id="enable_debts_only_invoices" model="ir.ui.view">
+        <field name="name">enable_debts_only_invoices</field>
+        <field name="model">res.company</field>
+        <field name="inherit_id" ref="base.view_company_form"/>
+        <field name="arch" type="xml">
+            <field name="currency_id" position="after">
+                <field name="enable_debts_only_invoices" widget="boolean_toggle"/>
+            </field>
+        </field>
+    </record>
+</odoo>

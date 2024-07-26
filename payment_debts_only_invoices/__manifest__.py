@@ -9,16 +9,19 @@
 {
     "name": "Payment debts only invoices",
     "summary": "",
-    'version': "16.0.1",
+    'version': "16.0.1.1",
     'author': 'SINAPSYS GLOBAL SA || MASTERCORE SAS',
     'website': "http://sinapsys.global",
     'category': "account",
     "license": "AGPL-3",
     "depends": [
+        "base",
         "account",
         "account_payment_group",
     ],
     "data": [
-        "views/account_payment_group.xml"
+        #"views/account_payment_group.xml",
+        "views/res_company_views.xml",
+
     ],
 }

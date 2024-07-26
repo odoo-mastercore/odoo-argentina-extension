@@ -11,13 +11,6 @@ from odoo.exceptions import ValidationError
 
 
 class AccountPaymentGroup(models.Model):
-    _inherit = "account.payment.group"
+    _inherit = "res.company"
 
-    enable_debts_only_invoices = fields.Boolean('Enable debts only invoices', related='company_id.enable_debts_only_invoices')
-
-    def _get_to_pay_move_lines_domain(self):
-        rec = super(AccountPaymentGroup, self)._get_to_pay_move_lines_domain()
-        if self.enable_debts_only_invoices:
-            rec.append(('move_type','in',['out_invoice','out_refund']))
-        return rec
-    
+    enable_debts_only_invoices = fields.Boolean('Habilitar solo deudas FC/ND en registros de pagos', default=False)

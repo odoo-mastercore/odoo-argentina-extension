@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+##############################################################################
+# Author: Mastercore Sinapsys Global®
+# Copyright: 2019-Present.
+# License AGPL-3 
+#
+##############################################################################
+-->
+<odoo>
+    <data noupdate="1">
+        <record forcecreate="True" id="ir_cron_arbitraje_bcu" model="ir.cron">
+            <field name="name">Dolar MEP: Consultar cotización actual</field>
+            <field name="model_id" ref="base.model_res_currency"/>
+            <field name="state">code</field>
+            <field name="code">
+# Available variables:
+#  - env: Odoo Environment on which the action is triggered
+#  - model: Odoo Model of the record on which the action is triggered; is a void recordset
+#  - record: record on which the action is triggered; may be void
+#  - records: recordset of all records on which the action is triggered in multi-mode; may be void
+#  - time, datetime, dateutil, timezone: useful Python libraries
+#  - float_compare: Odoo function to compare floats based on specific precisions
+#  - log: log(message, level='info'): logging function to record debug information in ir.logging table
+#  - UserError: Warning Exception to use with raise
+#  - Command: x2Many commands namespace
+# To return an action, assign: action = {...}
+# Cómo usarlo:
+# model.set_mep_currency_rate()
+            </field>
+            <field name="user_id" ref="base.user_root"/>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="active" eval="False" />
+            <field name="doall" eval="False" />
+        </record>
+    </data>
+</odoo>

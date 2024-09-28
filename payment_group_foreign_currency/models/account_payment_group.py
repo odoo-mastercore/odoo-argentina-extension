@@ -33,7 +33,7 @@ class AccountPaymentGroup(models.Model):
         string='Selected Debt in foreign currency',
     )
     apply_foreign_payment = fields.Boolean('Aplicar Marcador de Tipo de cambio')
-    exchange_rate_applied = fields.Float('Tasa de Cambio')
+    exchange_rate_applied = fields.Float(digits=(16,6), string='Tasa de Cambio')
 
     show_apply_foreign_payment = fields.Boolean(
         'Mostrar marcador de tipo de cambio',
@@ -47,16 +47,16 @@ class AccountPaymentGroup(models.Model):
                        for line in rec.to_pay_move_line_ids)
             rec.show_apply_foreign_payment = show
 
-    @api.onchange('apply_foreign_payment')
-    def _onchange_apply_foreign_payment(self):
-        if self.apply_foreign_payment:
-            if any(line.currency_id.id != self.selected_debt_currency_id.id \
-                       for line in self.to_pay_move_line_ids):
-                raise ValidationError(
-                    _("¡Lo sentimos!, Para usar la función de Marcador de tasa "
-                    + "de cambio, todas las deudas seleccionadas deben ser de "
-                    + "la misma divisa.")
-                )
+    #@api.onchange('apply_foreign_payment')
+    #def _onchange_apply_foreign_payment(self):
+    #    if self.apply_foreign_payment:
+    #        if any(line.currency_id.id != self.selected_debt_currency_id.id \
+    #                   for line in self.to_pay_move_line_ids):
+    #            raise ValidationError(
+    #                _("¡Lo sentimos!, Para usar la función de Marcador de tasa "
+    #                + "de cambio, todas las deudas seleccionadas deben ser de "
+    #                + "la misma divisa.")
+    #            )
 
     @api.depends(
         'to_pay_move_line_ids.amount_residual',

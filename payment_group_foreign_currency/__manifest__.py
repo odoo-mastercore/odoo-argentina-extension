@@ -9,7 +9,7 @@
 {
     "name": "Payment Group in Foreign currency",
     "summary": "",
-    'version': "16.0.2.3",
+    'version': "16.0.2.4",
     'author': 'SINAPSYS GLOBAL SA || MASTERCORE SAS',
     'website': "http://sinapsys.global",
     'category': "contact",
@@ -21,6 +21,7 @@
         'l10n_ar_account_withholding'
     ],
     "data": [
+        "views/account_move_views.xml",
         "views/account_payment_group_view.xml",
         "reports/report_withholding_certificate.xml"
     ],

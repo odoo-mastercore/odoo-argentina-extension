@@ -20,7 +20,7 @@
                         options="{'currency_field': 'selected_debt_currency_id'}"/>
                     <field name="show_apply_foreign_payment" invisible="1" />
                     <field name="apply_foreign_payment" attrs="{'readonly': [('state','=','posted')]}" widget="boolean_toggle" />
-                    <field name="exchange_rate_applied" attrs="{'invisible': [('apply_foreign_payment', '=', False)], 'readonly': ['|',('show_apply_foreign_payment', '=', False),('state','=','posted')]}"/>
+                    <field name="exchange_rate_applied" attrs="{'invisible': [('apply_foreign_payment', '=', False)], 'readonly': [('state','=','posted')]}"/>
                 </field>
             </field>
         </record>

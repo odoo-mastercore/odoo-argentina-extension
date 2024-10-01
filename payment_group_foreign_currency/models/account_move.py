@@ -6,7 +6,7 @@ _logger = logging.getLogger(__name__)
 class AccountMove(models.Model):
     _inherit = 'account.move'
 
-    rate_dummy = fields.Float(string="Tasa",compute='_compute_rate_dummy', store=False)
+    rate_dummy = fields.Float(string="Tasa", digits=(16,6), compute='_compute_rate_dummy', store=False)
 
     @api.depends('currency_id', 'company_id', 'date', 'invoice_date')
     def _compute_rate_dummy(self):

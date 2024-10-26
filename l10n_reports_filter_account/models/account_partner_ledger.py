@@ -36,7 +36,7 @@ class ReportPartnerLedger(models.AbstractModel):
                     if c['id'] == self._context.get('account_acc'):
                         c['selected'] = True
             res['account_accts'] = True
-        if 'account_account_ids' not in previous_options:
+        if (previous_options == False or 'account_account_ids' not in previous_options):
             res['account_account_ids'] = []
             res['account_acc_ids'] = []
         else:

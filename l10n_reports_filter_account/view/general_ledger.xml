@@ -5,7 +5,7 @@
 		<template id="search_template_account_acct">
             <div class="o-no-caret" style="margin-top: 5px;">
 				<b><span class="fa fa-filter"></span>
-				Plan de cuentas:
+				Cuentas:
                 <t t-set="account_value" t-value="' '" />
 				<t t-foreach="options['account_accounts']" t-as="aa">
 					<t t-if="aa.get('selected') == True">

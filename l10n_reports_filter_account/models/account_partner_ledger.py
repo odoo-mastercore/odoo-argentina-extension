@@ -30,7 +30,7 @@ class ReportPartnerLedger(models.AbstractModel):
             else:
                 account_accounts = self.env['account.account'].search([])
             #_logger.warning('ReportPartnerLedger-_get_options-account_accounts: %s', account_accounts)
-            res['account_accounts'] = [{'id': aa.id, 'name': aa.name, 'selected': False} for aa in account_accounts]
+            res['account_accounts'] = [{'id': aa.id, 'name': (aa.code +' - ' + aa.name), 'selected': False} for aa in account_accounts]
             if 'account_acc' in self._context:
                 for c in res['account_accounts']:
                     if c['id'] == self._context.get('account_acc'):

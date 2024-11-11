@@ -44,7 +44,7 @@ class ResCurrency(models.Model):
                             vals = {
                                 'name': fecha,
                                 'company_id': company.id,
-                                'rate': 1 / (exchange_rate or 1),
+                                'inverse_company_rate': exchange_rate or 1,
                                 'currency_id': usd_id,
                             }
                             new_rate = self.env['res.currency.rate'].search([

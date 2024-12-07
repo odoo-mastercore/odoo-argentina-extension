@@ -51,6 +51,15 @@
 					t-if="options.get('account_accts')">
 					<t t-call="l10n_reports_filter_account.search_template_account_acct" />
 				</div>
+                <div class="btn-group dropdown o_account_reports_filter_bool" style="margin-top: 5px; margin-left: 10px;">
+    				<b>Excluir balances en 0:</b>
+                    <t t-if="options['exclude_companies_without_difference'] == True">
+                        <input type="checkbox" name="exclude_companies_without_difference" class="exclude_companies_without_difference" checked="checked" style="margin-left: 10px; margin-bottom: 7px;"/>
+                    </t>
+                    <t t-if="options['exclude_companies_without_difference'] != True">
+                        <input type="checkbox" name="exclude_companies_without_difference" class="exclude_companies_without_difference" style="margin-left: 10px; margin-bottom: 7px;"/>
+                    </t>
+    			</div>
 			</xpath>
 
 		</template>

@@ -39,9 +39,12 @@ class ReportPartnerLedger(models.AbstractModel):
         if (previous_options == False or 'account_account_ids' not in previous_options):
             res['account_account_ids'] = []
             res['account_acc_ids'] = []
+        if (previous_options == False or 'exclude_companies_without_difference' not in previous_options):
+            res['exclude_companies_without_difference'] = False
         else:
             res['account_account_ids'] = previous_options['account_account_ids']
             res['account_acc_ids'] = previous_options['account_acc_ids']
+            res['exclude_companies_without_difference'] = previous_options['exclude_companies_without_difference'] if ('exclude_companies_without_difference' in previous_options) else False
         #_logger.warning('ReportPartnerLedger-_get_options-res: %s', res)
         return res
 
@@ -305,3 +308,33 @@ class ReportPartnerLedger(models.AbstractModel):
             where_params.append(limit)
 
         return query, where_params
+
+    @api.model
+    def _do_query(self, options, expanded_partner=None):
+        partners_results = super(ReportPartnerLedger, self)._do_query(options, expanded_partner)
+        #_logger.warning('_do_query-self: %s', self)
+        _logger.warning('_do_query-len-partners_results: %s', len(partners_results))
+
+        filtered_results = []  # Nueva lista para almacenar los resultados que cumplen con las condiciones
+
+        for partner, results in partners_results:
+            if partner and options['exclude_companies_without_difference'] == True:
+                partner_sum = results.get('sum', {})
+                balance = partner_sum.get('balance', 0.0)
+                partner_init_bal = results.get('initial_balance', {})
+                initial_balance = partner_init_bal.get('balance', 0.0)
+                total_balance = balance + initial_balance
+
+                # Si no cumple la condición de exclusión, se agrega a la lista filtrada
+                '''if balance == 0.0 or total_balance == 0.0:
+                    _logger.warning("Excluyendo partner: %s (Balance: %s, Total Balance: %s)", partner.name, balance, total_balance)
+                else:
+                    filtered_results.append((partner, results))'''
+                if (total_balance != 0.0):
+                    filtered_results.append((partner, results))
+            else:
+                # Si no aplica el filtro, se agrega directamente
+                filtered_results.append((partner, results))
+
+        _logger.warning('_do_query-lenF-partners_results: %s', len(filtered_results))
+        return filtered_results

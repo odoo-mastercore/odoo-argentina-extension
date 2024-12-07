@@ -7,7 +7,7 @@
 ###############################################################################
 {
     'name': "Reports Filter Account",
-    'version': "15.0.0.2",
+    'version': "15.0.0.3",
     'description': '',
     'summary': "",
     'author': "SINAPSYS GLOBAL SA || MASTERCORE SAS",

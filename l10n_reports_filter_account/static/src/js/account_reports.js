@@ -21,6 +21,16 @@ odoo.define('l10n_reports_filter_account.account_report', function (require) {
             //console.log('render_searchview_buttons-this: ', this);
             //console.log('render_searchview_buttons-report_options: ', this.report_options);
             this._super.apply(this, arguments);
+            this.$searchview_buttons.find('.exclude_companies_without_difference').click(function (event) {
+                var option_value = $(this).data('filter');
+                self.report_options.exclude_companies_without_difference = $('input[name="exclude_companies_without_difference"]').prop('checked');
+                _.filter(self.report_options[option_value], function(el) {
+                    el.selected = false;
+                    self.odoo_context['exclude_companies_without_difference'] = $('input[name="exclude_companies_without_difference"]').prop('checked');
+                    return el;
+                });
+                self.reload();
+            });
             this.$searchview_buttons.find('.account_account_filter').click(function (event) {
                 //console.log('account_account_filter-click-this: ', this);
                 var option_value = $(this).data('filter');

@@ -26,9 +26,9 @@ class ReportPartnerLedger(models.AbstractModel):
         #_logger.warning('ReportPartnerLedger-_get_options-res(I): %s', res)
         if self.filter_account_acc :
             if ('allowed_company_ids' in self._context):
-                account_accounts = self.env['account.account'].search([('company_id', 'in', self._context.get('allowed_company_ids'))])
+                account_accounts = self.env['account.account'].search([('company_id', 'in', self._context.get('allowed_company_ids')), ('user_type_id', 'in', [1, 2])])
             else:
-                account_accounts = self.env['account.account'].search([])
+                account_accounts = self.env['account.account'].search([('user_type_id', 'in', [1, 2])])
             #_logger.warning('ReportPartnerLedger-_get_options-account_accounts: %s', account_accounts)
             res['account_accounts'] = [{'id': aa.id, 'name': (aa.code +' - ' + aa.name), 'selected': False} for aa in account_accounts]
             if 'account_acc' in self._context:

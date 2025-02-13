@@ -34,7 +34,11 @@ class ResCurrency(models.Model):
 
             if companies_ar:
                 # Llamada a la API
-                response = requests.get("https://dolarapi.com/v1/dolares/bolsa")
+                # Posibles valores de parámetro dolarapi.com.data.source: 
+                # - "oficial" : Cambio BNA
+                # - "bolsa" : Cambio MEP
+                source = self.env['ir.config_parameter'].get_param('dolarapi.com.data.source', 'oficial')
+                response = requests.get("https://dolarapi.com/v1/dolares/"+source)
                 if response.status_code == 200:
                     data = response.json()
                     exchange_rate = data.get('venta', 0)  # Toma el valor de 'venta'

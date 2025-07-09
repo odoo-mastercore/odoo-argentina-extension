@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+
+		<template id="search_template_account_acct">
+            <div class="o-no-caret" style="margin-top: 5px;">
+				<b><span class="fa fa-filter"></span>
+				Cuentas:
+                <t t-set="account_value" t-value="' '" />
+				<t t-foreach="options['account_accounts']" t-as="aa">
+					<t t-if="aa.get('selected') == True">
+						<t t-set="account_value" t-value="''" />
+						<t t-esc="aa.get('name')" />
+					</t>
+				</t>
+				<t t-esc="account_value" />
+				<span class="caret"></span></b>
+			</div>
+            <div class="o_field_many2manytags o_input o_field_widget dropdown-toggle"  name="account_acc_ids" data-toggle="dropdown">
+                <t t-foreach="options['account_account_ids']" t-as="aa">
+                    <div class="badge badge-pill  o_tag_color_0" data-color="0" data-index="0" t-att-id="'badge_'+aa.get('id')" title="Tag color: No color">
+                        <span class="o_badge_text" title="3DF SRL">
+                            <span role="img" aria-label="Tag color: No color"></span>
+                            <span class="o_tag_badge_text acc_acc_value" t-att-val="aa.get('id')"><t t-esc="aa.get('name')" /></span>
+                        </span>
+                        <a href="#" class="fa fa-times o_delete o_delete_acc" title="Suprimir" aria-label="Suprimir"></a>
+                    </div>
+                </t>
+                <div class="o_field_widget o_field_many2one o_quick_editable" id="div_account_acc_ids" aria-atomic="true" name="account_acc_ids">
+                    <div class="o_field_many2one_selection" style="min-width: 120px;">
+                    </div>
+                    <div class="o_field_many2one_extra"></div>
+                </div>
+            </div>
+			<ul class="dropdown-menu o_filters_menu" >
+				<t t-foreach="options['account_accounts']" t-as="aa">
+					<li t-att-title="aa.get('name')" data-filter="account_accounts"
+						t-att-data-id="aa.get('id')" class="account_account_filter">
+						<a class="dropdown-item">
+							<t t-esc="aa.get('name')" />
+						</a>
+					</li>
+				</t>
+			</ul>
+		</template>
+
+		<template id="search_template_analytic" inherit_id="account_reports.search_template">
+			<xpath expr="." position="inside">
+				<div
+					class="btn-group o_dropdown s"
+					t-if="options.get('account_accts')">
+					<t t-call="l10n_reports_filter_account.search_template_account_acct" />
+				</div>
+                <div class="btn-group dropdown o_account_reports_filter_bool" style="margin-top: 5px; margin-left: 10px;">
+    				<b>Excluir balances en 0:</b>
+                    <t t-if="options.get('exclude_companies_without_difference', False) == True">
+                        <input type="checkbox" name="exclude_companies_without_difference" class="exclude_companies_without_difference" checked="checked" style="margin-left: 10px; margin-bottom: 7px;"/>
+                    </t>
+                    <t t-if="options.get('exclude_companies_without_difference', False) != True">
+                        <input type="checkbox" name="exclude_companies_without_difference" class="exclude_companies_without_difference" style="margin-left: 10px; margin-bottom: 7px;"/>
+                    </t>
+    			</div>
+			</xpath>
+
+		</template>
+
+	</data>
+</odoo>

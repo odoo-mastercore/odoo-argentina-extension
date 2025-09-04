@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="inherit_account_payment_pro_view_form" model="ir.ui.view">
+        <field name="name">inherit.account.payment.pro.view.form</field>
+        <field name="model">account.payment</field>
+        <field name="inherit_id" ref="account_payment_pro.view_account_payment_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='counterpart_currency_amount']" position="before">
+                <field
+                    name="counterpart_currency_amount_aux"
+                    readonly="state != 'draft'"
+                    invisible="other_currency or is_internal_transfer or not use_payment_pro"
+                    widget="monetary"
+                    options="{'currency_field': 'counterpart_currency_id'}"
+                    groups="base.group_multi_currency"
+                    />
+            </xpath>
+        </field>
+    </record>
+</odoo>

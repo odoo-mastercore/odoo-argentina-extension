@@ -14,10 +14,14 @@ _logger = logging.getLogger(__name__)
 class l10nArPaymentWithholding(models.Model):
     _inherit = "l10n_ar.payment.withholding"
 
-    foreign_currency_id = fields.Many2one("res.currency", string="Foreign currency")
+    foreign_currency_id = fields.Many2one(
+        "res.currency",
+        string="Foreign currency",
+        related="payment_id.counterpart_currency_id"
+    )
     amount_currency = fields.Float(string="Importe en Divisa")
 
-    @api.onchange('foreign_currency_id', 'amount_currency')
+    @api.onchange('amount_currency')
     def _onchange_amount_currency(self):
         if self.foreign_currency_id and self.amount_currency:
             rate = self.env["res.currency"]._get_conversion_rate(

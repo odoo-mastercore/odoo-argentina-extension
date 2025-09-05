@@ -9,13 +9,14 @@
 {
     "name": "l10_ar Tax extended",
     "summary": "",
-    'version': "18.0.1.0.2",
+    'version': "18.0.1.0.3",
     'author': 'Mastercore Sinapsys Global®',
     'website': 'https://www.mastercore.us',
     'license': 'OPL-1',
     'category': "accounting",
     "depends": [
-        'l10n_ar_tax'
+        'l10n_ar_tax',
+        'account_payment_pro'
     ],
     "data": [
         'views/res_config_settings.xml',

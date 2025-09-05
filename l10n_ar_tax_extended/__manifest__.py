@@ -9,7 +9,7 @@
 {
     "name": "l10_ar Tax extended",
     "summary": "",
-    'version': "18.0.1.0.1",
+    'version': "18.0.1.0.2",
     'author': 'Mastercore Sinapsys Global®',
     'website': 'https://www.mastercore.us',
     'license': 'OPL-1',
@@ -18,6 +18,7 @@
         'l10n_ar_tax'
     ],
     "data": [
-        'views/res_config_settings.xml'
+        'views/res_config_settings.xml',
+        'views/l10n_ar_payment_withholding.xml'
     ],
 }

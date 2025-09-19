@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates>
+    <t t-name="bcvCurrencyRateMenu" owl="1">
+        <div class="NavbarMenuContainer" >
+            <a class="o_NavbarMenu_toggler dropdown-toggle o-no-caret o-dropdown--narrow " href="#" title="Tasa de cambio" role="button" aria-haspopup="true" t-on-click="onClickNavbarMenu">
+                <i class="o_NavbarMenu_icon fa fa-money" role="img" aria-label="NavbarMenu" id="usd_rate"/>
+            </a>
+            <div class="dropdown-content" id="dropdown-bcv-currencies">
+            </div>
+        </div>
+    </t>
+</templates>

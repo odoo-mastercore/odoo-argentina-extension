@@ -1,6 +1,7 @@
 /** @odoo-module **/
 import { registry } from '@web/core/registry'
 import { useService } from "@web/core/utils/hooks";
+import { formatMonetary } from "@web/views/fields/formatters";
 
 const {Component} = owl
 
@@ -8,6 +9,7 @@ export class NavbarMenu extends Component {
     setup(){
         super.setup()
         this.orm = useService("orm");
+        this.notification = useService("notification");
         this._getCurrencyRateData();
         this.show_dropdown = false;
     };
@@ -39,8 +41,30 @@ export class NavbarMenu extends Component {
         const dropdown_content = document.getElementById("dropdown-bcv-currencies");
         this.currencys.forEach(element =>{
             var anchor = document.createElement("a");
-            anchor.textContent = element.name + ": " + element.rate;
-            console.log(dropdown_content)
+            anchor.href = "#";
+
+            var icon = document.createElement("i");
+            icon.className = "fa fa-copy me-2";
+
+            var rate = formatMonetary(element.rate, {});
+            var text = document.createTextNode(element.name + " " + rate);
+
+            anchor.appendChild(icon);
+            anchor.appendChild(text);
+
+            var self = this
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                navigator.clipboard.writeText(rate);
+                var msg = "El tipo de cambio " + element.name + " se ha copiado en el portapapeles"
+                self.notification.add(msg, {
+                    title: "Tasas de cambio",
+                    type: "success",
+                    sticky: false,
+                });
+
+                self._RemoveRates()
+            });
             dropdown_content.appendChild(anchor);
         })
     }

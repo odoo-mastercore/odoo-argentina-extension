@@ -16,8 +16,8 @@
     'website': 'www.sinapsys.global',
     "version": "16.0.1.0.1",
     'license': 'AGPL-3',
-    'category': 'Localization / Venezuela',
-    'depends': ['l10n_ve_currency_bcv'],
+    'category': 'account',
+    'depends': [],
     'assets': {
         'web.assets_backend': [
             'l10n_ve_currency_rate_button/static/src/js/currency_rates.js',
@@ -25,5 +25,8 @@
             'l10n_ve_currency_rate_button/static/src/css/main.css'
         ],
     },
+    'data': [
+        'views/res_currency.xml'
+    ],
     'installable': True,
 }

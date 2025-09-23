@@ -25,8 +25,10 @@ class AccountPayment(models.Model):
         res = super()._prepare_witholding_write_off_vals()
         for line in self.l10n_ar_withholding_line_ids:
             if line.amount_currency and line.foreign_currency_id and res:
-                res[0].update({
-                    'currency_id': line.foreign_currency_id.id,
-                    'amount_currency': line.amount_currency
-                })
+                for i in range(len(res)):
+                    if res[i]['name'] == line.name:
+                        res[i].update({
+                            'currency_id': line.foreign_currency_id.id,
+                            'amount_currency': line.amount_currency
+                        })
         return res

@@ -9,7 +9,7 @@
 {
     "name": "Account Payment Pro Extended",
     "summary": "",
-    'version': "18.0.1.0.1",
+    'version': "18.0.1.0.2",
     'author': 'Mastercore Sinapsys Global®',
     'website': 'https://www.mastercore.us',
     'license': 'OPL-1',

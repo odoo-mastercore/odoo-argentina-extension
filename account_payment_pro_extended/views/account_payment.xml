@@ -9,11 +9,33 @@
                 <field
                     name="counterpart_currency_amount_aux"
                     readonly="state != 'draft'"
-                    invisible="other_currency or is_internal_transfer or not use_payment_pro"
+                    invisible="other_currency or not use_payment_pro"
                     widget="monetary"
                     options="{'currency_field': 'counterpart_currency_id'}"
                     groups="base.group_multi_currency"
                     />
+            </xpath>
+            <!-- INTERNAL TRANSFER -->
+            <xpath expr="//label[@for='write_off_amount']" position="attributes">
+                <attribute name="invisible" remove="is_internal_transfer" separator="or"/>
+            </xpath>
+            <xpath expr="//div[@name='write_off_amount']" position="attributes">
+                <attribute name="invisible" remove="is_internal_transfer" separator="or"/>
+            </xpath>
+            <xpath expr="//label[@for='payment_total']" position="attributes">
+                <attribute name="invisible" remove="is_internal_transfer" separator="or"/>
+            </xpath>
+            <xpath expr="//div[@name='payment_total']" position="attributes">
+                <attribute name="invisible" remove="is_internal_transfer" separator="or"/>
+            </xpath>
+            <xpath expr="//label[@for='counterpart_currency_amount']" position="attributes">
+                <attribute name="invisible" remove="is_internal_transfer" separator="or"/>
+            </xpath>
+            <xpath expr="//div[@name='counterpart_currency_amount']" position="attributes">
+                <attribute name="invisible" remove="is_internal_transfer" separator="or"/>
+            </xpath>
+            <xpath expr="//field[@name='counterpart_currency_amount']" position="attributes">
+                <attribute name="invisible" remove="is_internal_transfer" separator="or"/>
             </xpath>
         </field>
     </record>

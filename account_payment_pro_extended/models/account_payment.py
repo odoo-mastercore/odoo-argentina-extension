@@ -37,7 +37,8 @@ class AccountPayment(models.Model):
             write_off_line_vals=write_off_line_vals,
             force_balance=force_balance
         )
-        if self.is_internal_transfer:
+        # Lo dejamos asi para que funcione con cualquier pago con moneda en divisas
+        if self.counterpart_currency_id and self.counterpart_currency_amount:
             for i in range(len(res)):
                 if res[i]['credit'] > 0.0:
                     res[i].update({

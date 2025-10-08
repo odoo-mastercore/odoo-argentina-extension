@@ -9,6 +9,16 @@
                 <field name="foreign_currency_id" column_invisible="1" />
                 <field name="amount_currency" widget="monetary" options="{'currency_field': 'foreign_currency_id'}" optional="hide" />
             </xpath>
+            <xpath expr="//field[@name='withholdings_amount']" position="after">
+                <field
+                    name="withholding_amount_currency"
+                    readonly="state != 'draft'"
+                    invisible="not counterpart_currency_id or not use_payment_pro"
+                    widget="monetary"
+                    options="{'currency_field': 'counterpart_currency_id'}"
+                    groups="base.group_multi_currency"
+                    />
+            </xpath>
         </field>
     </record>
 

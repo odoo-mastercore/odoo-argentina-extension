@@ -31,23 +31,3 @@ class AccountPayment(models.Model):
                 rec.counterpart_exchange_rate = rate or False
             elif not rec.counterpart_currency_id:
                 rec.counterpart_exchange_rate = False
-
-    def _prepare_move_line_default_vals(self, write_off_line_vals=None, force_balance=None):
-        res = super(AccountPayment, self)._prepare_move_line_default_vals(
-            write_off_line_vals=write_off_line_vals,
-            force_balance=force_balance
-        )
-        # Lo dejamos asi para que funcione con cualquier pago con moneda en divisas
-        if self.counterpart_currency_id and self.counterpart_currency_amount:
-            for i in range(len(res)):
-                if res[i]['credit'] > 0.0:
-                    res[i].update({
-                        'currency_id': self.counterpart_currency_id.id,
-                        'amount_currency': -abs(self.counterpart_currency_amount)
-                    })
-                if res[i]['debit'] > 0.0:
-                    res[i].update({
-                        'currency_id': self.counterpart_currency_id.id,
-                        'amount_currency': abs(self.counterpart_currency_amount)
-                    })
-        return res

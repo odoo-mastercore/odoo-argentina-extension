@@ -25,7 +25,11 @@ class ResCurrency(models.Model):
                     INSERT INTO ir_logging(create_date, create_uid, type, dbname, name, level, message, path, line, func)
                     VALUES (NOW() at time zone 'UTC', %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """, (self.env.uid, 'server', self._cr.dbname, __name__, 'error', message, "action", 0, 'set_mep_currency_rate'))
-
+        
+        # Posibles valores de parámetro dolarapi.com.data.source:
+        # - "oficial" : Cambio BNA
+        # - "bolsa" : Cambio MEP
+        source = self.env['ir.config_parameter'].get_param('dolarapi.com.data.source', 'oficial')
         try:
             companies_ar = self.env['res.company'].search([
                 ('account_fiscal_country_id', '=', self.env.ref('base.ar').id),
@@ -34,10 +38,6 @@ class ResCurrency(models.Model):
 
             if companies_ar:
                 # Llamada a la API
-                # Posibles valores de parámetro dolarapi.com.data.source:
-                # - "oficial" : Cambio BNA
-                # - "bolsa" : Cambio MEP
-                source = self.env['ir.config_parameter'].get_param('dolarapi.com.data.source', 'oficial')
                 response = requests.get("https://dolarapi.com/v1/dolares/"+source)
                 if response.status_code == 200:
                     data = response.json()
@@ -66,4 +66,4 @@ class ResCurrency(models.Model):
                     log_error(f"Error {response.status_code} al consultar la API: {response.text}")
 
         except Exception as e:
-            log_error(f'Problema llamando a https://dolarapi.com/v1/dolares/bolsa: {str(e)}')
+            log_error(f'Problema llamando a https://dolarapi.com/v1/dolares/{source}: {str(e)}')

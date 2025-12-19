@@ -38,9 +38,12 @@ class AccountPayment(models.Model):
             if line.amount_currency and line.foreign_currency_id and res:
                 for i in range(len(res)):
                     if res[i]['name'] == line.name:
+                        amount = line.amount_currency
+                        if res[i]['amount_currency'] < 0:
+                            amount = -abs(line.amount_currency)
                         res[i].update({
                             'currency_id': line.foreign_currency_id.id,
-                            'amount_currency': line.amount_currency
+                            'amount_currency': amount
                         })
         return res
 

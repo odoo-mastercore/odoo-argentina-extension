@@ -21,7 +21,7 @@ class l10nArPaymentWithholding(models.Model):
     )
     amount_currency = fields.Float(string="Importe en Divisa")
 
-    @api.onchange('amount_currency', 'amount')
+    @api.onchange('amount_currency')
     def _onchange_amount_currency(self):
         if self.foreign_currency_id:
             rate = self.env["res.currency"]._get_conversion_rate(
@@ -30,10 +30,17 @@ class l10nArPaymentWithholding(models.Model):
                 company=self.company_id,
                 date=self.payment_id.date,
             ) or 1
-            if self.amount_currency and not self.amount:
+            if self.amount_currency:
                 self.amount = rate * self.amount_currency
-            elif self.amount and not self.amount_currency:
+
+    @api.onchange('amount')
+    def _onchange_amount(self):
+        if self.foreign_currency_id:
+            rate = self.env["res.currency"]._get_conversion_rate(
+                from_currency=self.foreign_currency_id,
+                to_currency=self.company_id.currency_id,
+                company=self.company_id,
+                date=self.payment_id.date,
+            ) or 1
+            if self.amount:
                 self.amount_currency = self.amount / rate
-            else:
-                if self.amount and self.amount_currency:
-                    self.amount = rate * self.amount_currency

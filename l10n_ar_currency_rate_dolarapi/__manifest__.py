@@ -8,7 +8,7 @@
 ###############################################################################
 {
     'name': 'Argentina - Currency Rate Provider (dolarapi BNA/MEP)',
-    'version': '18.0.1.0.1',
+    'version': '19.0.1.0.0',
     'category': 'Accounting/Accounting',
     'sequence': 1,
     'summary': 'Argentina: exchange rate provider using dolarapi.com (BNA official or MEP/bolsa).',

@@ -3,6 +3,7 @@
 # Author: Mastercore Sinapsys Global®
 # Copyright: 2019-Present.
 # License AGPL-3
+# See https://www.gnu.org/licenses/agpl-3.0.html
 #
 ###############################################################################
 
@@ -13,7 +14,6 @@ from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 
 _logger = logging.getLogger(__name__)
-
 
 class ResCompany(models.Model):
     _inherit = 'res.company'
@@ -37,18 +37,13 @@ class ResCompany(models.Model):
             USD = 1 / (ARS_per_USD)
         """
         self.ensure_one()
-
         today = fields.Date.context_today(self)
-        available_codes = set(available_currencies.mapped('name'))
 
-        # Base ARS entry (needed for proper rebasing when company currency is ARS)
-        result = {}
-        if 'ARS' in available_codes:
-            result['ARS'] = (1.0, today)
-
-        # Only compute USD if active
-        if 'USD' not in available_codes:
-            return result
+        # Validate availability
+        if 'USD' not in available_currencies:
+            raise UserError(_("USD is not available in the selected currencies."))
+        if self.currency_id.name != 'ARS':
+            raise UserError(_("This provider is intended for ARS-based companies."))
 
         icp = self.env['ir.config_parameter'].sudo()
         source = icp.get_param('dolarapi.com.data.source', 'oficial')  # oficial | bolsa
@@ -74,6 +69,7 @@ class ResCompany(models.Model):
         if ars_per_usd <= 0:
             raise UserError(_("Invalid 'venta' rate received from dolarapi.com (must be > 0)."))
 
+        result = {'ARS': (1.0, today)}
         # USD rate expressed vs ARS base (consistent with other providers using inverse convention)
         result['USD'] = (1.0 / ars_per_usd, today)
         return result

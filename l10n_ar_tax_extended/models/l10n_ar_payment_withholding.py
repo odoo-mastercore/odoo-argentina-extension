@@ -30,6 +30,8 @@ class l10nArPaymentWithholding(models.Model):
                 company=self.company_id,
                 date=self.payment_id.date,
             ) or 1
+            if self.payment_id.counterpart_currency_id and self.payment_id.counterpart_exchange_rate:
+                rate = self.payment_id.counterpart_exchange_rate
             if self.amount_currency:
                 self.amount = rate * self.amount_currency
 
@@ -42,5 +44,7 @@ class l10nArPaymentWithholding(models.Model):
                 company=self.company_id,
                 date=self.payment_id.date,
             ) or 1
+            if self.payment_id.counterpart_currency_id and self.payment_id.counterpart_exchange_rate:
+                rate = self.payment_id.counterpart_exchange_rate
             if self.amount:
                 self.amount_currency = self.amount / rate

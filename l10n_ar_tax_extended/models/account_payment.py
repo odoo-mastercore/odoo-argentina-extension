@@ -15,7 +15,7 @@ class AccountPayment(models.Model):
     _inherit = "account.payment"
 
     withholding_amount_currency = fields.Float(
-        string="Rentención en divisa",
+        string="Retención en divisa",
         compute="_compute_withholding_amount_currency",
         store=True
     )

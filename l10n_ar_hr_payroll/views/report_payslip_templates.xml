@@ -9,7 +9,7 @@
 ##############################################################################
 -->
 <odoo>
-    <template id="report_payslip_ar" primary="True">
+    <template id="report_payslip_ar">
         <t t-call="web.external_layout">
             <div class="page o_ar_payslip">
                 <style>

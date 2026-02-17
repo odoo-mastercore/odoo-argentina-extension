@@ -38,7 +38,7 @@
                 <p class="o_ar_subtitle">
                     <span t-field="o.name"/>
                     <span class="ms-2">- Recibo N°</span>
-                    <span t-out="o.number or '-'"/>
+                    <span t-out="o.id or '-'"/>
                 </p>
 
                 <div class="row mt-3 mb-2">

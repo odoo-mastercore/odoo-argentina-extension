@@ -1,3 +1,4 @@
 .vscode/
 odoo-ee/
 odoo-ce/
+__pycache__/

@@ -13,7 +13,8 @@
     "category": "Human Resources/Payroll",
     "depends": ["l10n_ar", "hr_payroll", "hr_work_entry_holidays", "hr_payroll_holidays"],
     "auto_install": ["hr_payroll"],
-    "version": "1.0.5",
+    "version": "1.1.0",
+    "summary": "Argentina payroll localization with salary cost simulation tools.",
     "description": """
 Argentinian Payroll Rules.
 ==========================
@@ -24,10 +25,12 @@ Argentinian Payroll Rules.
     * Rule parameters for legal percentages and divisors
     """,
     "data": [
+        "security/ir.model.access.csv",
         "data/hr_salary_rule_category_data.xml",
         "views/hr_payroll_report.xml",
         "views/report_payslip_templates.xml",
         "views/hr_payslip_views.xml",
+        "views/hr_payroll_cost_simulator_wizard_views.xml",
         "data/hr_payroll_structure_type_data.xml",
         "data/hr_payroll_structure_data.xml",
         "data/hr_payroll_structure_report_data.xml",
@@ -40,5 +43,6 @@ Argentinian Payroll Rules.
         "views/hr_contract_template_views.xml",
     ],
     "author": "Mastercore",
+    "website": "https://mastercore.us",
     "license": "AGPL-3",
 }

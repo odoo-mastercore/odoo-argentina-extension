@@ -8,4 +8,4 @@
 ##############################################################################
 
 from . import test_l10n_ar_hr_payroll
-
+from . import test_l10n_ar_hr_payroll_cost_simulator

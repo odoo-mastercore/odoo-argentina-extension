@@ -7,5 +7,4 @@
 #
 ##############################################################################
 
-from . import models
-from . import wizard
+from . import hr_payroll_cost_simulator_wizard

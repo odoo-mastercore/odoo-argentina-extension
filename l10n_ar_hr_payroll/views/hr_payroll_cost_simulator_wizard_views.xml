@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+##############################################################################
+# Author: Mastercore Sinapsys Global®
+# Copyright: 2019-Present.
+# License AGPL-3
+# See https://www.gnu.org/licenses/agpl-3.0.html
+#
+##############################################################################
+-->
+<odoo>
+    <record id="view_l10n_ar_cost_simulator_wizard_form" model="ir.ui.view">
+        <field name="name">l10n.ar.hr.payroll.cost.simulator.wizard.form</field>
+        <field name="model">l10n.ar.hr.payroll.cost.simulator.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Simulador de costos de nómina AR" create="0" edit="1" duplicate="0">
+                <header>
+                    <button name="action_simulate" string="Simular" type="object" class="oe_highlight"/>
+                    <button string="Cerrar" special="cancel" class="btn-secondary"/>
+                </header>
+                <sheet>
+                    <field name="result_ready" invisible="1"/>
+                    <group>
+                        <group string="Contexto">
+                            <field name="mode" widget="radio"/>
+                            <field name="company_id" required="1"/>
+                            <field name="structure_type_id" required="1" domain="[('country_id.code', '=', 'AR')]"/>
+                            <field name="reference_year"/>
+                            <field name="contract_start_date"/>
+                            <field name="seniority_date"/>
+                        </group>
+                        <group string="Parámetros">
+                            <field name="employee_id" invisible="mode != 'salary_increase'" required="mode == 'salary_increase'"/>
+                            <field name="current_gross_monthly" invisible="mode != 'salary_increase'" readonly="1"/>
+                            <field name="proposed_gross_monthly" required="1"/>
+                            <field name="current_union_rate" invisible="mode != 'salary_increase'" readonly="1"/>
+                            <field name="proposed_union_rate"/>
+                            <field name="current_seniority_percent" invisible="mode != 'salary_increase'" readonly="1"/>
+                            <field name="proposed_seniority_percent"/>
+                        </group>
+                    </group>
+
+                    <notebook invisible="not result_ready">
+                        <page string="Resumen">
+                            <group string="Costo empleador">
+                                <group string="Actual" invisible="mode != 'salary_increase'">
+                                    <field name="current_regular_monthly_cost" readonly="1"/>
+                                    <field name="current_prorated_monthly_cost" readonly="1"/>
+                                    <field name="current_annual_total_cost" readonly="1"/>
+                                </group>
+                                <group string="Propuesto">
+                                    <field name="proposed_regular_monthly_cost" readonly="1"/>
+                                    <field name="proposed_prorated_monthly_cost" readonly="1"/>
+                                    <field name="proposed_annual_total_cost" readonly="1"/>
+                                </group>
+                                <group string="Delta" invisible="mode != 'salary_increase'">
+                                    <field name="delta_regular_monthly_cost" readonly="1"/>
+                                    <field name="delta_prorated_monthly_cost" readonly="1"/>
+                                    <field name="delta_annual_total_cost" readonly="1"/>
+                                </group>
+                            </group>
+                            <group string="Neto empleado">
+                                <group string="Actual" invisible="mode != 'salary_increase'">
+                                    <field name="current_regular_monthly_net" readonly="1"/>
+                                    <field name="current_prorated_monthly_net" readonly="1"/>
+                                    <field name="current_annual_total_net" readonly="1"/>
+                                </group>
+                                <group string="Propuesto">
+                                    <field name="proposed_regular_monthly_net" readonly="1"/>
+                                    <field name="proposed_prorated_monthly_net" readonly="1"/>
+                                    <field name="proposed_annual_total_net" readonly="1"/>
+                                </group>
+                                <group string="Delta" invisible="mode != 'salary_increase'">
+                                    <field name="delta_regular_monthly_net" readonly="1"/>
+                                    <field name="delta_prorated_monthly_net" readonly="1"/>
+                                    <field name="delta_annual_total_net" readonly="1"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Detalle">
+                            <field name="line_ids" readonly="1" nolabel="1">
+                                <list create="0" edit="0" delete="0" default_order="scenario,sequence,id">
+                                    <field name="scenario"/>
+                                    <field name="name"/>
+                                    <field name="component"/>
+                                    <field name="periodicity"/>
+                                    <field name="gross_amount"/>
+                                    <field name="employee_deductions"/>
+                                    <field name="net_amount"/>
+                                    <field name="employer_contributions"/>
+                                    <field name="employer_total_cost"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_l10n_ar_cost_simulator_wizard" model="ir.actions.act_window">
+        <field name="name">Simulador de costos AR</field>
+        <field name="res_model">l10n.ar.hr.payroll.cost.simulator.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="view_id" ref="view_l10n_ar_cost_simulator_wizard_form"/>
+        <field name="context">{'default_mode': 'new_hire'}</field>
+    </record>
+
+    <menuitem id="menu_l10n_ar_cost_simulator_wizard"
+              name="Simulador de costos AR"
+              parent="hr_payroll.menu_hr_payroll_employees"
+              action="action_l10n_ar_cost_simulator_wizard"
+              sequence="45"
+              groups="hr_payroll.group_hr_payroll_user"/>
+</odoo>

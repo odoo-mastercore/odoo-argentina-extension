@@ -8,7 +8,7 @@
 ##############################################################################
 
 from odoo import _, api, fields, models
-from odoo.exceptions import ValidationError
+from odoo.exceptions import UserError, ValidationError
 
 
 class HrEmployee(models.Model):
@@ -71,3 +71,18 @@ class HrEmployee(models.Model):
         elif check == 10:
             check = 9
         return int(digits[10]) == check
+
+    def action_open_l10n_ar_cost_simulator(self):
+        self.ensure_one()
+        if self.company_country_code != "AR":
+            raise UserError(_("El simulador está disponible solo para compañías de Argentina."))
+        action = self.env["ir.actions.actions"]._for_xml_id(
+            "l10n_ar_hr_payroll.action_l10n_ar_cost_simulator_wizard"
+        )
+        action["context"] = dict(
+            self.env.context,
+            default_mode="salary_increase",
+            default_employee_id=self.id,
+            default_company_id=self.company_id.id,
+        )
+        return action

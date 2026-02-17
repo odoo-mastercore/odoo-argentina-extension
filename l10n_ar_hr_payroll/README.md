@@ -19,6 +19,10 @@ Initial payroll localization module for Argentina on Odoo 19.
   - Net salary computation.
 - Rule parameters:
   - Legal percentages and divisors are parameterized through `hr.rule.parameter`.
+- Cost simulator wizard:
+  - New hire cost simulation (employee net + employer contributions).
+  - Salary increase simulation from employee form.
+  - Includes regular payroll, SAC and paid vacation components.
 
 ## Legal basis used
 
@@ -36,4 +40,3 @@ This module is a technical baseline. In Argentina, final payroll implementation 
 - Periodic legal and tax updates.
 
 Always validate rates and formulas with payroll/accounting advisors before production payroll.
-

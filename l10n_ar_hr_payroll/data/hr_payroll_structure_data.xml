@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+##############################################################################
+# Author: Mastercore Sinapsys Global®
+# Copyright: 2019-Present.
+# License AGPL-3
+# See https://www.gnu.org/licenses/agpl-3.0.html
+#
+##############################################################################
+-->
+<odoo>
+    <record id="l10n_ar_regular_pay" model="hr.payroll.structure">
+        <field name="name">Argentina: Regular Pay</field>
+        <field name="code">AR_REGULAR</field>
+        <field name="country_id" ref="base.ar"/>
+        <field name="type_id" ref="l10n_ar_employee"/>
+        <field name="unpaid_work_entry_type_ids" eval="[(4, ref('hr_work_entry.work_entry_type_unpaid_leave'))]"/>
+        <field name="rule_ids" eval="[]"/>
+    </record>
+
+    <record id="l10n_ar_employee" model="hr.payroll.structure.type">
+        <field name="default_struct_id" ref="l10n_ar_regular_pay"/>
+    </record>
+
+    <record id="l10n_ar_sac_pay" model="hr.payroll.structure">
+        <field name="name">Argentina: SAC</field>
+        <field name="code">AR_SAC</field>
+        <field name="country_id" ref="base.ar"/>
+        <field name="use_worked_day_lines" eval="False"/>
+        <field name="type_id" ref="l10n_ar_employee"/>
+        <field name="rule_ids" eval="[]"/>
+    </record>
+
+    <record id="l10n_ar_vacation_pay" model="hr.payroll.structure">
+        <field name="name">Argentina: Paid Vacation</field>
+        <field name="code">AR_VAC</field>
+        <field name="country_id" ref="base.ar"/>
+        <field name="use_worked_day_lines" eval="False"/>
+        <field name="type_id" ref="l10n_ar_employee"/>
+        <field name="rule_ids" eval="[]"/>
+    </record>
+</odoo>
+

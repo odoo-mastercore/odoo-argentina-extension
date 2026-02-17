@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+##############################################################################
+# Author: Mastercore Sinapsys Global®
+# Copyright: 2019-Present.
+# License AGPL-3
+# See https://www.gnu.org/licenses/agpl-3.0.html
+#
+##############################################################################
+-->
+<odoo>
+    <record id="hr_contract_template_view_form" model="ir.ui.view">
+        <field name="name">hr.contract.template.view.form.inherit.l10n_ar_hr_payroll</field>
+        <field name="model">hr.version</field>
+        <field name="inherit_id" ref="hr_payroll.hr_contract_template_view_form"/>
+        <field name="arch" type="xml">
+            <group name="salary_info" position="inside">
+                <group string="Argentina" invisible="country_code != 'AR'">
+                    <field name="l10n_ar_seniority_date"/>
+                    <label for="l10n_ar_seniority_percent" string="Seniority Rate"/>
+                    <div class="o_row">
+                        <field name="l10n_ar_seniority_percent" class="o_hr_narrow_field"/>
+                        <span>%</span>
+                    </div>
+                    <label for="l10n_ar_union_rate" string="Union Contribution"/>
+                    <div class="o_row">
+                        <field name="l10n_ar_union_rate" class="o_hr_narrow_field"/>
+                        <span>%</span>
+                    </div>
+                </group>
+            </group>
+        </field>
+    </record>
+</odoo>
+

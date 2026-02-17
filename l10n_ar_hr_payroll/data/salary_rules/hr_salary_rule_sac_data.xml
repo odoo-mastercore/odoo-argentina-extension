@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+##############################################################################
+# Author: Mastercore Sinapsys Global®
+# Copyright: 2019-Present.
+# License AGPL-3
+# See https://www.gnu.org/licenses/agpl-3.0.html
+#
+##############################################################################
+-->
+<odoo>
+    <record id="l10n_ar_sac_salary_rule" model="hr.salary.rule">
+        <field name="category_id" ref="hr_payroll.BASIC"/>
+        <field name="name">SAC</field>
+        <field name="sequence">1</field>
+        <field name="code">SAC</field>
+        <field name="condition_select">none</field>
+        <field name="amount_select">code</field>
+        <field name="amount_python_compute">
+base_amount = inputs['AR_SAC_BASE'].amount if 'AR_SAC_BASE' in inputs else payslip._l10n_ar_get_sac_base()
+result = payslip._l10n_ar_compute_sac_amount(base_amount)
+        </field>
+        <field name="struct_id" ref="l10n_ar_sac_pay"/>
+    </record>
+
+    <record id="l10n_ar_sac_gross_salary_rule" model="hr.salary.rule">
+        <field name="category_id" ref="hr_payroll.GROSS"/>
+        <field name="name">Remuneracion Bruta</field>
+        <field name="sequence">100</field>
+        <field name="code">GROSS</field>
+        <field name="condition_select">none</field>
+        <field name="amount_select">code</field>
+        <field name="amount_python_compute">
+result = categories['BASIC'] + categories['ALW']
+        </field>
+        <field name="struct_id" ref="l10n_ar_sac_pay"/>
+    </record>
+
+    <record id="l10n_ar_sac_jubilacion_salary_rule" model="hr.salary.rule">
+        <field name="category_id" ref="l10n_ar_hr_payroll.l10n_ar_category_employee_contrib"/>
+        <field name="name">Jubilacion</field>
+        <field name="sequence">110</field>
+        <field name="code">AR_JUB</field>
+        <field name="condition_select">none</field>
+        <field name="amount_select">code</field>
+        <field name="amount_python_compute">
+result = -(categories['GROSS'] * payslip._rule_parameter('l10n_ar_employee_jubilacion_rate') / 100.0)
+        </field>
+        <field name="struct_id" ref="l10n_ar_sac_pay"/>
+    </record>
+
+    <record id="l10n_ar_sac_ley_19032_salary_rule" model="hr.salary.rule">
+        <field name="category_id" ref="l10n_ar_hr_payroll.l10n_ar_category_employee_contrib"/>
+        <field name="name">Ley 19032</field>
+        <field name="sequence">111</field>
+        <field name="code">AR_LEY19032</field>
+        <field name="condition_select">none</field>
+        <field name="amount_select">code</field>
+        <field name="amount_python_compute">
+result = -(categories['GROSS'] * payslip._rule_parameter('l10n_ar_employee_ley_19032_rate') / 100.0)
+        </field>
+        <field name="struct_id" ref="l10n_ar_sac_pay"/>
+    </record>
+
+    <record id="l10n_ar_sac_obra_social_salary_rule" model="hr.salary.rule">
+        <field name="category_id" ref="l10n_ar_hr_payroll.l10n_ar_category_employee_contrib"/>
+        <field name="name">Obra Social</field>
+        <field name="sequence">112</field>
+        <field name="code">AR_OBRA_SOC</field>
+        <field name="condition_select">none</field>
+        <field name="amount_select">code</field>
+        <field name="amount_python_compute">
+result = -(categories['GROSS'] * payslip._rule_parameter('l10n_ar_employee_obra_social_rate') / 100.0)
+        </field>
+        <field name="struct_id" ref="l10n_ar_sac_pay"/>
+    </record>
+
+    <record id="l10n_ar_sac_union_salary_rule" model="hr.salary.rule">
+        <field name="category_id" ref="hr_payroll.DED"/>
+        <field name="name">Aporte Sindical</field>
+        <field name="sequence">113</field>
+        <field name="code">AR_SINDICATO</field>
+        <field name="condition_select">python</field>
+        <field name="condition_python">result = bool(version.l10n_ar_union_rate)</field>
+        <field name="amount_select">code</field>
+        <field name="amount_python_compute">
+result = -(categories['GROSS'] * version.l10n_ar_union_rate / 100.0)
+        </field>
+        <field name="struct_id" ref="l10n_ar_sac_pay"/>
+    </record>
+
+    <record id="l10n_ar_sac_net_salary_rule" model="hr.salary.rule">
+        <field name="category_id" ref="hr_payroll.NET"/>
+        <field name="name">Neto</field>
+        <field name="sequence">200</field>
+        <field name="code">NET</field>
+        <field name="condition_select">none</field>
+        <field name="amount_select">code</field>
+        <field name="amount_python_compute">
+result = categories['BASIC'] + categories['ALW'] + categories['DED']
+        </field>
+        <field name="struct_id" ref="l10n_ar_sac_pay"/>
+    </record>
+</odoo>
+

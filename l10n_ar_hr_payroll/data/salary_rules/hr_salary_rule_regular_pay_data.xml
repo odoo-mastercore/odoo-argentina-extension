@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+##############################################################################
+# Author: Mastercore Sinapsys Global®
+# Copyright: 2019-Present.
+# License AGPL-3
+# See https://www.gnu.org/licenses/agpl-3.0.html
+#
+##############################################################################
+-->
+<odoo>
+    <record id="l10n_ar_regular_basic_salary_rule" model="hr.salary.rule">
+        <field name="category_id" ref="hr_payroll.BASIC"/>
+        <field name="name">Sueldo Basico</field>
+        <field name="sequence">1</field>
+        <field name="code">BASIC</field>
+        <field name="condition_select">none</field>
+        <field name="amount_select">code</field>
+        <field name="amount_python_compute">
+result = payslip.paid_amount
+        </field>
+        <field name="struct_id" ref="l10n_ar_regular_pay"/>
+    </record>
+
+    <record id="l10n_ar_regular_seniority_salary_rule" model="hr.salary.rule">
+        <field name="category_id" ref="hr_payroll.ALW"/>
+        <field name="name">Antiguedad</field>
+        <field name="sequence">10</field>
+        <field name="code">AR_ANTIG</field>
+        <field name="condition_select">python</field>
+        <field name="condition_python">
+result = version.l10n_ar_seniority_percent and payslip._l10n_ar_get_seniority_years() > 0
+        </field>
+        <field name="amount_select">code</field>
+        <field name="amount_python_compute">
+years = payslip._l10n_ar_get_seniority_years()
+result = payslip.paid_amount * years * (version.l10n_ar_seniority_percent / 100.0)
+        </field>
+        <field name="struct_id" ref="l10n_ar_regular_pay"/>
+    </record>
+
+    <record id="l10n_ar_regular_gross_salary_rule" model="hr.salary.rule">
+        <field name="category_id" ref="hr_payroll.GROSS"/>
+        <field name="name">Remuneracion Bruta</field>
+        <field name="sequence">100</field>
+        <field name="code">GROSS</field>
+        <field name="condition_select">none</field>
+        <field name="amount_select">code</field>
+        <field name="amount_python_compute">
+result = categories['BASIC'] + categories['ALW']
+        </field>
+        <field name="struct_id" ref="l10n_ar_regular_pay"/>
+    </record>
+
+    <record id="l10n_ar_regular_jubilacion_salary_rule" model="hr.salary.rule">
+        <field name="category_id" ref="l10n_ar_hr_payroll.l10n_ar_category_employee_contrib"/>
+        <field name="name">Jubilacion</field>
+        <field name="sequence">110</field>
+        <field name="code">AR_JUB</field>
+        <field name="condition_select">none</field>
+        <field name="amount_select">code</field>
+        <field name="amount_python_compute">
+result = -(categories['GROSS'] * payslip._rule_parameter('l10n_ar_employee_jubilacion_rate') / 100.0)
+        </field>
+        <field name="struct_id" ref="l10n_ar_regular_pay"/>
+    </record>
+
+    <record id="l10n_ar_regular_ley_19032_salary_rule" model="hr.salary.rule">
+        <field name="category_id" ref="l10n_ar_hr_payroll.l10n_ar_category_employee_contrib"/>
+        <field name="name">Ley 19032</field>
+        <field name="sequence">111</field>
+        <field name="code">AR_LEY19032</field>
+        <field name="condition_select">none</field>
+        <field name="amount_select">code</field>
+        <field name="amount_python_compute">
+result = -(categories['GROSS'] * payslip._rule_parameter('l10n_ar_employee_ley_19032_rate') / 100.0)
+        </field>
+        <field name="struct_id" ref="l10n_ar_regular_pay"/>
+    </record>
+
+    <record id="l10n_ar_regular_obra_social_salary_rule" model="hr.salary.rule">
+        <field name="category_id" ref="l10n_ar_hr_payroll.l10n_ar_category_employee_contrib"/>
+        <field name="name">Obra Social</field>
+        <field name="sequence">112</field>
+        <field name="code">AR_OBRA_SOC</field>
+        <field name="condition_select">none</field>
+        <field name="amount_select">code</field>
+        <field name="amount_python_compute">
+result = -(categories['GROSS'] * payslip._rule_parameter('l10n_ar_employee_obra_social_rate') / 100.0)
+        </field>
+        <field name="struct_id" ref="l10n_ar_regular_pay"/>
+    </record>
+
+    <record id="l10n_ar_regular_union_salary_rule" model="hr.salary.rule">
+        <field name="category_id" ref="hr_payroll.DED"/>
+        <field name="name">Aporte Sindical</field>
+        <field name="sequence">113</field>
+        <field name="code">AR_SINDICATO</field>
+        <field name="condition_select">python</field>
+        <field name="condition_python">result = bool(version.l10n_ar_union_rate)</field>
+        <field name="amount_select">code</field>
+        <field name="amount_python_compute">
+result = -(categories['GROSS'] * version.l10n_ar_union_rate / 100.0)
+        </field>
+        <field name="struct_id" ref="l10n_ar_regular_pay"/>
+    </record>
+
+    <record id="l10n_ar_regular_attachment_of_salary_rule" model="hr.salary.rule">
+        <field name="category_id" ref="hr_payroll.DED"/>
+        <field name="name">Attachment of Salary</field>
+        <field name="sequence">174</field>
+        <field name="code">ATTACH_SALARY</field>
+        <field name="condition_select">python</field>
+        <field name="condition_python">result = 'ATTACH_SALARY' in inputs</field>
+        <field name="amount_select">code</field>
+        <field name="amount_python_compute">
+result = -inputs['ATTACH_SALARY'].amount
+result_name = inputs['ATTACH_SALARY'].name
+        </field>
+        <field name="struct_id" ref="l10n_ar_regular_pay"/>
+    </record>
+
+    <record id="l10n_ar_regular_assignment_of_salary_rule" model="hr.salary.rule">
+        <field name="category_id" ref="hr_payroll.DED"/>
+        <field name="name">Assignment of Salary</field>
+        <field name="sequence">175</field>
+        <field name="code">ASSIG_SALARY</field>
+        <field name="condition_select">python</field>
+        <field name="condition_python">result = 'ASSIG_SALARY' in inputs</field>
+        <field name="amount_select">code</field>
+        <field name="amount_python_compute">
+result = -inputs['ASSIG_SALARY'].amount
+result_name = inputs['ASSIG_SALARY'].name
+        </field>
+        <field name="struct_id" ref="l10n_ar_regular_pay"/>
+    </record>
+
+    <record id="l10n_ar_regular_child_support_rule" model="hr.salary.rule">
+        <field name="category_id" ref="hr_payroll.DED"/>
+        <field name="name">Child Support</field>
+        <field name="sequence">176</field>
+        <field name="code">CHILD_SUPPORT</field>
+        <field name="condition_select">python</field>
+        <field name="condition_python">result = 'CHILD_SUPPORT' in inputs</field>
+        <field name="amount_select">code</field>
+        <field name="amount_python_compute">
+result = -inputs['CHILD_SUPPORT'].amount
+result_name = inputs['CHILD_SUPPORT'].name
+        </field>
+        <field name="struct_id" ref="l10n_ar_regular_pay"/>
+    </record>
+
+    <record id="l10n_ar_regular_deduction_salary_rule" model="hr.salary.rule">
+        <field name="category_id" ref="hr_payroll.DED"/>
+        <field name="name">Deduction</field>
+        <field name="sequence">198</field>
+        <field name="code">DEDUCTION</field>
+        <field name="condition_select">python</field>
+        <field name="condition_python">result = 'DEDUCTION' in inputs</field>
+        <field name="amount_select">code</field>
+        <field name="amount_python_compute">
+result = -inputs['DEDUCTION'].amount
+result_name = inputs['DEDUCTION'].name
+        </field>
+        <field name="struct_id" ref="l10n_ar_regular_pay"/>
+    </record>
+
+    <record id="l10n_ar_regular_reimbursement_salary_rule" model="hr.salary.rule">
+        <field name="category_id" ref="hr_payroll.ALW"/>
+        <field name="name">Reimbursement</field>
+        <field name="sequence">199</field>
+        <field name="code">REIMBURSEMENT</field>
+        <field name="condition_select">python</field>
+        <field name="condition_python">result = 'REIMBURSEMENT' in inputs</field>
+        <field name="amount_select">code</field>
+        <field name="amount_python_compute">
+result = inputs['REIMBURSEMENT'].amount
+result_name = inputs['REIMBURSEMENT'].name
+        </field>
+        <field name="struct_id" ref="l10n_ar_regular_pay"/>
+    </record>
+
+    <record id="l10n_ar_regular_net_salary_rule" model="hr.salary.rule">
+        <field name="category_id" ref="hr_payroll.NET"/>
+        <field name="name">Neto</field>
+        <field name="sequence">200</field>
+        <field name="code">NET</field>
+        <field name="appears_on_employee_cost_dashboard" eval="True"/>
+        <field name="condition_select">none</field>
+        <field name="amount_select">code</field>
+        <field name="amount_python_compute">
+result = categories['BASIC'] + categories['ALW'] + categories['DED']
+        </field>
+        <field name="struct_id" ref="l10n_ar_regular_pay"/>
+    </record>
+
+    <record id="l10n_ar_regular_employer_contrib_salary_rule" model="hr.salary.rule">
+        <field name="category_id" ref="l10n_ar_hr_payroll.l10n_ar_category_employer_contrib"/>
+        <field name="name">Contribuciones Patronales</field>
+        <field name="sequence">250</field>
+        <field name="code">AR_CONT_SOC</field>
+        <field name="appears_on_payslip" eval="False"/>
+        <field name="condition_select">none</field>
+        <field name="amount_select">code</field>
+        <field name="amount_python_compute">
+result = categories['GROSS'] * payslip._rule_parameter('l10n_ar_employer_contribution_rate') / 100.0
+        </field>
+        <field name="struct_id" ref="l10n_ar_regular_pay"/>
+    </record>
+
+    <record id="l10n_ar_regular_art_salary_rule" model="hr.salary.rule">
+        <field name="category_id" ref="l10n_ar_hr_payroll.l10n_ar_category_employer_contrib"/>
+        <field name="name">ART</field>
+        <field name="sequence">251</field>
+        <field name="code">AR_ART</field>
+        <field name="appears_on_payslip" eval="False"/>
+        <field name="condition_select">none</field>
+        <field name="amount_select">code</field>
+        <field name="amount_python_compute">
+result = categories['GROSS'] * payslip._rule_parameter('l10n_ar_art_rate') / 100.0
+        </field>
+        <field name="struct_id" ref="l10n_ar_regular_pay"/>
+    </record>
+</odoo>
+

@@ -22,4 +22,18 @@
         <field name="country_id" ref="base.ar"/>
         <field name="struct_ids" eval="[(4, ref('l10n_ar_vacation_pay'))]"/>
     </record>
+
+    <record id="l10n_ar_input_regular_sac" model="hr.payslip.input.type">
+        <field name="name">SAC en recibo regular</field>
+        <field name="code">AR_SAC_REGULAR</field>
+        <field name="country_id" ref="base.ar"/>
+        <field name="struct_ids" eval="[(4, ref('l10n_ar_regular_pay'))]"/>
+    </record>
+
+    <record id="l10n_ar_input_regular_vac_days" model="hr.payslip.input.type">
+        <field name="name">Vacaciones en recibo regular (días)</field>
+        <field name="code">AR_VAC_REG_DAYS</field>
+        <field name="country_id" ref="base.ar"/>
+        <field name="struct_ids" eval="[(4, ref('l10n_ar_regular_pay'))]"/>
+    </record>
 </odoo>

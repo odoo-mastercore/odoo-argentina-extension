@@ -39,6 +39,38 @@ result = payslip.paid_amount * years * (version.l10n_ar_seniority_percent / 100.
         <field name="struct_id" ref="l10n_ar_regular_pay"/>
     </record>
 
+    <record id="l10n_ar_regular_sac_manual_salary_rule" model="hr.salary.rule">
+        <field name="category_id" ref="hr_payroll.BASIC"/>
+        <field name="name">SAC (manual)</field>
+        <field name="sequence">20</field>
+        <field name="code">AR_SAC_REGULAR</field>
+        <field name="condition_select">python</field>
+        <field name="condition_python">result = 'AR_SAC_REGULAR' in inputs</field>
+        <field name="amount_select">code</field>
+        <field name="amount_python_compute">
+result = inputs['AR_SAC_REGULAR'].amount
+result_name = inputs['AR_SAC_REGULAR'].name
+        </field>
+        <field name="struct_id" ref="l10n_ar_regular_pay"/>
+    </record>
+
+    <record id="l10n_ar_regular_vacation_manual_salary_rule" model="hr.salary.rule">
+        <field name="category_id" ref="hr_payroll.BASIC"/>
+        <field name="name">Vacaciones (manual)</field>
+        <field name="sequence">21</field>
+        <field name="code">AR_VAC_REGULAR</field>
+        <field name="condition_select">python</field>
+        <field name="condition_python">result = 'AR_VAC_REG_DAYS' in inputs</field>
+        <field name="amount_select">code</field>
+        <field name="amount_python_compute">
+vacation_days = inputs['AR_VAC_REG_DAYS'].amount
+result_qty = vacation_days
+result = payslip._l10n_ar_compute_vacation_amount(vacation_days)
+result_name = inputs['AR_VAC_REG_DAYS'].name
+        </field>
+        <field name="struct_id" ref="l10n_ar_regular_pay"/>
+    </record>
+
     <record id="l10n_ar_regular_gross_salary_rule" model="hr.salary.rule">
         <field name="category_id" ref="hr_payroll.GROSS"/>
         <field name="name">Remuneración bruta</field>

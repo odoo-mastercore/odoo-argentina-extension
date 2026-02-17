@@ -10,15 +10,15 @@
 -->
 <odoo>
     <record id="l10n_ar_category_employee_contrib" model="hr.salary.rule.category">
-        <field name="name">Employee Social Security</field>
-        <field name="name@es_419">Aportes Seguridad Social</field>
+        <field name="name">Aportes de seguridad social</field>
+        <field name="name@es_419">Aportes de seguridad social</field>
         <field name="code">AR_APORTES</field>
         <field name="parent_id" ref="hr_payroll.DED"/>
         <field name="country_id" ref="base.ar"/>
     </record>
 
     <record id="l10n_ar_category_employer_contrib" model="hr.salary.rule.category">
-        <field name="name">Employer Social Security</field>
+        <field name="name">Contribuciones patronales</field>
         <field name="name@es_419">Contribuciones Patronales</field>
         <field name="code">AR_CONT</field>
         <field name="parent_id" ref="hr_payroll.COMP"/>
@@ -26,10 +26,9 @@
     </record>
 
     <record id="l10n_ar_category_provisions" model="hr.salary.rule.category">
-        <field name="name">Provisions</field>
+        <field name="name">Provisiones</field>
         <field name="name@es_419">Provisiones</field>
         <field name="code">AR_PROV</field>
         <field name="country_id" ref="base.ar"/>
     </record>
 </odoo>
-

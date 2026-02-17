@@ -10,7 +10,7 @@
 -->
 <odoo>
     <record id="rule_parameter_employee_jubilacion_rate" model="hr.rule.parameter">
-        <field name="name">AR: Employee Pension Contribution Rate</field>
+        <field name="name">AR: Aporte jubilatorio empleado (%)</field>
         <field name="code">l10n_ar_employee_jubilacion_rate</field>
         <field name="country_id" ref="base.ar"/>
     </record>
@@ -21,7 +21,7 @@
     </record>
 
     <record id="rule_parameter_employee_ley_19032_rate" model="hr.rule.parameter">
-        <field name="name">AR: Employee Law 19032 Contribution Rate</field>
+        <field name="name">AR: Aporte Ley 19.032 empleado (%)</field>
         <field name="code">l10n_ar_employee_ley_19032_rate</field>
         <field name="country_id" ref="base.ar"/>
     </record>
@@ -32,7 +32,7 @@
     </record>
 
     <record id="rule_parameter_employee_obra_social_rate" model="hr.rule.parameter">
-        <field name="name">AR: Employee Health Contribution Rate</field>
+        <field name="name">AR: Aporte obra social empleado (%)</field>
         <field name="code">l10n_ar_employee_obra_social_rate</field>
         <field name="country_id" ref="base.ar"/>
     </record>
@@ -43,7 +43,7 @@
     </record>
 
     <record id="rule_parameter_employer_contribution_rate" model="hr.rule.parameter">
-        <field name="name">AR: Employer Social Security Contribution Rate</field>
+        <field name="name">AR: Contribución patronal seguridad social (%)</field>
         <field name="code">l10n_ar_employer_contribution_rate</field>
         <field name="country_id" ref="base.ar"/>
     </record>
@@ -54,7 +54,7 @@
     </record>
 
     <record id="rule_parameter_art_rate" model="hr.rule.parameter">
-        <field name="name">AR: ART Rate</field>
+        <field name="name">AR: Alícuota ART (%)</field>
         <field name="code">l10n_ar_art_rate</field>
         <field name="country_id" ref="base.ar"/>
     </record>
@@ -65,7 +65,7 @@
     </record>
 
     <record id="rule_parameter_sac_divisor" model="hr.rule.parameter">
-        <field name="name">AR: SAC Divisor</field>
+        <field name="name">AR: Divisor SAC</field>
         <field name="code">l10n_ar_sac_divisor</field>
         <field name="country_id" ref="base.ar"/>
     </record>
@@ -76,7 +76,7 @@
     </record>
 
     <record id="rule_parameter_vacation_divisor" model="hr.rule.parameter">
-        <field name="name">AR: Vacation Daily Divisor</field>
+        <field name="name">AR: Divisor diario vacaciones</field>
         <field name="code">l10n_ar_vacation_divisor</field>
         <field name="country_id" ref="base.ar"/>
     </record>
@@ -86,4 +86,3 @@
         <field name="date_from" eval="datetime(2026, 1, 1).date()"/>
     </record>
 </odoo>
-

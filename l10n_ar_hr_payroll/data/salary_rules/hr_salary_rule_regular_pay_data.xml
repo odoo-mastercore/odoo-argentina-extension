@@ -11,7 +11,7 @@
 <odoo>
     <record id="l10n_ar_regular_basic_salary_rule" model="hr.salary.rule">
         <field name="category_id" ref="hr_payroll.BASIC"/>
-        <field name="name">Sueldo Basico</field>
+        <field name="name">Sueldo básico</field>
         <field name="sequence">1</field>
         <field name="code">BASIC</field>
         <field name="condition_select">none</field>
@@ -24,7 +24,7 @@ result = payslip.paid_amount
 
     <record id="l10n_ar_regular_seniority_salary_rule" model="hr.salary.rule">
         <field name="category_id" ref="hr_payroll.ALW"/>
-        <field name="name">Antiguedad</field>
+        <field name="name">Antigüedad</field>
         <field name="sequence">10</field>
         <field name="code">AR_ANTIG</field>
         <field name="condition_select">python</field>
@@ -41,7 +41,7 @@ result = payslip.paid_amount * years * (version.l10n_ar_seniority_percent / 100.
 
     <record id="l10n_ar_regular_gross_salary_rule" model="hr.salary.rule">
         <field name="category_id" ref="hr_payroll.GROSS"/>
-        <field name="name">Remuneracion Bruta</field>
+        <field name="name">Remuneración bruta</field>
         <field name="sequence">100</field>
         <field name="code">GROSS</field>
         <field name="condition_select">none</field>
@@ -54,7 +54,7 @@ result = categories['BASIC'] + categories['ALW']
 
     <record id="l10n_ar_regular_jubilacion_salary_rule" model="hr.salary.rule">
         <field name="category_id" ref="l10n_ar_hr_payroll.l10n_ar_category_employee_contrib"/>
-        <field name="name">Jubilacion</field>
+        <field name="name">Jubilación</field>
         <field name="sequence">110</field>
         <field name="code">AR_JUB</field>
         <field name="condition_select">none</field>
@@ -107,7 +107,7 @@ result = -(categories['GROSS'] * version.l10n_ar_union_rate / 100.0)
 
     <record id="l10n_ar_regular_attachment_of_salary_rule" model="hr.salary.rule">
         <field name="category_id" ref="hr_payroll.DED"/>
-        <field name="name">Attachment of Salary</field>
+        <field name="name">Deducción salarial</field>
         <field name="sequence">174</field>
         <field name="code">ATTACH_SALARY</field>
         <field name="condition_select">python</field>
@@ -122,7 +122,7 @@ result_name = inputs['ATTACH_SALARY'].name
 
     <record id="l10n_ar_regular_assignment_of_salary_rule" model="hr.salary.rule">
         <field name="category_id" ref="hr_payroll.DED"/>
-        <field name="name">Assignment of Salary</field>
+        <field name="name">Asignación salarial</field>
         <field name="sequence">175</field>
         <field name="code">ASSIG_SALARY</field>
         <field name="condition_select">python</field>
@@ -137,7 +137,7 @@ result_name = inputs['ASSIG_SALARY'].name
 
     <record id="l10n_ar_regular_child_support_rule" model="hr.salary.rule">
         <field name="category_id" ref="hr_payroll.DED"/>
-        <field name="name">Child Support</field>
+        <field name="name">Pensión alimenticia</field>
         <field name="sequence">176</field>
         <field name="code">CHILD_SUPPORT</field>
         <field name="condition_select">python</field>
@@ -152,7 +152,7 @@ result_name = inputs['CHILD_SUPPORT'].name
 
     <record id="l10n_ar_regular_deduction_salary_rule" model="hr.salary.rule">
         <field name="category_id" ref="hr_payroll.DED"/>
-        <field name="name">Deduction</field>
+        <field name="name">Deducción</field>
         <field name="sequence">198</field>
         <field name="code">DEDUCTION</field>
         <field name="condition_select">python</field>
@@ -167,7 +167,7 @@ result_name = inputs['DEDUCTION'].name
 
     <record id="l10n_ar_regular_reimbursement_salary_rule" model="hr.salary.rule">
         <field name="category_id" ref="hr_payroll.ALW"/>
-        <field name="name">Reimbursement</field>
+        <field name="name">Reembolso</field>
         <field name="sequence">199</field>
         <field name="code">REIMBURSEMENT</field>
         <field name="condition_select">python</field>

@@ -10,7 +10,7 @@
 -->
 <odoo>
     <record id="l10n_ar_regular_pay" model="hr.payroll.structure">
-        <field name="name">Argentina: Regular Pay</field>
+        <field name="name">Argentina: Pago regular</field>
         <field name="code">AR_REGULAR</field>
         <field name="country_id" ref="base.ar"/>
         <field name="type_id" ref="l10n_ar_employee"/>
@@ -32,7 +32,7 @@
     </record>
 
     <record id="l10n_ar_vacation_pay" model="hr.payroll.structure">
-        <field name="name">Argentina: Paid Vacation</field>
+        <field name="name">Argentina: Vacaciones pagas</field>
         <field name="code">AR_VAC</field>
         <field name="country_id" ref="base.ar"/>
         <field name="use_worked_day_lines" eval="False"/>
@@ -40,4 +40,3 @@
         <field name="rule_ids" eval="[]"/>
     </record>
 </odoo>
-

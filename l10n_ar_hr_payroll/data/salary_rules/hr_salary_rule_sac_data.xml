@@ -25,7 +25,7 @@ result = payslip._l10n_ar_compute_sac_amount(base_amount)
 
     <record id="l10n_ar_sac_gross_salary_rule" model="hr.salary.rule">
         <field name="category_id" ref="hr_payroll.GROSS"/>
-        <field name="name">Remuneracion Bruta</field>
+        <field name="name">Remuneración bruta</field>
         <field name="sequence">100</field>
         <field name="code">GROSS</field>
         <field name="condition_select">none</field>
@@ -38,7 +38,7 @@ result = categories['BASIC'] + categories['ALW']
 
     <record id="l10n_ar_sac_jubilacion_salary_rule" model="hr.salary.rule">
         <field name="category_id" ref="l10n_ar_hr_payroll.l10n_ar_category_employee_contrib"/>
-        <field name="name">Jubilacion</field>
+        <field name="name">Jubilación</field>
         <field name="sequence">110</field>
         <field name="code">AR_JUB</field>
         <field name="condition_select">none</field>
@@ -102,4 +102,3 @@ result = categories['BASIC'] + categories['ALW'] + categories['DED']
         <field name="struct_id" ref="l10n_ar_sac_pay"/>
     </record>
 </odoo>
-

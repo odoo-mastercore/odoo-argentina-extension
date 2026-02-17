@@ -48,6 +48,7 @@ class TestL10nArHrPayrollCostSimulator(TransactionCase):
         self.assertTrue(vacation_lines)
         self.assertGreater(sac_lines[0].gross_amount, 0.0)
         self.assertGreater(vacation_lines[0].gross_amount, 0.0)
+        self.assertLess(vacation_lines[0].gross_amount, wizard.proposed_gross_monthly)
 
     def test_salary_increase_delta_is_positive(self):
         employee = self.env["hr.employee"].create({

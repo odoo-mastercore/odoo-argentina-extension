@@ -328,14 +328,11 @@ class L10nArHrPayrollCostSimulatorWizard(models.TransientModel):
                 ],
                 regular_slip.currency_id,
             )
-            vacation_annual = self._l10n_ar_extract_component_amounts(
-                vacation_slip, employer_rate=employer_rate, employer_from_lines=False
-            )
             vacation_days = vacation_slip._l10n_ar_get_vacation_days()
             vacation_annual = self._l10n_ar_convert_vacation_to_incremental_amounts(
-                vacation_annual,
                 wage=wage,
                 vacation_days=vacation_days,
+                vacation_divisor=self._l10n_ar_get_rule_parameter(vacation_slip, "l10n_ar_vacation_divisor") or 25.0,
                 employee_rate=employee_rate,
                 employer_rate=employer_rate,
                 currency=regular_slip.currency_id,
@@ -403,15 +400,16 @@ class L10nArHrPayrollCostSimulatorWizard(models.TransientModel):
 
     def _l10n_ar_convert_vacation_to_incremental_amounts(
         self,
-        vacation_amounts,
         wage,
         vacation_days,
+        vacation_divisor,
         employee_rate,
         employer_rate,
         currency,
     ):
+        vacation_gross = (wage / vacation_divisor) * vacation_days if vacation_divisor else 0.0
         covered_by_regular_gross = (wage / 30.0) * vacation_days
-        incremental_gross = max(vacation_amounts["gross_amount"] - covered_by_regular_gross, 0.0)
+        incremental_gross = max(vacation_gross - covered_by_regular_gross, 0.0)
         incremental_employee_deductions = incremental_gross * employee_rate
         incremental_employer_contributions = incremental_gross * employer_rate
         incremental_net = incremental_gross - incremental_employee_deductions

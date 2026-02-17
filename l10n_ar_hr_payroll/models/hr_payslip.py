@@ -10,10 +10,23 @@
 from datetime import date
 
 from odoo import fields, models
+from odoo.tools.misc import format_date
 
 
 class HrPayslip(models.Model):
     _inherit = "hr.payslip"
+
+    l10n_ar_payment_method = fields.Selection(
+        selection=[
+            ("bank_transfer", "Transferencia bancaria"),
+            ("cash", "Efectivo"),
+            ("check", "Cheque"),
+            ("other", "Otro"),
+        ],
+        string="Payment Method",
+        default="bank_transfer",
+    )
+    l10n_ar_payment_method_note = fields.Char(string="Payment Method Detail")
 
     l10n_ar_social_security_deposit_period = fields.Char(
         string="Social Security Deposit Period",
@@ -121,3 +134,54 @@ class HrPayslip(models.Model):
         self.ensure_one()
         amount = abs(self.net_wage or 0.0)
         return self.currency_id.with_context(lang=self.employee_id.lang or self.env.lang).amount_to_text(amount)
+
+    def _l10n_ar_get_employee_entry_date(self):
+        self.ensure_one()
+        versions = self.employee_id.with_context(active_test=False).version_ids
+        contract_dates = [d for d in versions.mapped("contract_date_start") if d]
+        if contract_dates:
+            return min(contract_dates)
+        effective_dates = [d for d in versions.mapped("date_start") if d]
+        return min(effective_dates) if effective_dates else (self.version_id.contract_date_start or self.version_id.date_start)
+
+    def _l10n_ar_get_payment_place(self):
+        self.ensure_one()
+        return self.company_id.partner_id.city or self.company_id.partner_id.state_id.name or "-"
+
+    def _l10n_ar_get_payment_date(self):
+        self.ensure_one()
+        return self.paid_date or self.compute_date or fields.Date.today()
+
+    def _l10n_ar_get_employee_entry_date_display(self):
+        self.ensure_one()
+        entry_date = self._l10n_ar_get_employee_entry_date()
+        return format_date(self.env, entry_date) if entry_date else "-"
+
+    def _l10n_ar_get_payment_date_display(self):
+        self.ensure_one()
+        payment_date = self._l10n_ar_get_payment_date()
+        return format_date(self.env, payment_date) if payment_date else "-"
+
+    def _l10n_ar_get_payment_method_display(self):
+        self.ensure_one()
+        if self.l10n_ar_payment_method == "other":
+            return self.l10n_ar_payment_method_note or "Otro"
+        if self.l10n_ar_payment_method:
+            return dict(self._fields["l10n_ar_payment_method"].selection).get(self.l10n_ar_payment_method)
+        return "Transferencia bancaria" if self._l10n_ar_get_payment_account() else "-"
+
+    def _l10n_ar_get_legajo(self):
+        self.ensure_one()
+        return self.employee_id.registration_number or str(self.employee_id.id)
+
+    def _l10n_ar_get_deduction_rate(self, line):
+        self.ensure_one()
+        if line.code == "AR_JUB":
+            return self._rule_parameter("l10n_ar_employee_jubilacion_rate")
+        if line.code == "AR_LEY19032":
+            return self._rule_parameter("l10n_ar_employee_ley_19032_rate")
+        if line.code == "AR_OBRA_SOC":
+            return self._rule_parameter("l10n_ar_employee_obra_social_rate")
+        if line.code == "AR_SINDICATO":
+            return self.version_id.l10n_ar_union_rate
+        return line.rate

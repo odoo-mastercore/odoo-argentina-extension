@@ -87,6 +87,18 @@ class L10nArHrPayrollCostSimulatorWizard(models.TransientModel):
     proposed_regular_monthly_cost = fields.Monetary(string="Costo regular mensual propuesto")
     delta_regular_monthly_cost = fields.Monetary(string="Delta costo regular mensual")
 
+    current_regular_annual_cost = fields.Monetary(string="Costo anual regular actual")
+    proposed_regular_annual_cost = fields.Monetary(string="Costo anual regular propuesto")
+    delta_regular_annual_cost = fields.Monetary(string="Delta costo anual regular")
+
+    current_sac_annual_cost = fields.Monetary(string="Costo anual SAC actual")
+    proposed_sac_annual_cost = fields.Monetary(string="Costo anual SAC propuesto")
+    delta_sac_annual_cost = fields.Monetary(string="Delta costo anual SAC")
+
+    current_vacation_annual_cost = fields.Monetary(string="Costo anual vacaciones actual")
+    proposed_vacation_annual_cost = fields.Monetary(string="Costo anual vacaciones propuesto")
+    delta_vacation_annual_cost = fields.Monetary(string="Delta costo anual vacaciones")
+
     current_prorated_monthly_cost = fields.Monetary(string="Costo mensual prorrateado actual")
     proposed_prorated_monthly_cost = fields.Monetary(string="Costo mensual prorrateado propuesto")
     delta_prorated_monthly_cost = fields.Monetary(string="Delta costo mensual prorrateado")
@@ -294,6 +306,12 @@ class L10nArHrPayrollCostSimulatorWizard(models.TransientModel):
                 self._l10n_ar_get_rule_parameter(regular_slip, "l10n_ar_employer_contribution_rate")
                 + self._l10n_ar_get_rule_parameter(regular_slip, "l10n_ar_art_rate")
             ) / 100.0
+            employee_rate = (
+                self._l10n_ar_get_rule_parameter(regular_slip, "l10n_ar_employee_jubilacion_rate")
+                + self._l10n_ar_get_rule_parameter(regular_slip, "l10n_ar_employee_ley_19032_rate")
+                + self._l10n_ar_get_rule_parameter(regular_slip, "l10n_ar_employee_obra_social_rate")
+                + union_rate
+            ) / 100.0
 
             regular_monthly = self._l10n_ar_extract_component_amounts(
                 regular_slip, employer_rate=employer_rate, employer_from_lines=True
@@ -312,6 +330,15 @@ class L10nArHrPayrollCostSimulatorWizard(models.TransientModel):
             )
             vacation_annual = self._l10n_ar_extract_component_amounts(
                 vacation_slip, employer_rate=employer_rate, employer_from_lines=False
+            )
+            vacation_days = vacation_slip._l10n_ar_get_vacation_days()
+            vacation_annual = self._l10n_ar_convert_vacation_to_incremental_amounts(
+                vacation_annual,
+                wage=wage,
+                vacation_days=vacation_days,
+                employee_rate=employee_rate,
+                employer_rate=employer_rate,
+                currency=regular_slip.currency_id,
             )
             annual_total = self._l10n_ar_sum_amounts(
                 [regular_annual, sac_annual, vacation_annual], regular_slip.currency_id
@@ -374,6 +401,28 @@ class L10nArHrPayrollCostSimulatorWizard(models.TransientModel):
             "employer_total_cost": currency.round(gross_amount + employer_contributions),
         }
 
+    def _l10n_ar_convert_vacation_to_incremental_amounts(
+        self,
+        vacation_amounts,
+        wage,
+        vacation_days,
+        employee_rate,
+        employer_rate,
+        currency,
+    ):
+        covered_by_regular_gross = (wage / 30.0) * vacation_days
+        incremental_gross = max(vacation_amounts["gross_amount"] - covered_by_regular_gross, 0.0)
+        incremental_employee_deductions = incremental_gross * employee_rate
+        incremental_employer_contributions = incremental_gross * employer_rate
+        incremental_net = incremental_gross - incremental_employee_deductions
+        return {
+            "gross_amount": currency.round(incremental_gross),
+            "employee_deductions": currency.round(incremental_employee_deductions),
+            "net_amount": currency.round(incremental_net),
+            "employer_contributions": currency.round(incremental_employer_contributions),
+            "employer_total_cost": currency.round(incremental_gross + incremental_employer_contributions),
+        }
+
     def _l10n_ar_get_payslip_line_total(self, payslip, code):
         line = payslip.line_ids.filtered(lambda payslip_line: payslip_line.code == code)[:1]
         return line.total if line else 0.0
@@ -419,7 +468,7 @@ class L10nArHrPayrollCostSimulatorWizard(models.TransientModel):
             (10, _("Regular mensual"), "regular", "monthly", result_values["regular_monthly"]),
             (20, _("Regular anual"), "regular", "annual", result_values["regular_annual"]),
             (30, _("SAC"), "sac", "annual", result_values["sac_annual"]),
-            (40, _("Vacaciones"), "vacation", "annual", result_values["vacation_annual"]),
+            (40, _("Vacaciones (adicional anual)"), "vacation", "annual", result_values["vacation_annual"]),
             (50, _("Total mensual prorrateado"), "total", "monthly", result_values["monthly_prorated_total"]),
             (60, _("Total anual"), "total", "annual", result_values["annual_total"]),
         ]
@@ -442,6 +491,9 @@ class L10nArHrPayrollCostSimulatorWizard(models.TransientModel):
     def _l10n_ar_update_summary_for_scenario(self, summary_vals, prefix, result_values):
         summary_vals.update({
             f"{prefix}_regular_monthly_cost": result_values["regular_monthly"]["employer_total_cost"],
+            f"{prefix}_regular_annual_cost": result_values["regular_annual"]["employer_total_cost"],
+            f"{prefix}_sac_annual_cost": result_values["sac_annual"]["employer_total_cost"],
+            f"{prefix}_vacation_annual_cost": result_values["vacation_annual"]["employer_total_cost"],
             f"{prefix}_prorated_monthly_cost": result_values["monthly_prorated_total"]["employer_total_cost"],
             f"{prefix}_annual_total_cost": result_values["annual_total"]["employer_total_cost"],
             f"{prefix}_regular_monthly_net": result_values["regular_monthly"]["net_amount"],
@@ -452,6 +504,9 @@ class L10nArHrPayrollCostSimulatorWizard(models.TransientModel):
     def _l10n_ar_update_summary_deltas(self, summary_vals):
         summary_vals.update({
             "delta_regular_monthly_cost": summary_vals["proposed_regular_monthly_cost"] - summary_vals["current_regular_monthly_cost"],
+            "delta_regular_annual_cost": summary_vals["proposed_regular_annual_cost"] - summary_vals["current_regular_annual_cost"],
+            "delta_sac_annual_cost": summary_vals["proposed_sac_annual_cost"] - summary_vals["current_sac_annual_cost"],
+            "delta_vacation_annual_cost": summary_vals["proposed_vacation_annual_cost"] - summary_vals["current_vacation_annual_cost"],
             "delta_prorated_monthly_cost": summary_vals["proposed_prorated_monthly_cost"] - summary_vals["current_prorated_monthly_cost"],
             "delta_annual_total_cost": summary_vals["proposed_annual_total_cost"] - summary_vals["current_annual_total_cost"],
             "delta_regular_monthly_net": summary_vals["proposed_regular_monthly_net"] - summary_vals["current_regular_monthly_net"],
@@ -465,6 +520,15 @@ class L10nArHrPayrollCostSimulatorWizard(models.TransientModel):
             "current_regular_monthly_cost": 0.0,
             "proposed_regular_monthly_cost": 0.0,
             "delta_regular_monthly_cost": 0.0,
+            "current_regular_annual_cost": 0.0,
+            "proposed_regular_annual_cost": 0.0,
+            "delta_regular_annual_cost": 0.0,
+            "current_sac_annual_cost": 0.0,
+            "proposed_sac_annual_cost": 0.0,
+            "delta_sac_annual_cost": 0.0,
+            "current_vacation_annual_cost": 0.0,
+            "proposed_vacation_annual_cost": 0.0,
+            "delta_vacation_annual_cost": 0.0,
             "current_prorated_monthly_cost": 0.0,
             "proposed_prorated_monthly_cost": 0.0,
             "delta_prorated_monthly_cost": 0.0,

@@ -14,10 +14,6 @@
         <field name="model">l10n.ar.hr.payroll.cost.simulator.wizard</field>
         <field name="arch" type="xml">
             <form string="Simulador de costos de nómina AR" create="0" edit="1" duplicate="0">
-                <header>
-                    <button name="action_simulate" string="Simular" type="object" class="oe_highlight"/>
-                    <button string="Cerrar" special="cancel" class="btn-secondary"/>
-                </header>
                 <sheet>
                     <field name="result_ready" invisible="1"/>
                     <group>
@@ -45,16 +41,25 @@
                             <group string="Costo empleador">
                                 <group string="Actual" invisible="mode != 'salary_increase'">
                                     <field name="current_regular_monthly_cost" readonly="1"/>
+                                    <field name="current_regular_annual_cost" readonly="1"/>
+                                    <field name="current_sac_annual_cost" readonly="1"/>
+                                    <field name="current_vacation_annual_cost" readonly="1"/>
                                     <field name="current_prorated_monthly_cost" readonly="1"/>
                                     <field name="current_annual_total_cost" readonly="1"/>
                                 </group>
                                 <group string="Propuesto">
                                     <field name="proposed_regular_monthly_cost" readonly="1"/>
+                                    <field name="proposed_regular_annual_cost" readonly="1"/>
+                                    <field name="proposed_sac_annual_cost" readonly="1"/>
+                                    <field name="proposed_vacation_annual_cost" readonly="1"/>
                                     <field name="proposed_prorated_monthly_cost" readonly="1"/>
                                     <field name="proposed_annual_total_cost" readonly="1"/>
                                 </group>
                                 <group string="Delta" invisible="mode != 'salary_increase'">
                                     <field name="delta_regular_monthly_cost" readonly="1"/>
+                                    <field name="delta_regular_annual_cost" readonly="1"/>
+                                    <field name="delta_sac_annual_cost" readonly="1"/>
+                                    <field name="delta_vacation_annual_cost" readonly="1"/>
                                     <field name="delta_prorated_monthly_cost" readonly="1"/>
                                     <field name="delta_annual_total_cost" readonly="1"/>
                                 </group>
@@ -94,6 +99,10 @@
                         </page>
                     </notebook>
                 </sheet>
+                <footer>
+                    <button name="action_simulate" string="Simular" type="object" class="oe_highlight"/>
+                    <button string="Cerrar" special="cancel" class="btn-secondary"/>
+                </footer>
             </form>
         </field>
     </record>

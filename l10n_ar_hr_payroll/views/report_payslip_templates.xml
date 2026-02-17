@@ -18,7 +18,7 @@
                     .o_ar_payslip .o_ar_subtitle { font-size: 14px; color: #5a6169; margin: 0 0 6px 0; }
                     .o_ar_payslip .o_ar_section_title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; border-bottom: 2px solid #1b1d1f; padding-bottom: 2px; margin-bottom: 5px; }
                     .o_ar_payslip .o_ar_meta p { margin-bottom: 2px; }
-                    .o_ar_payslip .o_ar_meta { line-height: 1.2; }
+                    .o_ar_payslip .o_ar_meta { font-size: 13px; line-height: 1.2; }
                     .o_ar_payslip .o_ar_compact p { margin: 0 0 2px 0; line-height: 1.2; }
                     .o_ar_payslip .o_ar_table thead th { border-bottom: 2px solid #1b1d1f; font-size: 12px; }
                     .o_ar_payslip .o_ar_table td, .o_ar_payslip .o_ar_table th { padding: 3px 6px; }

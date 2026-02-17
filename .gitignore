@@ -2,3 +2,4 @@
 odoo-ee/
 odoo-ce/
 __pycache__/
+.DS_Store

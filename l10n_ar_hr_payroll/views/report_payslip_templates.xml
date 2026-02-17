@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+##############################################################################
+# Author: Mastercore Sinapsys Global®
+# Copyright: 2019-Present.
+# License AGPL-3
+# See https://www.gnu.org/licenses/agpl-3.0.html
+#
+##############################################################################
+-->
+<odoo>
+    <template id="report_payslip_ar" primary="True">
+        <t t-call="web.external_layout">
+            <div class="page o_ar_payslip">
+                <style>
+                    .o_ar_payslip { font-size: 12px; }
+                    .o_ar_payslip .o_ar_title { font-size: 30px; font-weight: 700; color: #0f6371; margin-bottom: 0; }
+                    .o_ar_payslip .o_ar_subtitle { font-size: 13px; color: #5a6169; margin: 0; }
+                    .o_ar_payslip .o_ar_section_title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; border-bottom: 2px solid #1b1d1f; padding-bottom: 3px; margin-bottom: 8px; }
+                    .o_ar_payslip .o_ar_meta p { margin-bottom: 4px; }
+                    .o_ar_payslip .o_ar_table thead th { border-bottom: 2px solid #1b1d1f; font-size: 12px; }
+                    .o_ar_payslip .o_ar_table td, .o_ar_payslip .o_ar_table th { padding: 4px 6px; }
+                    .o_ar_payslip .o_ar_table tbody tr.total_row td { border-top: 1px solid #1b1d1f; font-weight: 700; }
+                    .o_ar_payslip .o_ar_total_box { border: 2px solid #1b1d1f; border-radius: 6px; padding: 10px 12px; }
+                    .o_ar_payslip .o_ar_total_box p { margin: 0; }
+                    .o_ar_payslip .o_ar_sign_box { margin-top: 30px; border-top: 1px solid #1b1d1f; padding-top: 6px; text-align: center; }
+                    .o_ar_payslip .o_ar_legal_note { margin-top: 10px; font-size: 10px; color: #6c757d; }
+                </style>
+
+                <t t-set="earnings_lines" t-value="o.line_ids.filtered(lambda l: l.appears_on_payslip and l.total &gt; 0 and l.code != 'NET')"/>
+                <t t-set="deduction_lines" t-value="o.line_ids.filtered(lambda l: l.appears_on_payslip and l.total &lt; 0 and l.code != 'NET')"/>
+                <t t-set="gross_amount" t-value="sum(earnings_lines.mapped('total'))"/>
+                <t t-set="deduction_amount" t-value="abs(sum(deduction_lines.mapped('total')))"/>
+                <t t-set="payment_bank" t-value="o._l10n_ar_get_payment_account()"/>
+                <t t-set="employee_display_name" t-value="o.employee_id.legal_name or o.employee_id.name"/>
+
+                <h2 class="o_ar_title">Recibo de sueldo</h2>
+                <p class="o_ar_subtitle">
+                    <span t-field="o.name"/>
+                    <span class="ms-2">- Recibo N°</span>
+                    <span t-out="o.number or '-'"/>
+                </p>
+
+                <div class="row mt-3 mb-2">
+                    <div class="col-6">
+                        <p class="o_ar_section_title">Datos del empleador</p>
+                        <div class="o_ar_meta">
+                            <p><strong>Razón social:</strong> <span t-field="o.company_id.name"/></p>
+                            <p><strong>CUIT:</strong> <span t-field="o.company_id.partner_id.vat"/></p>
+                            <p>
+                                <strong>Domicilio:</strong>
+                                <span t-field="o.company_id.partner_id.street"/>
+                                <span t-if="o.company_id.partner_id.street2">, <span t-field="o.company_id.partner_id.street2"/></span>
+                                <span t-if="o.company_id.partner_id.city">, <span t-field="o.company_id.partner_id.city"/></span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <p class="o_ar_section_title">Datos del trabajador</p>
+                        <div class="o_ar_meta">
+                            <p><strong>Nombre y apellido:</strong> <span t-out="employee_display_name"/></p>
+                            <p><strong>CUIL:</strong> <span t-out="o.employee_id.l10n_ar_cuil or '-'"/></p>
+                            <p><strong>Legajo:</strong> <span t-out="o.employee_id.registration_number or '-'"/></p>
+                            <p><strong>Categoría / tarea:</strong> <span t-out="o.version_id.job_title or o.version_id.job_id.name or '-'"/></p>
+                            <p><strong>Fecha de ingreso:</strong> <span t-field="o.version_id.contract_date_start"/></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-2">
+                    <div class="col-6">
+                        <p><strong>Período liquidado:</strong> <span t-field="o.date_from"/> al <span t-field="o.date_to"/></p>
+                        <p><strong>Lugar y fecha de pago:</strong> <span t-field="o.company_id.partner_id.city"/>, <span t-field="o.compute_date"/></p>
+                    </div>
+                    <div class="col-6">
+                        <p><strong>Forma de pago:</strong> Transferencia bancaria</p>
+                        <p><strong>CBU destino:</strong> <span t-out="payment_bank.acc_number if payment_bank else '-'"/></p>
+                        <p><strong>Banco:</strong> <span t-out="payment_bank.bank_id.name if payment_bank and payment_bank.bank_id else '-'"/></p>
+                    </div>
+                </div>
+
+                <div class="row mb-2">
+                    <div class="col-12">
+                        <p class="o_ar_section_title">Constancia de depósito de aportes y contribuciones</p>
+                        <p>
+                            <strong>Período depositado:</strong> <span t-out="o.l10n_ar_social_security_deposit_period or '-'"/>
+                            <span class="ms-4"><strong>Fecha de depósito:</strong> <span t-field="o.l10n_ar_social_security_deposit_date"/></span>
+                            <span class="ms-4"><strong>Banco:</strong> <span t-out="o.l10n_ar_social_security_bank or '-'"/></span>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-6">
+                        <p class="o_ar_section_title">Haberes</p>
+                        <table class="table table-sm table-borderless o_ar_table">
+                            <thead>
+                                <tr>
+                                    <th>Concepto</th>
+                                    <th class="text-end">Cantidad</th>
+                                    <th class="text-end">Tasa (%)</th>
+                                    <th class="text-end">Importe</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="earnings_lines" t-as="line">
+                                    <td><span t-field="line.name"/></td>
+                                    <td class="text-end"><span t-out="round(line.quantity, 2)"/></td>
+                                    <td class="text-end"><span t-out="round(line.rate, 2)"/></td>
+                                    <td class="text-end">
+                                        <span t-out="line.total" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                    </td>
+                                </tr>
+                                <tr class="total_row">
+                                    <td colspan="3">Total haberes brutos</td>
+                                    <td class="text-end">
+                                        <span t-out="gross_amount" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="col-6">
+                        <p class="o_ar_section_title">Deducciones</p>
+                        <table class="table table-sm table-borderless o_ar_table">
+                            <thead>
+                                <tr>
+                                    <th>Concepto</th>
+                                    <th class="text-end">Cantidad</th>
+                                    <th class="text-end">Tasa (%)</th>
+                                    <th class="text-end">Importe</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="deduction_lines" t-as="line">
+                                    <td><span t-field="line.name"/></td>
+                                    <td class="text-end"><span t-out="round(line.quantity, 2)"/></td>
+                                    <td class="text-end"><span t-out="round(line.rate, 2)"/></td>
+                                    <td class="text-end">
+                                        <span t-out="abs(line.total)" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                    </td>
+                                </tr>
+                                <tr class="total_row">
+                                    <td colspan="3">Total deducciones</td>
+                                    <td class="text-end">
+                                        <span t-out="deduction_amount" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="o_ar_total_box mt-3">
+                    <p>
+                        <strong>Neto a cobrar:</strong>
+                        <span class="ms-2" t-out="o.net_wage" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                    </p>
+                    <p class="mt-1">
+                        <strong>Neto en letras:</strong>
+                        <span t-out="o._l10n_ar_get_net_amount_text()"/>
+                    </p>
+                </div>
+
+                <p class="o_ar_legal_note">
+                    Contenido mínimo alineado con LCT 20.744 (arts. 138 a 146) y Decreto-Ley 17.250/67 (art. 12).
+                </p>
+
+                <div class="row mt-4">
+                    <div class="col-6">
+                        <div class="o_ar_sign_box">
+                            Firma del empleador
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="o_ar_sign_box">
+                            Firma del trabajador
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <template id="report_payslip_ar_lang">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-set="o" t-value="o.with_context(lang=o.employee_id.lang or o.env.lang)"/>
+                <t t-call="l10n_ar_hr_payroll.report_payslip_ar" t-lang="o.env.lang"/>
+            </t>
+        </t>
+    </template>
+</odoo>

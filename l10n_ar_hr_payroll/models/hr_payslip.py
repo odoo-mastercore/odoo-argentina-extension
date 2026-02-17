@@ -15,6 +15,19 @@ from odoo import fields, models
 class HrPayslip(models.Model):
     _inherit = "hr.payslip"
 
+    l10n_ar_social_security_deposit_period = fields.Char(
+        string="Social Security Deposit Period",
+        help="Period of the latest social security contribution deposit, as required by Decree-Law 17.250/67.",
+    )
+    l10n_ar_social_security_deposit_date = fields.Date(
+        string="Social Security Deposit Date",
+        help="Date of the latest social security contribution deposit, as required by Decree-Law 17.250/67.",
+    )
+    l10n_ar_social_security_bank = fields.Char(
+        string="Social Security Deposit Bank",
+        help="Bank used for the latest social security contribution deposit, as required by Decree-Law 17.250/67.",
+    )
+
     def _l10n_ar_get_semester_dates(self):
         self.ensure_one()
         if not self.date_to:
@@ -92,3 +105,19 @@ class HrPayslip(models.Model):
         divisor = self._rule_parameter("l10n_ar_sac_divisor") or 2.0
         return (base_amount / divisor) * self._l10n_ar_get_sac_proportional_ratio() if divisor else 0.0
 
+    def _l10n_ar_get_payment_account(self):
+        self.ensure_one()
+        allocations = self.compute_salary_allocations()
+        if allocations:
+            first_bank_id = next(iter(allocations))
+            if first_bank_id:
+                return self.env["res.partner.bank"].browse(int(first_bank_id))
+        return (
+            self.employee_id.bank_account_ids.filtered("allow_out_payment")[:1]
+            or self.employee_id.bank_account_ids[:1]
+        )
+
+    def _l10n_ar_get_net_amount_text(self):
+        self.ensure_one()
+        amount = abs(self.net_wage or 0.0)
+        return self.currency_id.with_context(lang=self.employee_id.lang or self.env.lang).amount_to_text(amount)

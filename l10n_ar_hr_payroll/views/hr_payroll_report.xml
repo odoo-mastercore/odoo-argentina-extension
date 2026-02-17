@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+##############################################################################
+# Author: Mastercore Sinapsys Global®
+# Copyright: 2019-Present.
+# License AGPL-3
+# See https://www.gnu.org/licenses/agpl-3.0.html
+#
+##############################################################################
+-->
+<odoo>
+    <record id="action_report_payslip_ar" model="ir.actions.report">
+        <field name="name">AR: Recibo de Sueldo</field>
+        <field name="model">hr.payslip</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">l10n_ar_hr_payroll.report_payslip_ar_lang</field>
+        <field name="report_file">l10n_ar_hr_payroll.report_payslip_ar_lang</field>
+        <field name="print_report_name">'Recibo de sueldo - %s' % (object.employee_id.name)</field>
+        <field name="binding_model_id" ref="hr_payroll.model_hr_payslip"/>
+        <field name="binding_type">report</field>
+        <field name="attachment"></field>
+        <field name="attachment_use" eval="False"/>
+    </record>
+</odoo>
+

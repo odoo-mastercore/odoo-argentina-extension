@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+##############################################################################
+# Author: Mastercore Sinapsys Global®
+# Copyright: 2019-Present.
+# License AGPL-3
+# See https://www.gnu.org/licenses/agpl-3.0.html
+#
+##############################################################################
+-->
+<odoo>
+    <record id="view_hr_payslip_form_l10n_ar" model="ir.ui.view">
+        <field name="name">hr.payslip.form.inherit.l10n_ar_hr_payroll</field>
+        <field name="model">hr.payslip</field>
+        <field name="inherit_id" ref="hr_payroll.view_hr_payslip_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='account_info']//group[@name='accounting']/field[@name='paid_date']" position="after">
+                <separator string="Art. 12 Decreto-Ley 17.250/67" invisible="country_code != 'AR'"/>
+                <field name="l10n_ar_social_security_deposit_period" invisible="country_code != 'AR'"/>
+                <field name="l10n_ar_social_security_deposit_date" invisible="country_code != 'AR'"/>
+                <field name="l10n_ar_social_security_bank" invisible="country_code != 'AR'"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
+

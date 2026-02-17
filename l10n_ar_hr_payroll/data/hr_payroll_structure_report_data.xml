@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+##############################################################################
+# Author: Mastercore Sinapsys Global®
+# Copyright: 2019-Present.
+# License AGPL-3
+# See https://www.gnu.org/licenses/agpl-3.0.html
+#
+##############################################################################
+-->
+<odoo>
+    <record id="l10n_ar_regular_pay" model="hr.payroll.structure">
+        <field name="report_id" ref="l10n_ar_hr_payroll.action_report_payslip_ar"/>
+    </record>
+
+    <record id="l10n_ar_sac_pay" model="hr.payroll.structure">
+        <field name="report_id" ref="l10n_ar_hr_payroll.action_report_payslip_ar"/>
+    </record>
+
+    <record id="l10n_ar_vacation_pay" model="hr.payroll.structure">
+        <field name="report_id" ref="l10n_ar_hr_payroll.action_report_payslip_ar"/>
+    </record>
+</odoo>
+

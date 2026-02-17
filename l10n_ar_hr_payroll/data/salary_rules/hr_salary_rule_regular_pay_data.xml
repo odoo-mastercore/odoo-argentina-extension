@@ -200,6 +200,7 @@ result = categories['BASIC'] + categories['ALW'] + categories['DED']
         <field name="sequence">250</field>
         <field name="code">AR_CONT_SOC</field>
         <field name="appears_on_payslip" eval="False"/>
+        <field name="appears_on_employee_cost_dashboard" eval="True"/>
         <field name="condition_select">none</field>
         <field name="amount_select">code</field>
         <field name="amount_python_compute">
@@ -214,6 +215,7 @@ result = categories['GROSS'] * payslip._rule_parameter('l10n_ar_employer_contrib
         <field name="sequence">251</field>
         <field name="code">AR_ART</field>
         <field name="appears_on_payslip" eval="False"/>
+        <field name="appears_on_employee_cost_dashboard" eval="True"/>
         <field name="condition_select">none</field>
         <field name="amount_select">code</field>
         <field name="amount_python_compute">
@@ -222,4 +224,3 @@ result = categories['GROSS'] * payslip._rule_parameter('l10n_ar_art_rate') / 100
         <field name="struct_id" ref="l10n_ar_regular_pay"/>
     </record>
 </odoo>
-

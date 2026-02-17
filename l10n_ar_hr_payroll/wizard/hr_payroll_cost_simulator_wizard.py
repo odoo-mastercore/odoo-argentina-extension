@@ -67,7 +67,17 @@ class L10nArHrPayrollCostSimulatorWizard(models.TransientModel):
     )
 
     current_gross_monthly = fields.Monetary(string="Bruto mensual actual")
-    proposed_gross_monthly = fields.Monetary(string="Bruto mensual propuesto", required=True)
+    proposed_input_type = fields.Selection(
+        selection=[
+            ("gross", "Bruto mensual"),
+            ("net", "Neto regular mensual"),
+        ],
+        string="Entrada propuesta",
+        default="gross",
+        required=True,
+    )
+    proposed_gross_monthly = fields.Monetary(string="Bruto mensual propuesto")
+    proposed_net_regular_monthly = fields.Monetary(string="Neto regular mensual propuesto")
 
     current_union_rate = fields.Float(string="Aporte sindical actual (%)")
     proposed_union_rate = fields.Float(string="Aporte sindical propuesto (%)", default=0.0)
@@ -194,6 +204,12 @@ class L10nArHrPayrollCostSimulatorWizard(models.TransientModel):
     def action_simulate(self):
         self.ensure_one()
         self._l10n_ar_validate_inputs()
+        if self.proposed_input_type == "net":
+            self.proposed_gross_monthly = self._l10n_ar_resolve_gross_from_target_net_regular_monthly(
+                target_net=self.proposed_net_regular_monthly,
+                union_rate=self.proposed_union_rate,
+                seniority_percent=self.proposed_seniority_percent,
+            )
         self.line_ids.unlink()
         summary_vals = self._l10n_ar_get_empty_summary_vals()
 
@@ -237,8 +253,10 @@ class L10nArHrPayrollCostSimulatorWizard(models.TransientModel):
             raise UserError(_("El simulador está disponible solo para compañías de Argentina."))
         if self.reference_year < 2000 or self.reference_year > 9999:
             raise ValidationError(_("El año de simulación debe estar entre 2000 y 9999."))
-        if self.proposed_gross_monthly <= 0:
+        if self.proposed_input_type == "gross" and self.proposed_gross_monthly <= 0:
             raise ValidationError(_("El salario bruto propuesto debe ser mayor a cero."))
+        if self.proposed_input_type == "net" and self.proposed_net_regular_monthly <= 0:
+            raise ValidationError(_("El neto regular mensual propuesto debe ser mayor a cero."))
         if self.mode == "salary_increase":
             if not self.employee_id:
                 raise ValidationError(_("Debe seleccionar un empleado para simular incremento salarial."))
@@ -252,6 +270,93 @@ class L10nArHrPayrollCostSimulatorWizard(models.TransientModel):
             raise ValidationError(_("Debe indicar una fecha de ingreso para la simulación."))
         if not self.seniority_date:
             raise ValidationError(_("Debe indicar una fecha de antigüedad para la simulación."))
+
+    def _l10n_ar_resolve_gross_from_target_net_regular_monthly(self, target_net, union_rate, seniority_percent):
+        self.ensure_one()
+        currency = self.currency_id or self.company_id.currency_id
+        cache = {}
+
+        def _get_net_for_gross(gross_amount):
+            rounded_gross = currency.round(gross_amount)
+            if rounded_gross not in cache:
+                regular_monthly = self._l10n_ar_simulate_regular_monthly_amounts(
+                    wage=rounded_gross,
+                    union_rate=union_rate,
+                    seniority_percent=seniority_percent,
+                )
+                cache[rounded_gross] = regular_monthly["net_amount"]
+            return cache[rounded_gross]
+
+        low = 0.0
+        high = max(target_net, 1.0)
+        high_net = _get_net_for_gross(high)
+        for _idx in range(12):
+            if high_net >= target_net:
+                break
+            low = high
+            high *= 1.35
+            high_net = _get_net_for_gross(high)
+
+        if high_net < target_net:
+            raise ValidationError(
+                _("No fue posible derivar un bruto mensual para el neto objetivo con los parámetros actuales.")
+            )
+
+        for _idx in range(24):
+            mid = (low + high) / 2.0
+            mid_net = _get_net_for_gross(mid)
+            if mid_net < target_net:
+                low = mid
+            else:
+                high = mid
+        return currency.round(high)
+
+    def _l10n_ar_simulate_regular_monthly_amounts(self, wage, union_rate, seniority_percent):
+        self.ensure_one()
+        regular_structure = self.structure_type_id.default_struct_id or self.env.ref(
+            "l10n_ar_hr_payroll.l10n_ar_regular_pay"
+        )
+        current_month = fields.Date.today().month
+        regular_from = date(self.reference_year, current_month, 1)
+        regular_to = regular_from + relativedelta(day=31)
+
+        with self.env.cr.savepoint(flush=False) as savepoint:
+            temp_employee = self.env["hr.employee"].with_context(tracking_disable=True).create({
+                "name": _("Simulación AR"),
+                "company_id": self.company_id.id,
+            })
+            temp_version = temp_employee.version_id.with_context(tracking_disable=True)
+            temp_version.write({
+                "company_id": self.company_id.id,
+                "structure_type_id": self.structure_type_id.id,
+                "resource_calendar_id": self.company_id.resource_calendar_id.id,
+                "contract_date_start": self.contract_start_date,
+                "date_start": self.contract_start_date,
+                "wage": wage,
+                "l10n_ar_seniority_date": self.seniority_date,
+                "l10n_ar_seniority_percent": seniority_percent,
+                "l10n_ar_union_rate": union_rate,
+            })
+            regular_slip = self._l10n_ar_simulate_payslip(
+                temp_employee, temp_version, regular_structure, regular_from, regular_to
+            )
+            employer_rate = (
+                self._l10n_ar_get_rule_parameter(regular_slip, "l10n_ar_employer_contribution_rate")
+                + self._l10n_ar_get_rule_parameter(regular_slip, "l10n_ar_art_rate")
+            ) / 100.0
+            regular_monthly = self._l10n_ar_extract_component_amounts(
+                regular_slip, employer_rate=employer_rate, employer_from_lines=True
+            )
+
+            self.env.cr.precommit.data.pop("mail.tracking.hr.version", None)
+            self.env.cr.precommit.data.pop("mail.tracking.hr.employee", None)
+            self.env.flush_all()
+            savepoint.rollback()
+
+        self.env["hr.version"].invalidate_model()
+        self.env["hr.employee"].invalidate_model()
+        self.env["hr.payslip"].invalidate_model()
+        return regular_monthly
 
     def _l10n_ar_simulate_cost_package(self, wage, union_rate, seniority_percent):
         self.ensure_one()

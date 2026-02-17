@@ -87,3 +87,22 @@ class TestL10nArHrPayrollCostSimulator(TransactionCase):
         self.assertGreater(wizard.delta_regular_monthly_cost, 0.0)
         self.assertGreater(wizard.delta_prorated_monthly_cost, 0.0)
         self.assertGreater(wizard.delta_annual_total_cost, 0.0)
+
+    def test_new_hire_net_input_derives_gross(self):
+        target_net = 664000.0
+        wizard = self.wizard_model.create({
+            "mode": "new_hire",
+            "company_id": self.env.company.id,
+            "structure_type_id": self.structure_type.id,
+            "reference_year": 2026,
+            "contract_start_date": date(2026, 1, 1),
+            "seniority_date": date(2026, 1, 1),
+            "proposed_input_type": "net",
+            "proposed_net_regular_monthly": target_net,
+            "proposed_union_rate": 0.0,
+            "proposed_seniority_percent": 0.0,
+        })
+        wizard.action_simulate()
+        self.assertTrue(wizard.result_ready)
+        self.assertGreater(wizard.proposed_gross_monthly, wizard.proposed_net_regular_monthly)
+        self.assertAlmostEqual(wizard.proposed_regular_monthly_net, target_net, delta=5.0)

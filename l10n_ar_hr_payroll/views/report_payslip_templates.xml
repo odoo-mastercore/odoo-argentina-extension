@@ -30,7 +30,8 @@
 
                 <t t-set="earnings_lines" t-value="o.line_ids.filtered(lambda l: l.appears_on_payslip and l.total &gt; 0 and l.code not in ('NET', 'GROSS'))"/>
                 <t t-set="deduction_lines" t-value="o.line_ids.filtered(lambda l: l.appears_on_payslip and l.total &lt; 0 and l.code != 'NET')"/>
-                <t t-set="gross_amount" t-value="sum(earnings_lines.mapped('total'))"/>
+                <t t-set="gross_line" t-value="o.line_ids.filtered(lambda l: l.code == 'GROSS')[:1]"/>
+                <t t-set="gross_amount" t-value="gross_line.total if gross_line else sum(earnings_lines.mapped('total'))"/>
                 <t t-set="deduction_amount" t-value="abs(sum(deduction_lines.mapped('total')))"/>
                 <t t-set="payment_bank" t-value="o._l10n_ar_get_payment_account()"/>
                 <t t-set="employee_display_name" t-value="o.employee_id.legal_name or o.employee_id.name"/>

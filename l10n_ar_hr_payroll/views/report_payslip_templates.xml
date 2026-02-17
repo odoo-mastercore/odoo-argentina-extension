@@ -15,16 +15,18 @@
                 <style>
                     .o_ar_payslip { font-size: 12px; }
                     .o_ar_payslip .o_ar_title { font-size: 28px; font-weight: 700; color: #0f6371; margin-bottom: 0; }
-                    .o_ar_payslip .o_ar_subtitle { font-size: 13px; color: #5a6169; margin: 0 0 6px 0; }
+                    .o_ar_payslip .o_ar_subtitle { font-size: 14px; color: #5a6169; margin: 0 0 6px 0; }
                     .o_ar_payslip .o_ar_section_title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; border-bottom: 2px solid #1b1d1f; padding-bottom: 2px; margin-bottom: 5px; }
                     .o_ar_payslip .o_ar_meta p { margin-bottom: 2px; }
                     .o_ar_payslip .o_ar_meta { line-height: 1.2; }
+                    .o_ar_payslip .o_ar_compact p { margin: 0 0 2px 0; line-height: 1.2; }
                     .o_ar_payslip .o_ar_table thead th { border-bottom: 2px solid #1b1d1f; font-size: 12px; }
                     .o_ar_payslip .o_ar_table td, .o_ar_payslip .o_ar_table th { padding: 3px 6px; }
                     .o_ar_payslip .o_ar_table tbody tr.total_row td { border-top: 1px solid #1b1d1f; font-weight: 700; }
                     .o_ar_payslip .o_ar_total_box { border: 2px solid #1b1d1f; border-radius: 6px; padding: 10px 12px; }
                     .o_ar_payslip .o_ar_total_box p { margin: 0; }
-                    .o_ar_payslip .o_ar_sign_box { margin-top: 16px; border-top: 1px solid #1b1d1f; padding-top: 38px; text-align: center; min-height: 58px; }
+                    .o_ar_payslip .o_ar_signatures { margin-top: 34px; }
+                    .o_ar_payslip .o_ar_sign_box { margin-top: 0; border-top: 1px solid #1b1d1f; padding-top: 38px; text-align: center; min-height: 58px; }
                     .o_ar_payslip .o_ar_legal_note { margin-top: 10px; font-size: 10px; color: #6c757d; }
                 </style>
 
@@ -69,7 +71,7 @@
                     </div>
                 </div>
 
-                <div class="row mb-1">
+                <div class="row mb-1 o_ar_compact">
                     <div class="col-6">
                         <p><strong>Período liquidado:</strong> <span t-field="o.date_from"/> al <span t-field="o.date_to"/></p>
                         <p><strong>Lugar y fecha de pago:</strong> <span t-out="o._l10n_ar_get_payment_place()"/>, <span t-out="o._l10n_ar_get_payment_date_display()"/></p>
@@ -87,7 +89,7 @@
                         <p>
                             <strong>Período depositado:</strong> <span t-out="o.l10n_ar_social_security_deposit_period or '-'"/>
                             <span class="ms-4"><strong>Fecha de depósito:</strong> <span t-field="o.l10n_ar_social_security_deposit_date"/></span>
-                            <span class="ms-4"><strong>Banco:</strong> <span t-out="o.l10n_ar_social_security_bank or '-'"/></span>
+                            <span class="ms-4"><strong>Banco:</strong> <span t-out="o.l10n_ar_social_security_bank.name if o.l10n_ar_social_security_bank else '-'"/></span>
                         </p>
                     </div>
                 </div>
@@ -162,7 +164,7 @@
                     Contenido mínimo alineado con LCT 20.744 (arts. 138 a 146) y Decreto-Ley 17.250/67 (art. 12).
                 </p>
 
-                <div class="row mt-4">
+                <div class="row o_ar_signatures">
                     <div class="col-6">
                         <div class="o_ar_sign_box">
                             Firma del empleador

@@ -15,7 +15,7 @@
         <field name="inherit_id" ref="hr_payroll.view_hr_payslip_form"/>
         <field name="arch" type="xml">
             <xpath expr="//page[@name='account_info']//group[@name='accounting']/field[@name='paid_date']" position="after">
-                <separator string="AR Payment Data" invisible="country_code != 'AR'"/>
+                <separator string="Datos de pago AR" invisible="country_code != 'AR'"/>
                 <field name="l10n_ar_payment_method" invisible="country_code != 'AR'"/>
                 <field name="l10n_ar_payment_method_note" invisible="country_code != 'AR' or l10n_ar_payment_method != 'other'"/>
                 <separator string="Art. 12 Decreto-Ley 17.250/67" invisible="country_code != 'AR'"/>

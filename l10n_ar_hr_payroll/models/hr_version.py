@@ -15,33 +15,33 @@ class HrVersion(models.Model):
     _inherit = "hr.version"
 
     l10n_ar_seniority_date = fields.Date(
-        string="Seniority Date",
+        string="Fecha de antigüedad",
         tracking=True,
         groups="hr_payroll.group_hr_payroll_user",
-        help="Reference start date used for seniority-based payroll rules.",
+        help="Fecha de referencia utilizada para reglas salariales basadas en antigüedad.",
     )
     l10n_ar_seniority_percent = fields.Float(
-        string="Seniority Rate (%)",
+        string="Porcentaje por antigüedad (%)",
         default=0.0,
         tracking=True,
         groups="hr_payroll.group_hr_payroll_user",
-        help="Additional percentage applied per completed seniority year.",
+        help="Porcentaje adicional aplicado por cada año completo de antigüedad.",
     )
     l10n_ar_union_rate = fields.Float(
-        string="Union Contribution (%)",
+        string="Aporte sindical (%)",
         default=0.0,
         tracking=True,
         groups="hr_payroll.group_hr_payroll_user",
-        help="Union deduction percentage over taxable salary.",
+        help="Porcentaje de descuento sindical sobre la remuneración imponible.",
     )
 
     @api.constrains("l10n_ar_seniority_percent", "l10n_ar_union_rate")
     def _check_l10n_ar_rates(self):
         for version in self:
             if version.l10n_ar_seniority_percent < 0 or version.l10n_ar_seniority_percent > 100:
-                raise ValidationError(_("Seniority rate must be between 0 and 100."))
+                raise ValidationError(_("El porcentaje por antigüedad debe estar entre 0 y 100."))
             if version.l10n_ar_union_rate < 0 or version.l10n_ar_union_rate > 100:
-                raise ValidationError(_("Union contribution rate must be between 0 and 100."))
+                raise ValidationError(_("El aporte sindical debe estar entre 0 y 100."))
 
     @api.model
     def _get_whitelist_fields_from_template(self):
@@ -53,4 +53,3 @@ class HrVersion(models.Model):
                 "l10n_ar_union_rate",
             ]
         return whitelisted_fields
-

@@ -14,7 +14,12 @@ from odoo.exceptions import ValidationError
 class HrEmployee(models.Model):
     _inherit = "hr.employee"
 
-    l10n_ar_cuil = fields.Char("CUIL", copy=False, tracking=True)
+    l10n_ar_cuil = fields.Char(
+        "CUIL",
+        copy=False,
+        tracking=True,
+        help="CUIL del trabajador con formato XX-XXXXXXXX-X.",
+    )
     l10n_ar_seniority_date = fields.Date(
         readonly=False,
         related="version_id.l10n_ar_seniority_date",
@@ -52,9 +57,9 @@ class HrEmployee(models.Model):
             return False
         digits = "".join(c for c in cuil if c.isdigit())
         if len(digits) != 11:
-            raise ValidationError(_("CUIL must contain 11 digits (example: 27-12345678-3)."))
+            raise ValidationError(_("El CUIL debe contener 11 dígitos (ejemplo: 27-12345678-3)."))
         if not self._l10n_ar_is_valid_cuil_digits(digits):
-            raise ValidationError(_("Invalid CUIL verification digit."))
+            raise ValidationError(_("El dígito verificador del CUIL no es válido."))
         return f"{digits[:2]}-{digits[2:10]}-{digits[10]}"
 
     def _l10n_ar_is_valid_cuil_digits(self, digits):
@@ -66,4 +71,3 @@ class HrEmployee(models.Model):
         elif check == 10:
             check = 9
         return int(digits[10]) == check
-

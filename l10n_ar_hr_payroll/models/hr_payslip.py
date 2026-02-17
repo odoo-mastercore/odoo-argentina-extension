@@ -23,22 +23,36 @@ class HrPayslip(models.Model):
             ("check", "Cheque"),
             ("other", "Otro"),
         ],
-        string="Payment Method",
+        string="Forma de pago",
         default="bank_transfer",
+        help="Modalidad utilizada para pagar el recibo de sueldo.",
     )
-    l10n_ar_payment_method_note = fields.Char(string="Payment Method Detail")
+    l10n_ar_payment_method_note = fields.Char(
+        string="Detalle de forma de pago",
+        help="Detalle adicional cuando la forma de pago es 'Otro'.",
+    )
 
     l10n_ar_social_security_deposit_period = fields.Char(
-        string="Social Security Deposit Period",
-        help="Period of the latest social security contribution deposit, as required by Decree-Law 17.250/67.",
+        string="Período de depósito SUSS",
+        help=(
+            "Período del último depósito de aportes y contribuciones, "
+            "conforme al art. 12 del Decreto-Ley 17.250/67."
+        ),
     )
     l10n_ar_social_security_deposit_date = fields.Date(
-        string="Social Security Deposit Date",
-        help="Date of the latest social security contribution deposit, as required by Decree-Law 17.250/67.",
+        string="Fecha de depósito SUSS",
+        help=(
+            "Fecha del último depósito de aportes y contribuciones, "
+            "conforme al art. 12 del Decreto-Ley 17.250/67."
+        ),
     )
-    l10n_ar_social_security_bank = fields.Char(
-        string="Social Security Deposit Bank",
-        help="Bank used for the latest social security contribution deposit, as required by Decree-Law 17.250/67.",
+    l10n_ar_social_security_bank = fields.Many2one(
+        "res.bank",
+        string="Banco de depósito SUSS",
+        help=(
+            "Banco en el que se realizó el último depósito de aportes y contribuciones, "
+            "conforme al art. 12 del Decreto-Ley 17.250/67."
+        ),
     )
 
     def _l10n_ar_get_semester_dates(self):

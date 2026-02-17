@@ -18,12 +18,12 @@
                 <group string="Argentina" invisible="company_country_code != 'AR'">
                     <field name="l10n_ar_cuil"/>
                     <field name="l10n_ar_seniority_date"/>
-                    <label for="l10n_ar_seniority_percent" string="Seniority Rate"/>
+                    <label for="l10n_ar_seniority_percent" string="Porcentaje por antigüedad"/>
                     <div class="o_row">
                         <field name="l10n_ar_seniority_percent" class="o_hr_narrow_field"/>
                         <span>%</span>
                     </div>
-                    <label for="l10n_ar_union_rate" string="Union Contribution"/>
+                    <label for="l10n_ar_union_rate" string="Aporte sindical"/>
                     <div class="o_row">
                         <field name="l10n_ar_union_rate" class="o_hr_narrow_field"/>
                         <span>%</span>

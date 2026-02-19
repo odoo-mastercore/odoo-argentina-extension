@@ -31,7 +31,7 @@ class AccountPayment(models.Model):
     def _compute_withholding_warning(self):
         for rec in self:
             if not rec.company_id.enabled_retention_currency:
-                return super()._check_withholdings_and_currency()
+                return super()._compute_withholding_warning()
             rec.withholding_warning = False
 
     def _prepare_witholding_write_off_vals(self):

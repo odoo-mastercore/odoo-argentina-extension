@@ -32,7 +32,7 @@ class AccountPayment(models.Model):
         for rec in self:
             if not rec.company_id.enabled_retention_currency:
                 return super()._check_withholdings_and_currency()
-            pass
+            rec.withholding_warning = False
 
     def _prepare_witholding_write_off_vals(self):
         res = super()._prepare_witholding_write_off_vals()

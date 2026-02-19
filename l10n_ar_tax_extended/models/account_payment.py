@@ -25,8 +25,10 @@ class AccountPayment(models.Model):
         for payment in self:
             payment.withholding_amount_currency = sum(payment.l10n_ar_withholding_line_ids.mapped('amount_currency'))
 
-    @api.constrains("currency_id", "company_id", "l10n_ar_withholding_line_ids")
-    def _check_withholdings_and_currency(self):
+    @api.depends(
+        "currency_id", "company_id", "l10n_ar_withholding_line_ids", "destination_account_id", "counterpart_currency_id"
+    )
+    def _compute_withholding_warning(self):
         for rec in self:
             if not rec.company_id.enabled_retention_currency:
                 return super()._check_withholdings_and_currency()

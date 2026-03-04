@@ -6,9 +6,7 @@
 # See https://www.odoo.com/documentation/master/legal/licenses.html
 #
 ################################################################################
-from odoo import api, models, fields, _, Command
-import logging
-_logger = logging.getLogger(__name__)
+from odoo import api, models, fields, Command
 
 
 class AccountPayment(models.Model):
@@ -29,52 +27,62 @@ class AccountPayment(models.Model):
         "currency_id", "company_id", "l10n_ar_withholding_line_ids", "destination_account_id", "counterpart_currency_id"
     )
     def _compute_withholding_warning(self):
-        for rec in self:
-            if not rec.company_id.enabled_retention_currency:
-                return super()._compute_withholding_warning()
-            rec.withholding_warning = False
-            pass
+        payments_with_standard_warning = self.filtered(lambda rec: not rec.company_id.enabled_retention_currency)
+        super(AccountPayment, payments_with_standard_warning)._compute_withholding_warning()
+        (self - payments_with_standard_warning).withholding_warning = False
 
-    def _prepare_witholding_write_off_vals(self):
-        res = super()._prepare_witholding_write_off_vals()
-        for line in self.l10n_ar_withholding_line_ids:
-            if line.amount_currency and line.foreign_currency_id and res:
-                for i in range(len(res)):
-                    if res[i]['name'] == line.name:
-                        amount = line.amount_currency
-                        if res[i]['amount_currency'] < 0:
-                            amount = -abs(line.amount_currency)
-                        res[i].update({
-                            'currency_id': line.foreign_currency_id.id,
-                            'amount_currency': amount
-                        })
-        return res
+    def _prepare_move_lines_per_type(self, write_off_line_vals=None, force_balance=None):
+        """Adjust move lines when retentions in foreign currency are enabled.
 
-    def _prepare_move_line_default_vals(self, write_off_line_vals=None, force_balance=None):
-        res = super(AccountPayment, self)._prepare_move_line_default_vals(
-            write_off_line_vals=write_off_line_vals,
-            force_balance=force_balance
-        )
-        # Lo dejamos asi para que funcione con cualquier pago con moneda en divisas
-        if self.counterpart_currency_id and self.counterpart_currency_amount:
-            for i in range(len(res)):
-                keys = {'credit', 'debit'}
-                if keys.issubset(res[i].keys()):
-                    amount = self.counterpart_currency_amount
-                    if self.withholding_amount_currency:
-                        account_id = self.env['account.account'].browse(res[i]['account_id'])
-                        if account_id.account_type not in ('asset_receivable', 'liability_payable'):
-                            amount -= self.withholding_amount_currency
-                    if res[i]['credit'] > 0.0:
-                        res[i].update({
-                            'currency_id': self.counterpart_currency_id.id,
-                            'amount_currency': -abs(amount)
-                        })
-                    if res[i]['debit'] > 0.0:
-                        res[i].update({
-                            'currency_id': self.counterpart_currency_id.id,
-                            'amount_currency': abs(amount)
-                        })
+        In Odoo 18, payment move synchronization is based on
+        ``_prepare_move_lines_per_type``. If the payment uses counterpart
+        currency, we keep outstanding and withholding tax lines in that
+        currency so the generated move is consistent in create/write flows.
+        """
+        res = super()._prepare_move_lines_per_type(write_off_line_vals=write_off_line_vals, force_balance=force_balance)
+        if not (
+            self.company_id.enabled_retention_currency
+            and self._use_counterpart_currency()
+            and self.counterpart_currency_id
+        ):
+            return res
+
+        counterpart_currency = self.counterpart_currency_id
+        withholding_lines = self.l10n_ar_withholding_line_ids
+        withholding_amount_currency = sum(withholding_lines.mapped("amount_currency"))
+        if not withholding_lines:
+            return res
+
+        # Outstanding line in counterpart currency: net amount in divisa.
+        liquidity_lines = res.get("liquidity_lines", [])
+        if liquidity_lines:
+            liquidity_sign = 1 if liquidity_lines[0].get("balance", 0.0) >= 0.0 else -1
+            liquidity_amount_currency = counterpart_currency.round(
+                self.counterpart_currency_amount - withholding_amount_currency
+            )
+            liquidity_lines[0].update({
+                "currency_id": counterpart_currency.id,
+                "amount_currency": liquidity_sign * abs(liquidity_amount_currency),
+            })
+
+        # Withholding tax lines in counterpart currency.
+        withholding_amount_by_name = {
+            line.name: counterpart_currency.round(line.amount_currency)
+            for line in withholding_lines
+            if line.name and line.amount_currency
+        }
+        for move_line_vals in res.get("withholding_lines", []):
+            if not move_line_vals.get("tax_repartition_line_id"):
+                continue
+            amount_currency = withholding_amount_by_name.get(move_line_vals.get("name"))
+            if amount_currency is None:
+                continue
+            sign = -1 if move_line_vals.get("balance", 0.0) < 0.0 else 1
+            move_line_vals.update({
+                "currency_id": counterpart_currency.id,
+                "amount_currency": sign * abs(amount_currency),
+            })
+
         return res
 
     @api.depends("l10n_ar_fiscal_position_id", "partner_id", "company_id", "date")

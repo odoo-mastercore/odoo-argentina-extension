@@ -40,7 +40,12 @@ class ResCompany(models.Model):
         today = fields.Date.context_today(self)
 
         # Validate availability
-        if 'USD' not in available_currencies:
+        available_currency_names = set(
+            available_currencies.mapped('name')
+            if hasattr(available_currencies, 'mapped')
+            else available_currencies
+        )
+        if 'USD' not in available_currency_names:
             raise UserError(_("USD is not available in the selected currencies."))
         if self.currency_id.name != 'ARS':
             raise UserError(_("This provider is intended for ARS-based companies."))

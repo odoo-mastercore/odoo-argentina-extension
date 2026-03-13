@@ -137,10 +137,9 @@ class AccountPayment(models.Model):
 
     def _build_payment_currency_withholding_lines(self, withholding_lines):
         self.ensure_one()
-        actual_withholding_names = set(self.l10n_ar_withholding_line_ids.mapped("name"))
         extra_lines = [
             line_vals for line_vals in withholding_lines
-            if line_vals.get("name") not in actual_withholding_names
+            if (line_vals.get("name") or "").startswith("Base Ret")
         ]
         actual_lines = []
         sign = 1 if self.payment_type == "inbound" else -1

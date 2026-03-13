@@ -145,16 +145,15 @@ class AccountPayment(models.Model):
         actual_lines = []
         sign = 1 if self.payment_type == "inbound" else -1
         for line in self.l10n_ar_withholding_line_ids:
-            __, account_id, tax_repartition_line_id, __ = line._tax_compute_all_helper()
+            __, account_id, __, __ = line._tax_compute_all_helper()
             actual_lines.append({
                 **self._get_withholding_move_line_default_values(),
-                "name": line.name,
+                "name": line.tax_id.name,
                 "account_id": account_id,
+                "partner_id": self.partner_id.id,
                 "balance": self.company_currency_id.round(sign * line.amount),
                 "amount_currency": self.currency_id.round(sign * line.amount_currency),
                 "currency_id": self.currency_id.id,
-                "tax_base_amount": sign * line.base_amount,
-                "tax_repartition_line_id": tax_repartition_line_id,
             })
         return actual_lines + extra_lines
 

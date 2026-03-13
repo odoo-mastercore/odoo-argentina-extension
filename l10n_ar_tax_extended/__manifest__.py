@@ -9,7 +9,7 @@
 {
     "name": "l10_ar Tax extended",
     "summary": "",
-    'version': "18.0.1.0.6",
+    'version': "18.0.1.0.7",
     'author': 'Mastercore Sinapsys Global®',
     'website': 'https://www.mastercore.us',
     'license': 'OPL-1',

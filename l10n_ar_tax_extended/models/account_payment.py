@@ -40,6 +40,9 @@ class AccountPayment(models.Model):
         currency so the generated move is consistent in create/write flows.
         """
         res = super()._prepare_move_lines_per_type(write_off_line_vals=write_off_line_vals, force_balance=force_balance)
+        if self._use_payment_currency_withholdings():
+            return self._normalize_payment_currency_withholding_move_lines(res)
+
         if not (
             self.company_id.enabled_retention_currency
             and self._use_counterpart_currency()
@@ -84,6 +87,72 @@ class AccountPayment(models.Model):
             })
 
         return res
+
+    def _use_payment_currency_withholdings(self):
+        self.ensure_one()
+        return (
+            self.company_id.enabled_retention_currency
+            and not self.is_internal_transfer
+            and self.l10n_ar_withholding_line_ids
+            and self.currency_id
+            and self.currency_id != self.company_currency_id
+        )
+
+    def _normalize_payment_currency_withholding_move_lines(self, line_vals_per_type):
+        self.ensure_one()
+
+        withholding_lines = self._build_payment_currency_withholding_lines(line_vals_per_type.get("withholding_lines", []))
+        line_vals_per_type["withholding_lines"] = withholding_lines
+
+        liquidity_lines = line_vals_per_type.get("liquidity_lines", [])
+        counterpart_lines = line_vals_per_type.get("counterpart_lines", [])
+        if not liquidity_lines or not counterpart_lines:
+            return line_vals_per_type
+
+        liquidity_sign = 1 if liquidity_lines[0].get("balance", 0.0) >= 0.0 else -1
+        liquidity_lines[0].update({
+            "currency_id": self.currency_id.id,
+            "amount_currency": liquidity_sign * abs(self.amount),
+            "balance": liquidity_sign * abs(self.amount_company_currency),
+        })
+
+        counterpart_lines[0].update({
+            "currency_id": self.currency_id.id,
+            "balance": -sum(
+                line.get("balance", 0.0)
+                for key in ("liquidity_lines", "write_off_lines", "withholding_lines")
+                for line in line_vals_per_type.get(key, [])
+            ),
+            "amount_currency": -sum(
+                line.get("amount_currency", 0.0)
+                for key in ("liquidity_lines", "write_off_lines", "withholding_lines")
+                for line in line_vals_per_type.get(key, [])
+            ),
+        })
+        return line_vals_per_type
+
+    def _build_payment_currency_withholding_lines(self, withholding_lines):
+        self.ensure_one()
+        actual_withholding_names = set(self.l10n_ar_withholding_line_ids.mapped("name"))
+        extra_lines = [
+            line_vals for line_vals in withholding_lines
+            if line_vals.get("name") not in actual_withholding_names
+        ]
+        actual_lines = []
+        sign = 1 if self.payment_type == "inbound" else -1
+        for line in self.l10n_ar_withholding_line_ids:
+            __, account_id, tax_repartition_line_id, __ = line._tax_compute_all_helper()
+            actual_lines.append({
+                **self._get_withholding_move_line_default_values(),
+                "name": line.name,
+                "account_id": account_id,
+                "balance": self.company_currency_id.round(sign * line.amount),
+                "amount_currency": self.currency_id.round(sign * line.amount_currency),
+                "currency_id": self.currency_id.id,
+                "tax_base_amount": sign * line.base_amount,
+                "tax_repartition_line_id": tax_repartition_line_id,
+            })
+        return actual_lines + extra_lines
 
     @api.depends("l10n_ar_fiscal_position_id", "partner_id", "company_id", "date")
     def _compute_l10n_ar_withholding_line_ids(self):

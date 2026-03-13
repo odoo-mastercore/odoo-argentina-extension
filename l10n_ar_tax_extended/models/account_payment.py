@@ -88,6 +88,10 @@ class AccountPayment(models.Model):
 
         return res
 
+    def action_post(self):
+        self._regenerate_payment_currency_withholding_moves()
+        return super().action_post()
+
     def _use_payment_currency_withholdings(self):
         self.ensure_one()
         return (
@@ -153,6 +157,15 @@ class AccountPayment(models.Model):
                 "tax_repartition_line_id": tax_repartition_line_id,
             })
         return actual_lines + extra_lines
+
+    def _regenerate_payment_currency_withholding_moves(self):
+        for payment in self.filtered(
+            lambda rec: rec.state == "draft" and rec.move_id and rec.move_id.state == "draft" and rec._use_payment_currency_withholdings()
+        ):
+            draft_move = payment.move_id
+            payment.move_id = False
+            draft_move.unlink()
+            payment._generate_journal_entry()
 
     @api.depends("l10n_ar_fiscal_position_id", "partner_id", "company_id", "date")
     def _compute_l10n_ar_withholding_line_ids(self):

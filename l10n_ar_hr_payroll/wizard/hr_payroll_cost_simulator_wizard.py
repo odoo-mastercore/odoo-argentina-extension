@@ -271,6 +271,24 @@ class L10nArHrPayrollCostSimulatorWizard(models.TransientModel):
         if not self.seniority_date:
             raise ValidationError(_("Debe indicar una fecha de antigüedad para la simulación."))
 
+    def _l10n_ar_get_simulation_context(self):
+        self.ensure_one()
+        clean_context = {
+            key: value
+            for key, value in self.env.context.items()
+            if not key.startswith("default_")
+        }
+        clean_context.pop("active_id", None)
+        clean_context.pop("active_ids", None)
+        clean_context.pop("active_model", None)
+        clean_context.update({
+            "tracking_disable": True,
+            "mail_create_nosubscribe": True,
+            "mail_notrack": True,
+            "from_planning": False,
+        })
+        return clean_context
+
     def _l10n_ar_resolve_gross_from_target_net_regular_monthly(self, target_net, union_rate, seniority_percent):
         self.ensure_one()
         currency = self.currency_id or self.company_id.currency_id
@@ -316,16 +334,17 @@ class L10nArHrPayrollCostSimulatorWizard(models.TransientModel):
         regular_structure = self.structure_type_id.default_struct_id or self.env.ref(
             "l10n_ar_hr_payroll.l10n_ar_regular_pay"
         )
+        simulation_context = self._l10n_ar_get_simulation_context()
         current_month = fields.Date.today().month
         regular_from = date(self.reference_year, current_month, 1)
         regular_to = regular_from + relativedelta(day=31)
 
         with self.env.cr.savepoint(flush=False) as savepoint:
-            temp_employee = self.env["hr.employee"].with_context(tracking_disable=True).create({
+            temp_employee = self.env["hr.employee"].with_context(**simulation_context).create({
                 "name": _("Simulación AR"),
                 "company_id": self.company_id.id,
             })
-            temp_version = temp_employee.version_id.with_context(tracking_disable=True)
+            temp_version = temp_employee.version_id.with_context(**simulation_context)
             temp_version.write({
                 "company_id": self.company_id.id,
                 "structure_type_id": self.structure_type_id.id,
@@ -365,6 +384,7 @@ class L10nArHrPayrollCostSimulatorWizard(models.TransientModel):
         )
         sac_structure = self.env.ref("l10n_ar_hr_payroll.l10n_ar_sac_pay")
         vacation_structure = self.env.ref("l10n_ar_hr_payroll.l10n_ar_vacation_pay")
+        simulation_context = self._l10n_ar_get_simulation_context()
 
         current_month = fields.Date.today().month
         regular_from = date(self.reference_year, current_month, 1)
@@ -377,11 +397,11 @@ class L10nArHrPayrollCostSimulatorWizard(models.TransientModel):
         vacation_to = date(self.reference_year, 12, 31)
 
         with self.env.cr.savepoint(flush=False) as savepoint:
-            temp_employee = self.env["hr.employee"].with_context(tracking_disable=True).create({
+            temp_employee = self.env["hr.employee"].with_context(**simulation_context).create({
                 "name": _("Simulación AR"),
                 "company_id": self.company_id.id,
             })
-            temp_version = temp_employee.version_id.with_context(tracking_disable=True)
+            temp_version = temp_employee.version_id.with_context(**simulation_context)
             temp_version.write({
                 "company_id": self.company_id.id,
                 "structure_type_id": self.structure_type_id.id,
@@ -468,7 +488,7 @@ class L10nArHrPayrollCostSimulatorWizard(models.TransientModel):
         }
 
     def _l10n_ar_simulate_payslip(self, employee, version, structure, date_from, date_to):
-        slip = self.env["hr.payslip"].with_context(tracking_disable=True).create({
+        slip = self.env["hr.payslip"].with_context(**self._l10n_ar_get_simulation_context()).create({
             "name": _("Simulación de costos AR"),
             "employee_id": employee.id,
             "company_id": self.company_id.id,

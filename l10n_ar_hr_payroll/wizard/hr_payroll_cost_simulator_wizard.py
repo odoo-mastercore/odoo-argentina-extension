@@ -340,11 +340,11 @@ class L10nArHrPayrollCostSimulatorWizard(models.TransientModel):
         regular_to = regular_from + relativedelta(day=31)
 
         with self.env.cr.savepoint(flush=False) as savepoint:
-            temp_employee = self.env["hr.employee"].with_context(**simulation_context).create({
+            temp_employee = self.env["hr.employee"].with_context(simulation_context).create({
                 "name": _("Simulación AR"),
                 "company_id": self.company_id.id,
             })
-            temp_version = temp_employee.version_id.with_context(**simulation_context)
+            temp_version = temp_employee.version_id.with_context(simulation_context)
             temp_version.write({
                 "company_id": self.company_id.id,
                 "structure_type_id": self.structure_type_id.id,
@@ -397,11 +397,11 @@ class L10nArHrPayrollCostSimulatorWizard(models.TransientModel):
         vacation_to = date(self.reference_year, 12, 31)
 
         with self.env.cr.savepoint(flush=False) as savepoint:
-            temp_employee = self.env["hr.employee"].with_context(**simulation_context).create({
+            temp_employee = self.env["hr.employee"].with_context(simulation_context).create({
                 "name": _("Simulación AR"),
                 "company_id": self.company_id.id,
             })
-            temp_version = temp_employee.version_id.with_context(**simulation_context)
+            temp_version = temp_employee.version_id.with_context(simulation_context)
             temp_version.write({
                 "company_id": self.company_id.id,
                 "structure_type_id": self.structure_type_id.id,
@@ -488,7 +488,7 @@ class L10nArHrPayrollCostSimulatorWizard(models.TransientModel):
         }
 
     def _l10n_ar_simulate_payslip(self, employee, version, structure, date_from, date_to):
-        slip = self.env["hr.payslip"].with_context(**self._l10n_ar_get_simulation_context()).create({
+        slip = self.env["hr.payslip"].with_context(self._l10n_ar_get_simulation_context()).create({
             "name": _("Simulación de costos AR"),
             "employee_id": employee.id,
             "company_id": self.company_id.id,

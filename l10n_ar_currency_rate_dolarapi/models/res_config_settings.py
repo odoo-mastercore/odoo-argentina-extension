@@ -14,10 +14,11 @@ class ResConfigSettings(models.TransientModel):
 
     dolarapi_data_source = fields.Selection(
         selection=[
-            ('oficial', 'BNA official (dolar oficial)'),
+            ('oficial', 'Oficial BNA'),
+            ('mayorista', 'Mayorista'),
             ('bolsa', 'MEP (bolsa)'),
         ],
-        string="Argentina dolarapi.com source",
+        string="Fuente DolarAPI Argentina",
         config_parameter='dolarapi.com.data.source',
         default='oficial',
     )

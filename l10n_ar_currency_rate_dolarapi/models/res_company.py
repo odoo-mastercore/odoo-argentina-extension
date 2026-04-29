@@ -19,7 +19,7 @@ class ResCompany(models.Model):
     _inherit = 'res.company'
 
     currency_provider = fields.Selection(
-        selection_add=[('dolarapi_ar', '[AR] dolarapi.com (BNA official / MEP bolsa)')],
+        selection_add=[('dolarapi_ar', '[AR] dolarapi.com (oficial BNA / mayorista / MEP bolsa)')],
     )
 
     def _parse_dolarapi_ar_data(self, available_currencies):
@@ -51,7 +51,7 @@ class ResCompany(models.Model):
             raise UserError(_("This provider is intended for ARS-based companies."))
 
         icp = self.env['ir.config_parameter'].sudo()
-        source = icp.get_param('dolarapi.com.data.source', 'oficial')  # oficial | bolsa
+        source = icp.get_param('dolarapi.com.data.source', 'oficial')  # oficial | mayorista | bolsa
 
         url = f"https://dolarapi.com/v1/dolares/{source}"
         try:

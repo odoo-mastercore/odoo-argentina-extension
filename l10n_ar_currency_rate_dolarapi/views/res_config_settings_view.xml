@@ -16,7 +16,7 @@
         <field name="arch" type="xml">
             <xpath expr="//setting[@id='update_exchange_rates']" position="inside">
                 <div class="row mt16" invisible="not module_currency_rate_live or currency_provider != 'dolarapi_ar'">
-                    <label string="Argentina source" for="dolarapi_data_source" class="col-lg-3 o_light_label"/>
+                    <label string="Fuente Argentina" for="dolarapi_data_source" class="col-lg-3 o_light_label"/>
                     <field name="dolarapi_data_source"/>
                 </div>
             </xpath>

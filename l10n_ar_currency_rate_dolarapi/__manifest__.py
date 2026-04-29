@@ -7,17 +7,18 @@
 #
 ###############################################################################
 {
-    'name': 'Argentina - Currency Rate Provider (dolarapi BNA/MEP)',
-    'version': '19.0.1.0.1',
+    'name': 'Argentina - Proveedor de Cotización DolarAPI *',
+    'version': '19.0.1.1.0',
     'category': 'Accounting/Accounting',
     'sequence': 1,
-    'summary': 'Argentina: exchange rate provider using dolarapi.com (BNA official or MEP/bolsa).',
+    'summary': 'Argentina: proveedor de cotización usando dolarapi.com (oficial, mayorista o MEP).',
     'description': """
-This module adds an Argentina-specific exchange rate provider based on dolarapi.com,
-integrated with Odoo Enterprise 'currency_rate_live' framework.
+Este módulo agrega un proveedor de cotización específico para Argentina basado en
+dolarapi.com, integrado con el framework Odoo Enterprise 'currency_rate_live'.
 
-It allows selecting the source (BNA official or MEP/bolsa) through Settings and
-updates the USD rate for AR companies using the standard Odoo currency rate scheduler.
+Permite seleccionar la fuente (oficial, mayorista o MEP/bolsa) desde Ajustes y
+actualiza la cotización de USD para compañías argentinas usando el planificador
+estándar de tipos de cambio de Odoo.
 """,
     'author': 'Mastercore Sinapsys Global®',
     'website': 'https://www.mastercore.us',

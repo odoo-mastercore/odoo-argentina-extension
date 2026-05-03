@@ -7,9 +7,13 @@
 #
 ##############################################################################
 
+import logging
+
 from odoo import _, api, fields, models
 
 from .. import const
+
+_logger = logging.getLogger(__name__)
 
 
 class MPAuthorizedPayment(models.Model):
@@ -117,3 +121,32 @@ class MPAuthorizedPayment(models.Model):
 
         if values:
             self.write(values)
+
+    # ------------------------------------------------------------------ #
+    #  Hooks de extensión para módulos consumidores                      #
+    # ------------------------------------------------------------------ #
+
+    def _on_processed_approved(self):
+        """Hook invocado cuando una cuota cierra como ``processed`` con
+        ``payment_status='approved'``.
+
+        Es el punto de extensión canónico para que módulos consumidores
+        (que asocian la suscripción MP a un modelo SaaS o a un sale.order
+        específico) implementen la lógica post-cobro: generar factura,
+        activar funcionalidad, enviar mail, etc.
+
+        El módulo base no hace nada — sólo loguea. Cualquier consumidor
+        debe heredar este método con ``super()._on_processed_approved()``
+        para mantener composición.
+
+        **Idempotencia**: este hook puede ser llamado múltiples veces
+        para la misma cuota (re-entrega de webhook, cron de
+        sincronización, dispatch manual). El consumidor debe ser
+        robusto — chequear si ya generó la factura antes de duplicarla.
+        """
+        for record in self:
+            _logger.info(
+                "MP authorized_payment %s processed=approved (no consumer hook).",
+                record.mp_id or record.id,
+            )
+        return True

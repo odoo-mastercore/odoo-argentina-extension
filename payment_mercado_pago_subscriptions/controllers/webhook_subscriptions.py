@@ -173,7 +173,9 @@ class MPSubscriptionsWebhookController(http.Controller):
         )
 
     def _handle_authorized_payment(self, env, client, data_id, action):
-        """Sincroniza/crea ``mp.authorized.payment``."""
+        """Sincroniza/crea ``mp.authorized.payment`` y dispara hook de
+        consumidores cuando la cuota cierra exitosa.
+        """
         response = client.get_authorized_payment(data_id)
         preapproval_mp_id = response.get('preapproval_id')
         if not preapproval_mp_id:
@@ -196,9 +198,24 @@ class MPSubscriptionsWebhookController(http.Controller):
             })
         record._apply_mp_payload(response)
         _logger.info(
-            "MP webhook: authorized_payment %s synced, status=%s.",
-            data_id, response.get('status'),
+            "MP webhook: authorized_payment %s synced, status=%s, payment_status=%s.",
+            data_id, record.status, record.payment_status,
         )
+        # Disparar hook si la cuota cerró exitosa. Los módulos
+        # consumidores (tupymeclara_subscription, etc.) heredan
+        # _on_processed_approved para implementar la lógica
+        # post-cobro (facturación, activación de funcionalidad).
+        if (record.status == const.AUTHORIZED_PAYMENT_STATUS_PROCESSED
+                and record.payment_status == 'approved'):
+            try:
+                record._on_processed_approved()
+            except Exception:  # noqa: BLE001
+                _logger.exception(
+                    "MP webhook: error in _on_processed_approved for cuota %s; "
+                    "the cuota state was already persisted, retry can come from "
+                    "the sync cron or a manual re-dispatch.",
+                    data_id,
+                )
 
     def _handle_payment(self, env, client, data_id, action):
         """Hidrata payment real (``/v1/payments/{id}``) y, si está vinculado

@@ -140,16 +140,24 @@ class SaleOrder(models.Model):
     # ------------------------------------------------------------------ #
 
     def _create_recurring_invoice(self, batch_size=30):
-        """Skipea las órdenes con preapproval MP activo.
+        """Skipea las órdenes con preapproval MP activo, salvo cuando se
+        invoca con context ``mp_force_invoice=True``.
 
         Cuando una suscripción Odoo está delegada a Mercado Pago, la
         factura no debe emitirse por el cron nativo: la generamos
         recién cuando MP reporta ``subscription_authorized_payment``
-        en estado ``processed=approved`` vía webhook.
+        en estado ``processed=approved`` vía webhook. Esto evita doble
+        cobro, facturas que después no cobran y desincronización entre
+        Odoo y MP.
 
-        Esto evita doble cobro, facturas que después no cobran y
-        desincronización entre Odoo y MP.
+        El context flag ``mp_force_invoice`` lo usa el handler post-
+        webhook para disparar la facturación de UNA orden específica
+        en el momento exacto en que MP confirmó el cobro. Bypasea el
+        filtro y deja que sale_subscription nativo arme la factura con
+        toda su lógica (impuestos, pricelists, prorrateos).
         """
+        if self.env.context.get('mp_force_invoice'):
+            return super()._create_recurring_invoice(batch_size=batch_size)
         orders_with_mp = self.filtered(
             lambda so: so.mp_preapproval_id
             and so.mp_preapproval_id.status in (

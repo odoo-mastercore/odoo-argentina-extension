@@ -22,5 +22,16 @@
             <field name="priority">10</field>
         </record>
 
+        <record id="cron_mp_index_amounts" model="ir.cron">
+            <field name="name">MP Suscripciones — Indexar monto antes del próximo cobro</field>
+            <field name="model_id" ref="model_mp_preapproval"/>
+            <field name="state">code</field>
+            <field name="code">model._cron_index_amounts_before_charge(days_before=1, threshold_percent=1.0)</field>
+            <field name="active" eval="False"/>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="priority">10</field>
+        </record>
+
     </data>
 </odoo>

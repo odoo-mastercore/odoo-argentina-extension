@@ -355,6 +355,103 @@ class MPPreapproval(models.Model):
         return True
 
     # ------------------------------------------------------------------ #
+    #  Indexación pre-cobro                                              #
+    # ------------------------------------------------------------------ #
+
+    def _compute_indexed_amount(self):
+        """Hook: módulos consumidores override para devolver el nuevo
+        ``transaction_amount`` indexado a aplicar antes del próximo cobro.
+
+        Retorna:
+        - ``float`` con el nuevo monto (en la moneda del preapproval), o
+        - ``None`` si no hay indexación que aplicar (no toca el monto).
+
+        El módulo base no indexa — devuelve ``None``. Implementaciones
+        específicas (por ejemplo ``tupymeclara_subscription``) usan la
+        offer asociada al sale_order para calcular el precio actual
+        desde la pricelist y sus derivadas.
+        """
+        self.ensure_one()
+        return None
+
+    @api.model
+    def _cron_index_amounts_before_charge(self, days_before=1, threshold_percent=1.0):
+        """Cron diario que actualiza monto del preapproval antes del cobro.
+
+        Para cada preapproval autorizado con ``next_payment_date`` igual a
+        ``today + days_before``:
+
+        1. Llama al hook ``_compute_indexed_amount`` para que el consumidor
+           calcule el nuevo monto.
+        2. Si el delta absoluto contra el ``transaction_amount`` actual
+           supera ``threshold_percent`` (default 1 %), hace ``PUT`` al
+           preapproval con el nuevo monto.
+        3. MP procesa el cambio y notifica al cliente automáticamente
+           antes del próximo cobro.
+
+        Idempotente vía ``X-Idempotency-Key`` derivado de
+        ``(preapproval_id, target_date)`` — si el cron corre dos veces el
+        mismo día, el segundo PUT devuelve el resultado del primero.
+
+        :param int days_before: días de anticipación al next_payment_date.
+        :param float threshold_percent: delta mínimo (en %) para disparar
+            el PUT. Cambios menores se ignoran para evitar ruido al cliente.
+        """
+        from datetime import timedelta
+        target_date = fields.Date.today() + timedelta(days=days_before)
+        candidates = self.search([
+            ('status', '=', 'authorized'),
+            ('next_payment_date', '!=', False),
+        ])
+        # Filtrar en Python por igualdad de fecha (ignorar hora).
+        candidates = candidates.filtered(
+            lambda p: p.next_payment_date and p.next_payment_date.date() == target_date
+        )
+        for preapproval in candidates:
+            try:
+                preapproval._index_amount(threshold_percent=threshold_percent)
+            except Exception as exc:  # noqa: BLE001
+                _logger.exception(
+                    "MP cron index: error sobre preapproval %s: %s",
+                    preapproval.mp_id, exc,
+                )
+        return len(candidates)
+
+    def _index_amount(self, threshold_percent=1.0):
+        """Aplica la indexación a este preapproval específico.
+
+        Calcula el nuevo monto via ``_compute_indexed_amount``, compara
+        contra el actual, y si supera el umbral hace ``PUT``.
+
+        Reutiliza la lógica de ``_mp_update_amount`` para la actualización
+        en MP.
+        """
+        self.ensure_one()
+        new_amount = self._compute_indexed_amount()
+        if new_amount is None or new_amount <= 0:
+            return False
+        if not self.transaction_amount:
+            return False
+        delta_pct = abs(new_amount - self.transaction_amount) / self.transaction_amount * 100
+        if delta_pct < threshold_percent:
+            _logger.info(
+                "MP cron index: preapproval %s delta %.2f%% bajo umbral %.2f%%, skip.",
+                self.mp_id, delta_pct, threshold_percent,
+            )
+            return False
+        idempotency_key = f"index_{self.mp_id}_{fields.Date.today().isoformat()}"
+        self._mp_update_amount(new_amount, idempotency_key=idempotency_key)
+        self.message_post(body=_(
+            "Indexación pre-cobro: monto actualizado de %(old).2f a %(new).2f %(cur)s "
+            "(delta %(delta).2f%%). MP notifica al cliente automáticamente.",
+            old=self.transaction_amount,
+            new=new_amount,
+            cur=self.currency_id.name,
+            delta=delta_pct,
+        ))
+        return True
+
+    # ------------------------------------------------------------------ #
     #  Helpers                                                           #
     # ------------------------------------------------------------------ #
 

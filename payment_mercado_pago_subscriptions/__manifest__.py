@@ -9,7 +9,7 @@
 
 {
     'name': 'Payment Provider: Mercado Pago Subscriptions *',
-    'version': '19.0.0.3.1',
+    'version': '19.0.0.3.2',
     'category': 'Accounting/Payment Providers',
     'sequence': 350,
     'summary': 'Suscripciones recurrentes con Mercado Pago (preapproval) sobre sale_subscription.',

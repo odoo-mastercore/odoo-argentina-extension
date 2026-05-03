@@ -1,0 +1,314 @@
+# -*- coding: utf-8 -*-
+##############################################################################
+# Author: Mastercore Sinapsys Global®
+# Copyright: 2019-Present.
+# License OPL-1 (Odoo Proprietary License v1.0)
+# See https://www.odoo.com/documentation/master/legal/licenses.html
+#
+##############################################################################
+
+from odoo import _, api, fields, models
+from odoo.exceptions import UserError
+
+from .. import const
+
+
+class MPPreapproval(models.Model):
+    """Suscripción individual en Mercado Pago (recurso ``preapproval``).
+
+    Cada registro corresponde a una suscripción firmada (o pendiente de
+    firma) por un suscriptor. El estado se mantiene sincronizado con MP
+    mediante webhooks y consultas explícitas al endpoint
+    ``GET /preapproval/{id}``.
+    """
+    _name = 'mp.preapproval'
+    _description = 'Suscripción Mercado Pago (preapproval)'
+    _inherit = ['mail.thread', 'mail.activity.mixin']
+    _order = 'create_date desc, id desc'
+
+    name = fields.Char(
+        compute='_compute_name',
+        store=True,
+        help='Nombre legible de la suscripción.',
+    )
+    provider_id = fields.Many2one(
+        'payment.provider',
+        string='Proveedor de pago',
+        required=True,
+        domain="[('code', '=', 'mercado_pago')]",
+        ondelete='restrict',
+    )
+    plan_id = fields.Many2one(
+        'mp.preapproval.plan',
+        string='Plan asociado',
+        ondelete='restrict',
+        tracking=True,
+        help='Plan MP al que pertenece. Vacío = suscripción "sin plan".',
+    )
+    mp_id = fields.Char(
+        string='MP Preapproval ID',
+        copy=False,
+        index=True,
+        readonly=True,
+        tracking=True,
+    )
+    reason = fields.Char(required=True, tracking=True)
+    payer_email = fields.Char(required=True, tracking=True)
+    external_reference = fields.Char(copy=False, index=True, tracking=True)
+
+    auto_recurring_frequency = fields.Integer(string='Frecuencia', default=1)
+    auto_recurring_frequency_type = fields.Selection(
+        [
+            (const.FREQUENCY_TYPE_DAYS, 'Días'),
+            (const.FREQUENCY_TYPE_MONTHS, 'Meses'),
+        ],
+        string='Unidad',
+        default=const.FREQUENCY_TYPE_MONTHS,
+    )
+    transaction_amount = fields.Float(
+        string='Monto por ciclo',
+        required=True,
+        digits=(16, 2),
+        tracking=True,
+    )
+    currency_id = fields.Many2one('res.currency', required=True)
+    start_date = fields.Datetime(string='Inicio')
+    end_date = fields.Datetime(string='Fin')
+    back_url = fields.Char(required=True)
+    card_token_id_value = fields.Char(
+        string='Card Token (efímero)',
+        copy=False,
+        help='Token de tarjeta generado por el frontend MP. Se usa una vez '
+             'al crear el preapproval con status=authorized; después no se '
+             'persiste.',
+    )
+
+    status = fields.Selection(
+        [
+            (const.PREAPPROVAL_STATUS_PENDING, 'Pendiente de firma'),
+            (const.PREAPPROVAL_STATUS_AUTHORIZED, 'Autorizada'),
+            (const.PREAPPROVAL_STATUS_PAUSED, 'Pausada'),
+            (const.PREAPPROVAL_STATUS_CANCELLED, 'Cancelada'),
+            (const.PREAPPROVAL_STATUS_FINISHED, 'Finalizada'),
+        ],
+        copy=False,
+        tracking=True,
+        index=True,
+    )
+    init_point = fields.Char(string='URL de firma', copy=False, readonly=True)
+    payer_id = fields.Char(string='MP Payer ID', readonly=True)
+    payer_first_name = fields.Char(string='Nombre del firmante', readonly=True)
+    payer_last_name = fields.Char(string='Apellido del firmante', readonly=True)
+    mp_card_id = fields.Char(
+        string='MP Card ID (persistente)',
+        readonly=True,
+        help='Identificador de tarjeta en MP que sobrevive a account updater.',
+    )
+    payment_method_id_mp = fields.Char(string='Medio de pago', readonly=True)
+
+    next_payment_date = fields.Datetime(string='Próximo cobro', readonly=True)
+    last_charged_date = fields.Datetime(string='Último cobro exitoso', readonly=True)
+    last_charged_amount = fields.Float(string='Último monto cobrado', readonly=True, digits=(16, 2))
+    charged_amount_total = fields.Float(string='Total acumulado', readonly=True, digits=(16, 2))
+    charged_quantity = fields.Integer(string='Ciclos cobrados', readonly=True)
+    pending_charge_quantity = fields.Integer(string='Ciclos pendientes', readonly=True)
+
+    sale_order_id = fields.Many2one(
+        'sale.order',
+        string='Suscripción Odoo',
+        ondelete='set null',
+        copy=False,
+        index=True,
+        help='Orden Odoo (con is_subscription=True) asociada a esta '
+             'suscripción MP. Se setea cuando un módulo consumidor llama '
+             'sale.order._mp_create_preapproval().',
+    )
+
+    authorized_payment_ids = fields.One2many(
+        'mp.authorized.payment',
+        'preapproval_id',
+        string='Cuotas',
+    )
+
+    _sql_constraints = [
+        ('mp_id_uniq', 'unique(mp_id)', 'El MP Preapproval ID debe ser único.'),
+    ]
+
+    @api.depends('reason', 'mp_id', 'payer_email')
+    def _compute_name(self):
+        for preapproval in self:
+            preapproval.name = preapproval.reason or preapproval.mp_id or preapproval.payer_email or _('Nueva suscripción')
+
+    # ------------------------------------------------------------------ #
+    #  MP API actions                                                    #
+    # ------------------------------------------------------------------ #
+
+    def _build_create_payload(self):
+        """Arma el payload para POST /preapproval."""
+        self.ensure_one()
+        payload = {
+            'reason': self.reason,
+            'payer_email': self.payer_email,
+            'auto_recurring': {
+                'frequency': self.auto_recurring_frequency,
+                'frequency_type': self.auto_recurring_frequency_type,
+                'transaction_amount': self.transaction_amount,
+                'currency_id': self.currency_id.name,
+            },
+            'back_url': self.back_url,
+        }
+        if self.start_date:
+            payload['auto_recurring']['start_date'] = fields.Datetime.to_string(
+                self.start_date
+            ).replace(' ', 'T') + '.000Z'
+        if self.end_date:
+            payload['auto_recurring']['end_date'] = fields.Datetime.to_string(
+                self.end_date
+            ).replace(' ', 'T') + '.000Z'
+        if self.plan_id and self.plan_id.mp_id:
+            payload['preapproval_plan_id'] = self.plan_id.mp_id
+        if self.external_reference:
+            payload['external_reference'] = self.external_reference
+        if self.card_token_id_value:
+            payload['card_token_id'] = self.card_token_id_value
+            payload['status'] = const.PREAPPROVAL_STATUS_AUTHORIZED
+        else:
+            payload['status'] = const.PREAPPROVAL_STATUS_PENDING
+        return payload
+
+    def action_create_in_mp(self):
+        """``POST /preapproval`` — crea la suscripción en MP.
+
+        Idempotencia: derivada de ``external_reference`` si existe, o
+        UUID generado por el cliente. Tras éxito, persiste ``mp_id``,
+        ``status`` e ``init_point``.
+        """
+        for preapproval in self:
+            if preapproval.mp_id:
+                raise UserError(_(
+                    "La suscripción %s ya tiene MP ID asignado.", preapproval.name
+                ))
+            client = preapproval.provider_id._mp_get_client()
+            payload = preapproval._build_create_payload()
+            response = client.create_preapproval(payload)
+            preapproval._apply_mp_payload(response)
+            preapproval.message_post(body=_(
+                "Preapproval creado en MP. ID=%(id)s, status=%(status)s.",
+                id=response.get('id'), status=response.get('status'),
+            ))
+            # Sólo mantenemos el card_token efímero en memoria, no persistido.
+            preapproval.card_token_id_value = False
+        return True
+
+    def action_sync_from_mp(self):
+        """``GET /preapproval/{id}`` — refresca el registro desde MP."""
+        for preapproval in self.filtered('mp_id'):
+            client = preapproval.provider_id._mp_get_client()
+            response = client.get_preapproval(preapproval.mp_id)
+            preapproval._apply_mp_payload(response)
+        return True
+
+    def _mp_update_amount(self, new_amount, idempotency_key=None):
+        """``PUT /preapproval/{id}`` con nuevo ``transaction_amount``.
+
+        Pensado para ser invocado desde crons de indexación en módulos
+        consumidores. El cambio aplica desde el siguiente cobro (no es
+        retroactivo).
+
+        :param float new_amount: nuevo monto en la moneda actual.
+        :param str idempotency_key: opcional; si no se pasa, el cliente
+            HTTP genera uno.
+        """
+        for preapproval in self:
+            if not preapproval.mp_id:
+                raise UserError(_(
+                    "No se puede actualizar monto: la suscripción no está sincronizada con MP."
+                ))
+            client = preapproval.provider_id._mp_get_client()
+            payload = {
+                'auto_recurring': {
+                    'transaction_amount': new_amount,
+                    'currency_id': preapproval.currency_id.name,
+                },
+            }
+            response = client.update_preapproval(
+                preapproval.mp_id, payload, idempotency_key=idempotency_key
+            )
+            preapproval._apply_mp_payload(response)
+            preapproval.message_post(body=_(
+                "Monto actualizado: %(old)s → %(new)s %(cur)s.",
+                old=preapproval.transaction_amount,
+                new=new_amount,
+                cur=preapproval.currency_id.name,
+            ))
+        return True
+
+    def action_pause(self):
+        """``PUT /preapproval/{id}`` con status='paused'."""
+        return self._mp_change_status(const.PREAPPROVAL_STATUS_PAUSED)
+
+    def action_resume(self):
+        """``PUT /preapproval/{id}`` con status='authorized'."""
+        return self._mp_change_status(const.PREAPPROVAL_STATUS_AUTHORIZED)
+
+    def action_cancel(self):
+        """``PUT /preapproval/{id}`` con status='cancelled' (terminal)."""
+        return self._mp_change_status(const.PREAPPROVAL_STATUS_CANCELLED)
+
+    def _mp_change_status(self, new_status):
+        for preapproval in self.filtered('mp_id'):
+            client = preapproval.provider_id._mp_get_client()
+            response = client.update_preapproval(
+                preapproval.mp_id, {'status': new_status}
+            )
+            preapproval._apply_mp_payload(response)
+            preapproval.message_post(body=_(
+                "Estado actualizado a %s.", new_status
+            ))
+        return True
+
+    # ------------------------------------------------------------------ #
+    #  Helpers                                                           #
+    # ------------------------------------------------------------------ #
+
+    def _apply_mp_payload(self, payload):
+        """Aplica un payload de MP (response de POST/GET/PUT) al registro."""
+        self.ensure_one()
+        values = {}
+        if payload.get('id') and not self.mp_id:
+            values['mp_id'] = payload['id']
+        if payload.get('status'):
+            values['status'] = payload['status']
+        if payload.get('init_point'):
+            values['init_point'] = payload['init_point']
+        if payload.get('payer_id'):
+            values['payer_id'] = str(payload['payer_id'])
+        if payload.get('payer_first_name'):
+            values['payer_first_name'] = payload['payer_first_name']
+        if payload.get('payer_last_name'):
+            values['payer_last_name'] = payload['payer_last_name']
+        if payload.get('card_id'):
+            values['mp_card_id'] = str(payload['card_id'])
+        if payload.get('payment_method_id'):
+            values['payment_method_id_mp'] = payload['payment_method_id']
+        if payload.get('next_payment_date'):
+            values['next_payment_date'] = payload['next_payment_date'].replace('T', ' ').rstrip('Z')[:19]
+
+        auto = payload.get('auto_recurring') or {}
+        if auto.get('transaction_amount') is not None:
+            values['transaction_amount'] = float(auto['transaction_amount'])
+
+        summarized = payload.get('summarized') or {}
+        if summarized.get('last_charged_date'):
+            values['last_charged_date'] = summarized['last_charged_date'].replace('T', ' ').rstrip('Z')[:19]
+        if summarized.get('last_charged_amount') is not None:
+            values['last_charged_amount'] = float(summarized['last_charged_amount'])
+        if summarized.get('charged_amount') is not None:
+            values['charged_amount_total'] = float(summarized['charged_amount'])
+        if summarized.get('charged_quantity') is not None:
+            values['charged_quantity'] = int(summarized['charged_quantity'])
+        if summarized.get('pending_charge_quantity') is not None:
+            values['pending_charge_quantity'] = int(summarized['pending_charge_quantity'])
+
+        if values:
+            self.write(values)

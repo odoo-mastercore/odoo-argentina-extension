@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+##############################################################################
+# Author: Mastercore Sinapsys Global®
+# Copyright: 2019-Present.
+# License OPL-1 (Odoo Proprietary License v1.0)
+# See https://www.odoo.com/documentation/master/legal/licenses.html
+#
+##############################################################################
+-->
+<odoo>
+
+    <record id="view_mp_authorized_payment_list" model="ir.ui.view">
+        <field name="name">mp.authorized.payment.list</field>
+        <field name="model">mp.authorized.payment</field>
+        <field name="arch" type="xml">
+            <list string="Cuotas MP">
+                <field name="debit_date"/>
+                <field name="preapproval_id"/>
+                <field name="status" decoration-success="status == 'processed' and payment_status == 'approved'" decoration-warning="status == 'recycling'" decoration-info="status == 'scheduled'"/>
+                <field name="transaction_amount"/>
+                <field name="currency_id"/>
+                <field name="payment_status"/>
+                <field name="payment_id_mp"/>
+                <field name="invoice_id"/>
+                <field name="mp_id"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_mp_authorized_payment_form" model="ir.ui.view">
+        <field name="name">mp.authorized.payment.form</field>
+        <field name="model">mp.authorized.payment</field>
+        <field name="arch" type="xml">
+            <form string="Cuota MP">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="preapproval_id"/>
+                            <field name="provider_id" readonly="1"/>
+                            <field name="mp_id" readonly="1"/>
+                            <field name="status" readonly="1"/>
+                            <field name="retry_attempt" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="debit_date" readonly="1"/>
+                            <field name="transaction_amount" readonly="1"/>
+                            <field name="currency_id" readonly="1"/>
+                            <field name="payment_id_mp" readonly="1"/>
+                            <field name="payment_status" readonly="1"/>
+                            <field name="invoice_id" readonly="1"/>
+                        </group>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_mp_authorized_payment" model="ir.actions.act_window">
+        <field name="name">Cuotas MP</field>
+        <field name="res_model">mp.authorized.payment</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+</odoo>

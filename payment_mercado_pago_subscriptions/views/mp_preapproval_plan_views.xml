@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+##############################################################################
+# Author: Mastercore Sinapsys Global®
+# Copyright: 2019-Present.
+# License OPL-1 (Odoo Proprietary License v1.0)
+# See https://www.odoo.com/documentation/master/legal/licenses.html
+#
+##############################################################################
+-->
+<odoo>
+
+    <record id="view_mp_preapproval_plan_list" model="ir.ui.view">
+        <field name="name">mp.preapproval.plan.list</field>
+        <field name="model">mp.preapproval.plan</field>
+        <field name="arch" type="xml">
+            <list string="Planes MP">
+                <field name="name"/>
+                <field name="reason"/>
+                <field name="frequency"/>
+                <field name="frequency_type"/>
+                <field name="transaction_amount"/>
+                <field name="currency_id"/>
+                <field name="state"/>
+                <field name="mp_id"/>
+                <field name="preapproval_count"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_mp_preapproval_plan_form" model="ir.ui.view">
+        <field name="name">mp.preapproval.plan.form</field>
+        <field name="model">mp.preapproval.plan</field>
+        <field name="arch" type="xml">
+            <form string="Plan MP">
+                <header>
+                    <button name="action_sync_to_mp" type="object" string="Sincronizar con MP" class="btn-primary" invisible="state == 'inactive'"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_preapprovals" type="object" class="oe_stat_button" icon="fa-users">
+                            <field name="preapproval_count" widget="statinfo" string="Suscripciones"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="Plan Pro AR"/></h1>
+                    </div>
+                    <group>
+                        <group string="Mercado Pago">
+                            <field name="provider_id" options="{'no_create': True}"/>
+                            <field name="mp_id" readonly="1"/>
+                            <field name="external_reference"/>
+                            <field name="back_url" widget="url"/>
+                        </group>
+                        <group string="Visible al suscriptor">
+                            <field name="reason"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Recurrencia">
+                            <field name="frequency"/>
+                            <field name="frequency_type"/>
+                            <field name="repetitions"/>
+                            <field name="billing_day"/>
+                            <field name="billing_day_proportional" invisible="not billing_day"/>
+                        </group>
+                        <group string="Monto">
+                            <field name="transaction_amount"/>
+                            <field name="currency_id"/>
+                        </group>
+                    </group>
+                    <group string="Free trial (opcional)">
+                        <field name="free_trial_frequency"/>
+                        <field name="free_trial_frequency_type" invisible="not free_trial_frequency"/>
+                    </group>
+                    <group string="Medios de pago aceptados">
+                        <field name="payment_methods_credit_card"/>
+                        <field name="payment_methods_debit_card"/>
+                    </group>
+                    <group string="Init point">
+                        <field name="init_point" widget="url" readonly="1"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_mp_preapproval_plan" model="ir.actions.act_window">
+        <field name="name">Planes MP</field>
+        <field name="res_model">mp.preapproval.plan</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+</odoo>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+##############################################################################
+# Author: Mastercore Sinapsys Global®
+# Copyright: 2019-Present.
+# License OPL-1 (Odoo Proprietary License v1.0)
+# See https://www.odoo.com/documentation/master/legal/licenses.html
+#
+##############################################################################
+-->
+<odoo>
+
+    <menuitem
+        id="menu_mp_subscriptions_root"
+        name="Mercado Pago Suscripciones"
+        parent="account.menu_finance_configuration"
+        sequence="80"/>
+
+    <menuitem
+        id="menu_mp_preapproval_plan"
+        name="Planes"
+        parent="menu_mp_subscriptions_root"
+        action="action_mp_preapproval_plan"
+        sequence="10"/>
+
+    <menuitem
+        id="menu_mp_preapproval"
+        name="Suscripciones"
+        parent="menu_mp_subscriptions_root"
+        action="action_mp_preapproval"
+        sequence="20"/>
+
+    <menuitem
+        id="menu_mp_authorized_payment"
+        name="Cuotas"
+        parent="menu_mp_subscriptions_root"
+        action="action_mp_authorized_payment"
+        sequence="30"/>
+
+</odoo>

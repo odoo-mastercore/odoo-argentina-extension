@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+##############################################################################
+# Author: Mastercore Sinapsys Global®
+# Copyright: 2019-Present.
+# License OPL-1 (Odoo Proprietary License v1.0)
+# See https://www.odoo.com/documentation/master/legal/licenses.html
+#
+##############################################################################
+-->
+<odoo>
+
+    <record id="view_payment_provider_form_mp_subs" model="ir.ui.view">
+        <field name="name">payment.provider.form.mp.subscriptions</field>
+        <field name="model">payment.provider</field>
+        <field name="inherit_id" ref="payment_mercado_pago.payment_provider_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='provider_credentials']" position="after">
+                <group name="mp_subscriptions" string="Suscripciones MP" invisible="code != 'mercado_pago'">
+                    <field name="mp_use_direct_api"/>
+                    <field name="mp_webhook_secret" password="True" invisible="not mp_use_direct_api"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

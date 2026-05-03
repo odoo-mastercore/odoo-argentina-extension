@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_mp_preapproval_plan_user,access_mp_preapproval_plan_user,model_mp_preapproval_plan,base.group_user,1,0,0,0
+access_mp_preapproval_plan_manager,access_mp_preapproval_plan_manager,model_mp_preapproval_plan,account.group_account_manager,1,1,1,1
+access_mp_preapproval_user,access_mp_preapproval_user,model_mp_preapproval,base.group_user,1,0,0,0
+access_mp_preapproval_manager,access_mp_preapproval_manager,model_mp_preapproval,account.group_account_manager,1,1,1,1
+access_mp_authorized_payment_user,access_mp_authorized_payment_user,model_mp_authorized_payment,base.group_user,1,0,0,0
+access_mp_authorized_payment_manager,access_mp_authorized_payment_manager,model_mp_authorized_payment,account.group_account_manager,1,1,1,1

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+##############################################################################
+# Author: Mastercore Sinapsys Global®
+# Copyright: 2019-Present.
+# License OPL-1 (Odoo Proprietary License v1.0)
+# See https://www.odoo.com/documentation/master/legal/licenses.html
+#
+##############################################################################
+-->
+<odoo>
+
+    <record id="view_sale_order_form_mp_subs" model="ir.ui.view">
+        <field name="name">sale.order.form.mp.subscriptions</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale_subscription.sale_subscription_primary_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='payment_token_id']" position="after">
+                <field name="mp_preapproval_id" options="{'no_create': True}"/>
+                <field name="mp_preapproval_status" invisible="not mp_preapproval_id"/>
+                <field name="mp_init_point" widget="url" invisible="not mp_init_point"/>
+                <field name="mp_next_payment_date" invisible="not mp_preapproval_id"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

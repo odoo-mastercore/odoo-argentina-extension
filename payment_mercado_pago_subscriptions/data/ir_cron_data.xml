@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+##############################################################################
+# Author: Mastercore Sinapsys Global®
+# Copyright: 2019-Present.
+# License OPL-1 (Odoo Proprietary License v1.0)
+# See https://www.odoo.com/documentation/master/legal/licenses.html
+#
+##############################################################################
+-->
+<odoo>
+    <data noupdate="1">
+
+        <record id="cron_mp_sync_preapprovals" model="ir.cron">
+            <field name="name">MP Suscripciones — Sincronización de preapprovals activos</field>
+            <field name="model_id" ref="model_mp_preapproval"/>
+            <field name="state">code</field>
+            <field name="code">model.search([('status', 'in', ('pending', 'authorized', 'paused'))]).action_sync_from_mp()</field>
+            <field name="active" eval="False"/>
+            <field name="interval_number">6</field>
+            <field name="interval_type">hours</field>
+            <field name="doall" eval="False"/>
+        </record>
+
+    </data>
+</odoo>

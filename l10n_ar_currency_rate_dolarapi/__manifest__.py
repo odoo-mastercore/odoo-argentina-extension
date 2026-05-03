@@ -8,7 +8,7 @@
 ###############################################################################
 {
     'name': 'Argentina - Proveedor de Cotización DolarAPI *',
-    'version': '19.0.1.1.0',
+    'version': '19.0.1.2.0',
     'category': 'Accounting/Accounting',
     'sequence': 1,
     'summary': 'Argentina: proveedor de cotización usando dolarapi.com (oficial, mayorista o MEP).',

@@ -157,6 +157,18 @@ class SaleOrder(models.Model):
         toda su lógica (impuestos, pricelists, prorrateos).
         """
         if self.env.context.get('mp_force_invoice'):
+            # Defensive: aseguramos require_payment=False para que
+            # _get_subscriptions_to_invoice acepte la SO. Las órdenes
+            # gestionadas por preapproval MP no usan payment_token_id
+            # nativo de Odoo (MP cobra autónomo). Sin esto, el filtro
+            # de la línea 1555 de sale_subscription/models/sale_order.py
+            # excluye la SO y _create_recurring_invoice retorna vacío.
+            stuck_orders = self.filtered(
+                lambda so: so.require_payment and not so.payment_token_id
+                and so.mp_preapproval_id
+            )
+            if stuck_orders:
+                stuck_orders.with_context(no_check=True).write({'require_payment': False})
             return super()._create_recurring_invoice(batch_size=batch_size)
         orders_with_mp = self.filtered(
             lambda so: so.mp_preapproval_id

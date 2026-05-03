@@ -29,13 +29,37 @@ class MPSignatureError(Exception):
     """Error de validación de firma del webhook."""
 
 
+# Threshold para detectar timestamps en milisegundos. En la práctica MP
+# envía ``ts`` en milisegundos (~1.7e12 en 2026), aunque la doc oficial
+# no lo aclara. Cualquier valor por encima de este threshold se asume
+# en milisegundos. Segundos epoch desde 1973 hasta ~5138 caen por
+# debajo; milisegundos epoch desde ~1973 caen por encima.
+_MS_THRESHOLD = 10 ** 11
+
+
+def _ts_to_seconds(ts: int) -> int:
+    """Normaliza un timestamp epoch a segundos.
+
+    Si el valor es mayor al threshold, se asume en milisegundos y se
+    divide por 1000. Se usa exclusivamente para la verificación de
+    tolerancia temporal — el manifest HMAC debe construirse con el
+    valor ORIGINAL recibido en el header, no el normalizado.
+    """
+    return ts // 1000 if ts > _MS_THRESHOLD else ts
+
+
 def parse_signature_header(header_value: str) -> Tuple[Optional[int], Optional[str]]:
     """Parsea el header ``x-signature`` con formato ``ts=...,v1=...``.
 
+    Devuelve ``ts`` como int **tal como viene** en el header (sin
+    normalizar), porque el manifest HMAC se arma con ese valor exacto.
+    Para la verificación de tolerancia temporal usar
+    :func:`_ts_to_seconds` antes de comparar contra ``time.time()``.
+
     :param str header_value: contenido crudo del header.
-    :return: tupla ``(ts, v1)`` con ``ts`` como int (segundos epoch) y
-        ``v1`` como str hex. Cualquiera puede ser ``None`` si no estaba
-        presente o no parsea.
+    :return: tupla ``(ts, v1)`` con ``ts`` como int en la unidad
+        original (típicamente milisegundos en MP) y ``v1`` como str hex.
+        Cualquiera puede ser ``None`` si no estaba presente o no parsea.
     """
     if not header_value:
         return None, None
@@ -112,13 +136,17 @@ def verify_signature(
 
     if tolerance_seconds > 0:
         now = int(time.time())
-        if abs(now - ts) > tolerance_seconds:
+        ts_seconds = _ts_to_seconds(ts)
+        if abs(now - ts_seconds) > tolerance_seconds:
             _logger.warning(
-                "MP webhook signature timestamp out of tolerance: ts=%s now=%s tol=%ss",
-                ts, now, tolerance_seconds,
+                "MP webhook signature timestamp out of tolerance: "
+                "ts_raw=%s ts_seconds=%s now=%s tol=%ss",
+                ts, ts_seconds, now, tolerance_seconds,
             )
             return False
 
+    # El manifest se arma con el ``ts`` ORIGINAL (sin normalizar) porque
+    # MP firma con ese valor exacto.
     manifest = build_manifest(data_id=data_id, request_id=request_id, ts=ts)
     expected = hmac.new(
         secret.encode('utf-8'),

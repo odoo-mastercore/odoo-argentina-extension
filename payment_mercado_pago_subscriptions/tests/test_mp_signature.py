@@ -220,3 +220,40 @@ class TestVerifySignature(TransactionCase):
         )
 
         self.assertTrue(result)
+
+    def test_milliseconds_timestamp_passes_tolerance(self):
+        """MP envía ts en milisegundos (no documentado). Verificar que
+        verify_signature normaliza correctamente para tolerance check
+        pero firma con el ts original."""
+        ts_ms = int(time.time() * 1000)  # ms epoch, ~1.7e12
+        # MP firma con el ts en ms tal cual.
+        manifest = build_manifest(self.DATA_ID, self.REQUEST_ID, ts_ms)
+        v1 = _sign(self.SECRET, manifest)
+        header = f'ts={ts_ms},v1={v1}'
+
+        result = verify_signature(
+            secret=self.SECRET,
+            data_id=self.DATA_ID,
+            signature_header=header,
+            request_id=self.REQUEST_ID,
+            tolerance_seconds=600,
+        )
+
+        self.assertTrue(result, "ts en ms debería pasar tolerance check normalizado")
+
+    def test_milliseconds_timestamp_old_fails_tolerance(self):
+        """ts en ms antiguo (>tolerance) debe rechazarse."""
+        ts_ms = (int(time.time()) - 3600) * 1000  # 1h atrás en ms
+        manifest = build_manifest(self.DATA_ID, self.REQUEST_ID, ts_ms)
+        v1 = _sign(self.SECRET, manifest)
+        header = f'ts={ts_ms},v1={v1}'
+
+        result = verify_signature(
+            secret=self.SECRET,
+            data_id=self.DATA_ID,
+            signature_header=header,
+            request_id=self.REQUEST_ID,
+            tolerance_seconds=600,
+        )
+
+        self.assertFalse(result, "ts en ms de 1h atrás debería fallar con tolerance=10min")

@@ -15,12 +15,46 @@
         <field name="model">payment.provider</field>
         <field name="inherit_id" ref="payment_mercado_pago.payment_provider_form"/>
         <field name="arch" type="xml">
+
+            <!-- Toggle siempre visible (cuando el provider es Mercado Pago).
+                 Activarlo bypasea el flujo OAuth/proxy de Odoo S.A. y habilita
+                 la sección de credenciales directas debajo. -->
             <xpath expr="//group[@name='provider_credentials']" position="after">
-                <group name="mp_subscriptions" string="Suscripciones MP" invisible="code != 'mercado_pago'">
+                <group name="mp_subscriptions_toggle" invisible="code != 'mercado_pago'">
                     <field name="mp_use_direct_api"/>
-                    <field name="mp_webhook_secret" password="True" invisible="not mp_use_direct_api"/>
                 </group>
             </xpath>
+
+            <!-- Credenciales para modo directo: visibles sólo cuando
+                 mp_use_direct_api=True. Re-exponen los campos
+                 mercado_pago_access_token y mercado_pago_public_key del
+                 módulo nativo, que en su vista están ocultos cuando el
+                 flag is_oauth_supported es True (precondición para usar el
+                 proxy Odoo S.A.). En modo directo la app del comercio carga
+                 sus credenciales propias. -->
+            <xpath expr="//group[@name='provider_credentials']" position="after">
+                <group name="mp_subscriptions_direct" string="Suscripciones MP — Credenciales directas (modo directo)" invisible="code != 'mercado_pago' or not mp_use_direct_api">
+                    <field name="mercado_pago_access_token"
+                           string="Access Token (TEST o PROD)"
+                           password="True"
+                           required="mp_use_direct_api and state != 'disabled'"/>
+                    <field name="mercado_pago_public_key"
+                           string="Public Key (TEST o PROD)"
+                           required="mp_use_direct_api and state != 'disabled'"/>
+                    <field name="mp_webhook_secret"
+                           password="True"
+                           required="mp_use_direct_api and state != 'disabled'"/>
+                </group>
+            </xpath>
+
+            <!-- Ocultar el botón "Connect" del proxy OAuth cuando estamos en
+                 modo directo: si lo dejamos visible, el operador puede
+                 clickearlo por error y disparar el flujo proxy que no
+                 queremos. -->
+            <xpath expr="//button[@name='action_start_onboarding']" position="attributes">
+                <attribute name="invisible" separator="or" add="mp_use_direct_api"/>
+            </xpath>
+
         </field>
     </record>
 

@@ -144,7 +144,35 @@ class MPPreapproval(models.Model):
     # ------------------------------------------------------------------ #
 
     def _build_create_payload(self):
-        """Arma el payload para POST /preapproval."""
+        """Arma el payload para POST /preapproval.
+
+        Reglas observadas en la API de Mercado Pago:
+
+        - Sin ``preapproval_plan_id`` + ``status='pending'`` + sin
+          ``card_token_id`` → MP acepta y devuelve ``init_point`` para
+          checkout hosted (el suscriptor firma en la UI de MP).
+        - Con ``preapproval_plan_id`` + ``status='authorized'`` + con
+          ``card_token_id`` → MP acepta. Modo embebido obligatorio.
+        - Con ``preapproval_plan_id`` + ``status='pending'`` + sin
+          ``card_token_id`` → **MP rechaza** con
+          "card_token_id is required". Es decir, asociar a plan
+          obliga a flow embebido.
+
+        Cuando el operador no provee ``card_token_id`` (modo hosted),
+        omitimos ``preapproval_plan_id`` del payload aunque haya plan
+        local seleccionado. Los valores del plan ya están copiados en
+        ``auto_recurring`` (vía onchange al seleccionar el plan en el
+        form), así que el preapproval queda funcionalmente equivalente.
+        El ``plan_id`` local sigue persistido para reporting y
+        filtrado en el back de Odoo, pero a nivel MP el preapproval no
+        está asociado al ``preapproval_plan``.
+
+        Para preservar la asociación a nivel MP (filtrado en el panel,
+        agrupamiento en reportes MP), el flow correcto es **compartir
+        el ``init_point`` del plan** al suscriptor en lugar de crear
+        un ``mp.preapproval`` desde Odoo. MP se encarga de generar el
+        preapproval automáticamente al firmar y enviar webhook.
+        """
         self.ensure_one()
         payload = {
             'reason': self.reason,
@@ -165,14 +193,20 @@ class MPPreapproval(models.Model):
             payload['auto_recurring']['end_date'] = fields.Datetime.to_string(
                 self.end_date
             ).replace(' ', 'T') + '.000Z'
-        if self.plan_id and self.plan_id.mp_id:
-            payload['preapproval_plan_id'] = self.plan_id.mp_id
         if self.external_reference:
             payload['external_reference'] = self.external_reference
         if self.card_token_id_value:
+            # Modo embebido: token presente, status authorized desde el
+            # alta. Si hay plan, se referencia (MP lo permite junto al
+            # token).
             payload['card_token_id'] = self.card_token_id_value
             payload['status'] = const.PREAPPROVAL_STATUS_AUTHORIZED
+            if self.plan_id and self.plan_id.mp_id:
+                payload['preapproval_plan_id'] = self.plan_id.mp_id
         else:
+            # Modo hosted: sin token. NO se incluye preapproval_plan_id
+            # porque MP exige token cuando hay plan asociado. El plan
+            # local queda solo para reporting interno.
             payload['status'] = const.PREAPPROVAL_STATUS_PENDING
         return payload
 

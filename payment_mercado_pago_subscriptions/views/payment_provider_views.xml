@@ -55,6 +55,15 @@
                 <attribute name="invisible" separator="or" add="mp_use_direct_api"/>
             </xpath>
 
+            <!-- El campo "País de la cuenta" tiene readonly nativo cuando hay
+                 access_token + is_oauth_supported (asume que el OAuth proxy
+                 ya seteó todo). En modo directo el operador necesita poder
+                 setearlo / re-setearlo manualmente porque required_if_provider
+                 lo valida en cada save. -->
+            <xpath expr="//field[@name='mercado_pago_account_country_id']" position="attributes">
+                <attribute name="readonly">mercado_pago_access_token and mercado_pago_is_oauth_supported and not mp_use_direct_api</attribute>
+            </xpath>
+
         </field>
     </record>
 

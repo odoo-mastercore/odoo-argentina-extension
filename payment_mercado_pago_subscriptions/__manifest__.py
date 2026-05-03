@@ -9,7 +9,7 @@
 
 {
     'name': 'Payment Provider: Mercado Pago Subscriptions *',
-    'version': '19.0.0.3.0',
+    'version': '19.0.0.3.1',
     'category': 'Accounting/Payment Providers',
     'sequence': 350,
     'summary': 'Suscripciones recurrentes con Mercado Pago (preapproval) sobre sale_subscription.',
@@ -48,6 +48,7 @@ indexación a una moneda particular. Esa lógica vive en módulos consumidores
         'views/mp_preapproval_views.xml',
         'views/mp_authorized_payment_views.xml',
         'views/sale_order_views.xml',
+        'views/res_config_settings_views.xml',
         'views/menu_views.xml',
     ],
     'images': ['static/description/icon.png'],

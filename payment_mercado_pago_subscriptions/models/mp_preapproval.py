@@ -375,7 +375,7 @@ class MPPreapproval(models.Model):
         return None
 
     @api.model
-    def _cron_index_amounts_before_charge(self, days_before=1, threshold_percent=1.0):
+    def _cron_index_amounts_before_charge(self, days_before=None, threshold_percent=None):
         """Cron diario que actualiza monto del preapproval antes del cobro.
 
         Para cada preapproval autorizado con ``next_payment_date`` igual a
@@ -384,8 +384,8 @@ class MPPreapproval(models.Model):
         1. Llama al hook ``_compute_indexed_amount`` para que el consumidor
            calcule el nuevo monto.
         2. Si el delta absoluto contra el ``transaction_amount`` actual
-           supera ``threshold_percent`` (default 1 %), hace ``PUT`` al
-           preapproval con el nuevo monto.
+           supera ``threshold_percent``, hace ``PUT`` al preapproval con
+           el nuevo monto.
         3. MP procesa el cambio y notifica al cliente automáticamente
            antes del próximo cobro.
 
@@ -393,11 +393,27 @@ class MPPreapproval(models.Model):
         ``(preapproval_id, target_date)`` — si el cron corre dos veces el
         mismo día, el segundo PUT devuelve el resultado del primero.
 
-        :param int days_before: días de anticipación al next_payment_date.
-        :param float threshold_percent: delta mínimo (en %) para disparar
-            el PUT. Cambios menores se ignoran para evitar ruido al cliente.
+        Los parámetros se leen de ``ir.config_parameter``:
+
+        - ``payment_mercado_pago_subscriptions.index_days_before`` (int,
+          default 1) — días de anticipación al next_payment_date.
+        - ``payment_mercado_pago_subscriptions.index_threshold_percent``
+          (float, default 1.0) — delta mínimo en %.
+
+        :param int days_before: override del config (opcional, para tests
+            o invocación manual).
+        :param float threshold_percent: override del config (opcional).
         """
         from datetime import timedelta
+        icp = self.env['ir.config_parameter'].sudo()
+        if days_before is None:
+            days_before = int(icp.get_param(
+                'payment_mercado_pago_subscriptions.index_days_before', '1'
+            ))
+        if threshold_percent is None:
+            threshold_percent = float(icp.get_param(
+                'payment_mercado_pago_subscriptions.index_threshold_percent', '1.0'
+            ))
         target_date = fields.Date.today() + timedelta(days=days_before)
         candidates = self.search([
             ('status', '=', 'authorized'),
@@ -406,6 +422,10 @@ class MPPreapproval(models.Model):
         # Filtrar en Python por igualdad de fecha (ignorar hora).
         candidates = candidates.filtered(
             lambda p: p.next_payment_date and p.next_payment_date.date() == target_date
+        )
+        _logger.info(
+            "MP cron index: %s preapprovals con cobro en %s (days_before=%s, threshold=%s%%).",
+            len(candidates), target_date, days_before, threshold_percent,
         )
         for preapproval in candidates:
             try:

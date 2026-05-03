@@ -242,6 +242,59 @@ class MPPreapproval(models.Model):
             preapproval._apply_mp_payload(response)
         return True
 
+    def action_sync_authorized_payments(self):
+        """``GET /authorized_payments/search?preapproval_id={id}`` — trae
+        todas las cuotas (recurrencias) desde MP y las persiste o
+        actualiza localmente.
+
+        Útil para:
+
+        - Reconciliación cuando el webhook
+          ``subscription_authorized_payment`` no llega (URL del webhook
+          mal configurada en el panel MP, app sin webhooks, secret
+          desactualizado).
+        - Recuperación de estado tras incidentes.
+        - Auditoría manual desde el back de Odoo.
+
+        Por cada cuota recuperada que esté en estado ``processed`` con
+        ``payment_status='approved'``, se dispara el hook
+        ``_on_processed_approved``. Como el hook es idempotente
+        (chequea ``invoice_id`` antes de generar factura), múltiples
+        sincronizaciones no producen duplicados.
+        """
+        AuthorizedPayment = self.env['mp.authorized.payment']
+        for preapproval in self.filtered('mp_id'):
+            client = preapproval.provider_id._mp_get_client()
+            response = client.search_authorized_payments({
+                'preapproval_id': preapproval.mp_id,
+            })
+            results = response.get('results') or response.get('data') or []
+            synced = 0
+            for payload in results:
+                mp_id = payload.get('id')
+                if not mp_id:
+                    continue
+                mp_id = str(mp_id)
+                cuota = AuthorizedPayment.search(
+                    [('mp_id', '=', mp_id)], limit=1
+                )
+                if not cuota:
+                    cuota = AuthorizedPayment.create({
+                        'preapproval_id': preapproval.id,
+                        'mp_id': mp_id,
+                    })
+                cuota._apply_mp_payload(payload)
+                synced += 1
+                # Hook post-cobro idempotente: el consumidor decide
+                # si genera factura, lo escala al equipo, etc.
+                if (cuota.status == const.AUTHORIZED_PAYMENT_STATUS_PROCESSED
+                        and cuota.payment_status == 'approved'):
+                    cuota._on_processed_approved()
+            preapproval.message_post(body=_(
+                "Sincronizadas %s cuotas desde MP.", synced
+            ))
+        return True
+
     def _mp_update_amount(self, new_amount, idempotency_key=None):
         """``PUT /preapproval/{id}`` con nuevo ``transaction_amount``.
 

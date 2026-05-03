@@ -37,6 +37,7 @@
                 <header>
                     <button name="action_create_in_mp" type="object" string="Crear en MP" class="btn-primary" invisible="mp_id"/>
                     <button name="action_sync_from_mp" type="object" string="Sincronizar" invisible="not mp_id"/>
+                    <button name="action_sync_authorized_payments" type="object" string="Sincronizar cuotas" invisible="not mp_id"/>
                     <button name="action_pause" type="object" string="Pausar" invisible="status != 'authorized'"/>
                     <button name="action_resume" type="object" string="Reanudar" invisible="status != 'paused'"/>
                     <button name="action_cancel" type="object" string="Cancelar" invisible="status in ('cancelled', 'finished') or not status" confirm="Esta acción es irreversible. ¿Cancelar la suscripción en MP?"/>

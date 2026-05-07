@@ -160,22 +160,41 @@ class MPAuthorizedPayment(models.Model):
         del rechazo, marcar la cuenta SaaS en estado de retry, alertar
         al equipo comercial, etc.
 
-        Política de retry de MP (informativa para consumidores):
-        cuando una cuota es rejected, MP reintenta automáticamente
-        hasta 2 veces más en una ventana de 4 días. Si los 3 intentos
-        fallan, MP cancela el preapproval y dispara el webhook
-        ``subscription_preapproval`` con ``status='cancelled'`` —
-        ahí es donde el consumidor recibe la cancelación final via
-        ``mp.preapproval._on_status_changed``.
+        Política oficial de retry de MP (validada contra docs en docs.
+        mercadopago.com.ar/developers/es/docs/subscriptions, sección
+        "Lógica de reintentos de cobro"):
 
-        El módulo base no hace nada — sólo loguea. Idempotente: igual
-        que approved, puede invocarse múltiples veces por la misma
-        cuota; el consumidor debe ser robusto.
+        - Cuando un cobro es rechazado, la cuota pasa a ``status='recycling'``
+          (NO ``processed``). El webhook ``subscription_authorized_payment``
+          se dispara pero NO entra en este hook (status != processed).
+        - MP reintenta automáticamente hasta **4 veces** en una ventana
+          de **10 días**.
+        - Si alguno de los 4 reintentos resulta exitoso, la cuota pasa a
+          ``processed`` con ``payment_status='approved'`` y se dispara
+          ``_on_processed_approved`` (no este hook).
+        - Si los 4 reintentos fallan o se vence la fecha de expiración,
+          la cuota queda en ``processed`` con ``payment_status='rejected'``
+          y SE DISPARA ESTE HOOK. Es el punto terminal de la cuota, NO
+          va a haber más reintentos para esta misma cuota.
+        - El próximo cobro mensual se programa normalmente.
+        - Si **3 cuotas consecutivas** quedan rejected (3 meses con
+          fallos), MP cancela el preapproval automáticamente y dispara
+          ``subscription_preapproval`` con ``status='cancelled'`` →
+          consumidor recibe via ``mp.preapproval._on_status_changed``.
+
+        Implicancia importante: cuando se invoca este hook, la cuota
+        actual ya se dio por perdida — el copy del email al cliente
+        debe reflejar esto (no decir "MP va a reintentar"; ya reintentó
+        y agotó las 4 oportunidades).
+
+        El módulo base no hace nada — sólo loguea. Idempotente: puede
+        invocarse múltiples veces por la misma cuota (re-entrega de
+        webhook); el consumidor debe ser robusto.
         """
         for record in self:
             _logger.info(
-                "MP authorized_payment %s processed=rejected (no consumer hook). "
-                "retry_attempt=%s",
+                "MP authorized_payment %s processed=rejected "
+                "(no consumer hook). retry_attempt=%s",
                 record.mp_id or record.id, record.retry_attempt,
             )
         return True

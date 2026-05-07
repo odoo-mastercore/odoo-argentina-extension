@@ -150,3 +150,32 @@ class MPAuthorizedPayment(models.Model):
                 record.mp_id or record.id,
             )
         return True
+
+    def _on_processed_rejected(self):
+        """Hook invocado cuando una cuota cierra como ``processed`` con
+        ``payment_status='rejected'``.
+
+        Punto de extensión simétrico a ``_on_processed_approved`` para
+        reaccionar al cobro fallido: enviar email al cliente con motivo
+        del rechazo, marcar la cuenta SaaS en estado de retry, alertar
+        al equipo comercial, etc.
+
+        Política de retry de MP (informativa para consumidores):
+        cuando una cuota es rejected, MP reintenta automáticamente
+        hasta 2 veces más en una ventana de 4 días. Si los 3 intentos
+        fallan, MP cancela el preapproval y dispara el webhook
+        ``subscription_preapproval`` con ``status='cancelled'`` —
+        ahí es donde el consumidor recibe la cancelación final via
+        ``mp.preapproval._on_status_changed``.
+
+        El módulo base no hace nada — sólo loguea. Idempotente: igual
+        que approved, puede invocarse múltiples veces por la misma
+        cuota; el consumidor debe ser robusto.
+        """
+        for record in self:
+            _logger.info(
+                "MP authorized_payment %s processed=rejected (no consumer hook). "
+                "retry_attempt=%s",
+                record.mp_id or record.id, record.retry_attempt,
+            )
+        return True

@@ -201,21 +201,41 @@ class MPSubscriptionsWebhookController(http.Controller):
             "MP webhook: authorized_payment %s synced, status=%s, payment_status=%s.",
             data_id, record.status, record.payment_status,
         )
-        # Disparar hook si la cuota cerró exitosa. Los módulos
-        # consumidores (tupymeclara_subscription, etc.) heredan
-        # _on_processed_approved para implementar la lógica
-        # post-cobro (facturación, activación de funcionalidad).
-        if (record.status == const.AUTHORIZED_PAYMENT_STATUS_PROCESSED
-                and record.payment_status == 'approved'):
-            try:
-                record._on_processed_approved()
-            except Exception:  # noqa: BLE001
-                _logger.exception(
-                    "MP webhook: error in _on_processed_approved for cuota %s; "
-                    "the cuota state was already persisted, retry can come from "
-                    "the sync cron or a manual re-dispatch.",
-                    data_id,
-                )
+        # Disparar hook según el resultado de la cuota cuando ya
+        # cerró el ciclo (status='processed'). Los módulos consumidores
+        # (tupymeclara_subscription, etc.) heredan estos hooks para
+        # implementar la lógica post-cobro:
+        #
+        # - approved: facturar + activar funcionalidad + email cobro
+        #   exitoso.
+        # - rejected: email cobro fallido + (eventualmente) marcar la
+        #   cuenta SaaS en estado de retry. MP reintentará automática-
+        #   mente hasta 2 veces más; si los 3 intentos fallan, MP
+        #   cancela el preapproval y dispara
+        #   ``mp.preapproval._on_status_changed`` con
+        #   new_status='cancelled'.
+        if record.status == const.AUTHORIZED_PAYMENT_STATUS_PROCESSED:
+            if record.payment_status == 'approved':
+                try:
+                    record._on_processed_approved()
+                except Exception:  # noqa: BLE001
+                    _logger.exception(
+                        "MP webhook: error in _on_processed_approved "
+                        "for cuota %s; the cuota state was already "
+                        "persisted, retry can come from the sync "
+                        "cron or a manual re-dispatch.",
+                        data_id,
+                    )
+            elif record.payment_status == 'rejected':
+                try:
+                    record._on_processed_rejected()
+                except Exception:  # noqa: BLE001
+                    _logger.exception(
+                        "MP webhook: error in _on_processed_rejected "
+                        "for cuota %s; el state se persistió ok, "
+                        "retry desde sync cron o re-dispatch manual.",
+                        data_id,
+                    )
 
     def _handle_payment(self, env, client, data_id, action):
         """Hidrata payment real (``/v1/payments/{id}``) y, si está vinculado

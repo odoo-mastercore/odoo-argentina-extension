@@ -476,8 +476,16 @@ class MPPreapproval(models.Model):
     # ------------------------------------------------------------------ #
 
     def _apply_mp_payload(self, payload):
-        """Aplica un payload de MP (response de POST/GET/PUT) al registro."""
+        """Aplica un payload de MP (response de POST/GET/PUT) al registro.
+
+        Si el ``status`` del preapproval cambia, dispara el hook
+        ``_on_status_changed(old_status, new_status)`` para que módulos
+        consumidores reaccionen a transiciones (cancelled, paused,
+        authorized). El hook solo se invoca cuando el status realmente
+        cambia — escrituras idempotentes (mismo status) no lo disparan.
+        """
         self.ensure_one()
+        old_status = self.status
         values = {}
         if payload.get('id') and not self.mp_id:
             values['mp_id'] = payload['id']
@@ -516,3 +524,51 @@ class MPPreapproval(models.Model):
 
         if values:
             self.write(values)
+
+        # Hook de transición de estado. Solo si efectivamente cambió.
+        new_status = self.status
+        if 'status' in values and new_status and new_status != old_status:
+            try:
+                self._on_status_changed(old_status, new_status)
+            except Exception as exc:  # noqa: BLE001
+                _logger.exception(
+                    "MP preapproval %s: error en _on_status_changed "
+                    "(%s → %s): %s",
+                    self.mp_id, old_status, new_status, exc,
+                )
+
+    # ------------------------------------------------------------------ #
+    #  Hooks de transición de estado                                     #
+    # ------------------------------------------------------------------ #
+
+    def _on_status_changed(self, old_status, new_status):
+        """Hook invocado cuando el ``status`` del preapproval cambia.
+
+        Se dispara desde ``_apply_mp_payload`` cuando el status
+        efectivamente cambia (no en escrituras idempotentes con el
+        mismo status). Útil para reaccionar a transiciones específicas:
+
+        - ``pending → authorized``: el cliente firmó. El consumidor
+          puede activar funcionalidad SaaS.
+        - ``authorized → cancelled``: el cliente canceló desde MP, o
+          MP canceló tras 3 cobros fallidos consecutivos. El consumidor
+          puede mandar email de despedida, marcar la cuenta para
+          downgrade en T+30, etc.
+        - ``authorized → paused``: el cliente pausó desde MP. El
+          consumidor puede mantener acceso en read-only.
+
+        El módulo base no hace nada — sólo loguea. Cualquier consumidor
+        debe heredar este método con ``super()._on_status_changed(...)``
+        para mantener composición.
+
+        :param str old_status: status anterior (puede ser ``False`` /
+            ``None`` si el preapproval no tenía status seteado).
+        :param str new_status: status nuevo después del write.
+        """
+        for record in self:
+            _logger.info(
+                "MP preapproval %s status changed: %s → %s "
+                "(no consumer hook).",
+                record.mp_id or record.id, old_status, new_status,
+            )
+        return True

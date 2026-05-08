@@ -355,6 +355,74 @@ class MPPreapproval(models.Model):
         return True
 
     # ------------------------------------------------------------------ #
+    #  Actualización de medio de pago (Card Payment Brick)               #
+    # ------------------------------------------------------------------ #
+
+    def _mp_update_card_token(self, card_token_id):
+        """``PUT /preapproval/{id}`` con nuevo ``card_token_id``.
+
+        Reemplaza la tarjeta asociada al preapproval por la tokenizada
+        en el frontend (Card Payment Brick / CardForm). Cita literal
+        de la doc oficial MP:
+
+            "Modificar tarjeta del medio de pago principal | Permite
+            modificar la tarjeta asociada a la suscripción existente.
+            Envía un PUT con el nuevo token en atributo card_token_id
+            para el endpoint /preapproval/{id}."
+
+        Reactivación automática: si el preapproval estaba ``paused``
+        (típico tras 4 reintentos fallidos que llevaron la cuenta a
+        past_due), incluimos también ``status: authorized`` en el
+        mismo PUT para reactivar la suscripción de una vez.
+
+        :param str card_token_id: token efímero (válido 7 días) que
+            representa la tarjeta tokenizada client-side. Se obtiene
+            del callback ``onSubmit`` del Card Payment Brick.
+        :return: dict con la respuesta de MP (preapproval actualizado).
+        :raises UserError: si falta ``mp_id`` o ``card_token_id``, o si
+            el preapproval está en estado terminal (``cancelled``).
+        """
+        self.ensure_one()
+        if not self.mp_id:
+            raise UserError(_(
+                "No se puede actualizar la tarjeta: la suscripción no "
+                "está sincronizada con Mercado Pago."
+            ))
+        if not card_token_id:
+            raise UserError(_(
+                "No se puede actualizar la tarjeta: falta el token "
+                "generado por el formulario de pago."
+            ))
+        if self.status == const.PREAPPROVAL_STATUS_CANCELLED:
+            raise UserError(_(
+                "La suscripción ya está cancelada y no puede actualizar "
+                "su tarjeta. Es necesario crear una suscripción nueva."
+            ))
+
+        client = self.provider_id._mp_get_client()
+        payload = {'card_token_id': card_token_id}
+        # Si el preapproval estaba paused (post past_due), aprovechamos
+        # el mismo PUT para reactivarlo. MP acepta ambos cambios en una
+        # sola llamada — más limpio y atómico que dos PUTs separados.
+        was_paused = self.status == const.PREAPPROVAL_STATUS_PAUSED
+        if was_paused:
+            payload['status'] = const.PREAPPROVAL_STATUS_AUTHORIZED
+
+        response = client.update_preapproval(self.mp_id, payload)
+        self._apply_mp_payload(response)
+        if was_paused:
+            self.message_post(body=_(
+                "Medio de pago actualizado vía Card Payment Brick. "
+                "Suscripción reactivada (paused → authorized) en el "
+                "mismo PUT."
+            ))
+        else:
+            self.message_post(body=_(
+                "Medio de pago actualizado vía Card Payment Brick."
+            ))
+        return response
+
+    # ------------------------------------------------------------------ #
     #  Indexación pre-cobro                                              #
     # ------------------------------------------------------------------ #
 

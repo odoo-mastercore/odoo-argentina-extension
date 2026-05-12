@@ -7,6 +7,8 @@
 #
 ##############################################################################
 
+from dateutil.relativedelta import relativedelta
+
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
@@ -52,6 +54,7 @@ class SaleOrder(models.Model):
         back_url=None,
         card_token_id=None,
         provider=None,
+        free_trial_months=None,
     ):
         """Crea el ``mp.preapproval`` asociado a esta orden y lo sincroniza con MP.
 
@@ -71,6 +74,13 @@ class SaleOrder(models.Model):
             hosted (status=pending).
         :param payment.provider provider: provider MP a usar. Si se omite,
             busca el primer provider mercado_pago con mp_use_direct_api.
+        :param int free_trial_months: cantidad de meses de gracia antes
+            del primer cobro. Si se pasa N > 0, se calcula
+            ``auto_recurring.start_date = now + N meses`` y se envía a
+            MP. MP autoriza el preapproval inmediatamente pero NO debita
+            hasta esa fecha. Útil para vouchers / trials extendidos /
+            promociones sobre planes pagos. None o 0 = sin gracia
+            (cobro inmediato, comportamiento estándar).
         :return: ``mp.preapproval`` creado.
         """
         self.ensure_one()
@@ -117,7 +127,7 @@ class SaleOrder(models.Model):
         if not external_reference:
             external_reference = f"so_{self.id}"
 
-        preapproval = self.env['mp.preapproval'].create({
+        preapproval_vals = {
             'provider_id': provider.id,
             'plan_id': plan.id if plan else False,
             'reason': reason,
@@ -130,7 +140,19 @@ class SaleOrder(models.Model):
             'sale_order_id': self.id,
             'auto_recurring_frequency': plan.frequency if plan else 1,
             'auto_recurring_frequency_type': plan.frequency_type if plan else const.FREQUENCY_TYPE_MONTHS,
-        })
+        }
+        # Free trial via auto_recurring.start_date futuro.
+        # MP autoriza el preapproval inmediatamente pero no debita hasta
+        # el start_date. El campo ya está serializado al payload de MP
+        # en mp_preapproval._build_create_payload(); acá solo lo setteamos
+        # según los meses de gracia solicitados por el caller.
+        if free_trial_months and free_trial_months > 0:
+            preapproval_vals['start_date'] = (
+                fields.Datetime.now()
+                + relativedelta(months=free_trial_months)
+            )
+
+        preapproval = self.env['mp.preapproval'].create(preapproval_vals)
         preapproval.action_create_in_mp()
         self.mp_preapproval_id = preapproval.id
         return preapproval

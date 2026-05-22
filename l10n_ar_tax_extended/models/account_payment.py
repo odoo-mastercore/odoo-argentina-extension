@@ -141,8 +141,8 @@ class AccountPayment(models.Model):
             line_vals for line_vals in withholding_lines
             if (line_vals.get("name") or "").startswith("Base Ret")
         ]
-        if self.partner_type == "customer":
-            extra_lines = [self._sanitize_customer_payment_currency_base_line(line_vals) for line_vals in extra_lines]
+        #if self.partner_type == "customer":
+        extra_lines = [self._sanitize_customer_payment_currency_base_line(line_vals) for line_vals in extra_lines]
         actual_lines = []
         sign = 1 if self.payment_type == "inbound" else -1
         for line in self.l10n_ar_withholding_line_ids:

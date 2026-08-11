@@ -18,6 +18,9 @@ class AccountReport(models.AbstractModel):
     _inherit = "account.report"
 
     filter_account_acc = True
+    filter_exclude_zero_balance = fields.Selection(
+        string="Excluir balances en 0",
+        selection=[ ('by_default', "Activado por defecto"), ('optional', "Opcional"),('never', "Nunca"), ],compute=lambda report: report._compute_report_option_filter( 'filter_exclude_zero_balance','never', ),readonly=False,store=True,depends=['root_report_id', 'section_main_report_ids'],)
 
     @api.readonly
     def get_options(self, previous_options):
@@ -91,3 +94,25 @@ class AccountReport(models.AbstractModel):
             currency_table=self._get_currency_table(options),
             period_key=options['date']['currency_table_period_key'],
         )
+
+    def _init_options_exclude_zero_balance(self, options, previous_options):
+        if self.filter_exclude_zero_balance != 'never':
+            previous_value = previous_options.get('exclude_zero_balance')
+
+            if previous_value is not None:
+                options['exclude_zero_balance'] = previous_value
+            else:
+                options['exclude_zero_balance'] = (
+                    self.filter_exclude_zero_balance == 'by_default'
+                )
+        else:
+            options['exclude_zero_balance'] = False
+
+    def get_report_information(self, options):
+        report_information = super().get_report_information(options)
+
+        report_information['filters']['show_exclude_zero_balance'] = (
+            self.filter_exclude_zero_balance
+        )
+
+        return report_information

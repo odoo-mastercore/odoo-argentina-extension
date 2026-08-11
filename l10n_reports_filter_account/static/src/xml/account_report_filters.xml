@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="l10n_reports_filter_account.AccountReportFilterExtraOptions" t-inherit="account_reports.AccountReportFilterExtraOptions" t-inherit-mode="extension" >
+        <xpath expr="//t[@t-if=&quot;controller.filters.show_hide_0_lines !== 'never'&quot;]" position="after" >
+            <t t-if="controller.filters.show_exclude_zero_balance !== 'never'">
+                <DropdownItem
+                    class="{ 'selected': controller.options.exclude_zero_balance }"
+                    onSelected="() => this.filterClicked({
+                        optionKey: 'exclude_zero_balance',
+                        reload: true
+                    })"
+                >
+                    Excluir balances en 0
+                </DropdownItem>
+            </t>
+        </xpath>
+    </t>
+</templates>

@@ -279,4 +279,22 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
         #método se ejecuta al entrar
         #_logger.warning(f'_get_report_line_total: {res}')
         return res
-    
+
+    def _query_partners(self, report, options):
+        partners_results = super()._query_partners(report, options)
+
+        if not options.get('exclude_zero_balance'):
+            return partners_results
+
+        filtered_results = []
+
+        for partner, results in partners_results:
+            if partner:
+                balances = [results.get(column_group_key, {}).get('balance', 0.0) for column_group_key in options['column_groups']]
+
+                if any(balance != 0.0 for balance in balances):
+                    filtered_results.append((partner, results))
+            else:
+                filtered_results.append((partner, results))
+
+        return filtered_results

@@ -19,6 +19,16 @@
         'account_followup',
         'account_reports',
     ],
+    'data': [
+        'view/account_report_view.xml',
+    ],
+    'assets': {
+        'web.assets_backend': [
+            'l10n_reports_filter_account/static/src/js/exclude_zero_balance_filter.js',
+            'l10n_reports_filter_account/static/src/xml/account_report_filters.xml',
+        ],
+    },
+
     #'assets': {
      #   'web.assets_backend': ['l10n_reports_filter_account/static/src/js/account_reports.js'],
      #   },

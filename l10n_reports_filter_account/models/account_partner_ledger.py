@@ -243,11 +243,28 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
         #_logger.warning(f'_get_order_by_aml_values: {res}')
         return res
     
-    def _get_aml_values(self, options, partner_ids, offset=0, limit=None):
-        res = super(PartnerLedgerCustomHandler, self)._get_aml_values(options, partner_ids, offset, limit)
-        #se ejecuta cuando se desplega uno de los campos del reporte
-        #_logger.warning(f'_get_aml_values: {res}')
-        return res
+    def _get_aml_values(self,options,partner_ids, offset=0,limit=None, ):
+            account_acc_ids = options.get('account_acc_ids', [])
+
+            if not account_acc_ids:
+                account_acc_ids = self.env.context.get('account_acc_ids',[],)
+
+            if account_acc_ids:
+                account_acc_ids = [int(account_id)  for account_id in account_acc_ids]
+
+                options = {
+                    **options,
+                    'forced_domain': [
+                        *options.get('forced_domain', []),
+                        (
+                            'account_id',
+                            'in',
+                            account_acc_ids,
+                        ),
+                    ],
+                }
+
+            return super()._get_aml_values(options,partner_ids,offset=offset,limit=limit,)
 
     def _get_report_line_partners(self, options, partner, partner_values, level_shift=0):
         res = super(PartnerLedgerCustomHandler, self)._get_report_line_partners(options, partner, partner_values, level_shift)

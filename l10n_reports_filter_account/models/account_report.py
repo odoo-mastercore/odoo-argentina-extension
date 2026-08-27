@@ -22,6 +22,15 @@ class AccountReport(models.AbstractModel):
         string="Excluir balances en 0",
         selection=[ ('by_default', "Activado por defecto"), ('optional', "Opcional"),('never', "Nunca"), ],compute=lambda report: report._compute_report_option_filter( 'filter_exclude_zero_balance','never', ),readonly=False,store=True,depends=['root_report_id', 'section_main_report_ids'],)
 
+    filter_exclude_zero_balance_open_items = fields.Boolean( 
+        string="Solo las lineas que componen el saldo",
+        compute= lambda report: report._compute_report_option_filter('filter_exclude_zero_balance_open_items', False), 
+        readonly=False, 
+        store=True, 
+        depends=['root_report_id', 'section_main_report_ids'], 
+        help=("Cuando se activa 'Excluir balance en 0', muestra unicamente las partidas que permanecian abiertas a la fecha final del reporte"),
+    )
+
     @api.readonly
     def get_options(self, previous_options):
         res = super(AccountReport, self).get_options(previous_options)
@@ -46,7 +55,24 @@ class AccountReport(models.AbstractModel):
             res['account_account_ids'] = previous_options['account_account_ids']
             res['account_acc_ids'] = previous_options['account_acc_ids']
             res['exclude_companies_without_difference'] = previous_options['exclude_companies_without_difference'] if ('exclude_companies_without_difference' in previous_options) else False
+        if (res.get('exclude_zero_balance') and self.filter_exclude_zero_balance_open_items): 
+            res['unreconciled'] = False
+        
         return res
+
+    def _get_options_domain(self, options, date_scope):
+        domain = super()._get_options_domain(options, date_scope)
+        account_acc_ids = (options.get('account_acc_ids') or self.env.context.get('account_acc_ids', []) )
+
+        if account_acc_ids:
+            domain.append(('account_id','in',[int(account_id) for account_id in account_acc_ids],))
+
+        date_to = options.get('date', {}).get('date_to')
+
+        if (options.get('exclude_zero_balance') and self.filter_exclude_zero_balance_open_items and date_to):
+            domain += ['&',('balance', '!=', 0),'|',('full_reconcile_id', '=', False),('full_reconcile_id.partial_reconcile_ids.max_date','>',date_to,),]
+
+        return domain
     
     @api.model
     def _currency_table_aml_join_for_leader_partner(self, options, aml_alias=SQL('account_move_line')) -> SQL:

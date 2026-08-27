@@ -7,6 +7,7 @@
         <field name="arch" type="xml">
             <field name="filter_hide_0_lines" position="after">
                 <field name="filter_exclude_zero_balance" help="Excluye las líneas agregadas cuyo saldo final sea exactamente cero."/>
+                <field name="filter_exclude_zero_balance_open_items"/>
             </field>
         </field>
     </record>

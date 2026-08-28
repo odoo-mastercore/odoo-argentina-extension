@@ -55,7 +55,11 @@ class AccountReport(models.AbstractModel):
             res['account_account_ids'] = previous_options['account_account_ids']
             res['account_acc_ids'] = previous_options['account_acc_ids']
             res['exclude_companies_without_difference'] = previous_options['exclude_companies_without_difference'] if ('exclude_companies_without_difference' in previous_options) else False
-        if (res.get('exclude_zero_balance') and self.filter_exclude_zero_balance_open_items): 
+
+        open_items_active = bool(res.get('exclude_zero_balance') and self.filter_exclude_zero_balance_open_items)
+        res['exclude_zero_balance_open_items'] = open_items_active
+        res['exclude_zero_balance_open_items_date_to'] = ( res.get('date', {}).get('date_to') if open_items_active else False)
+        if open_items_active: 
             res['unreconciled'] = False
         
         return res
@@ -63,14 +67,24 @@ class AccountReport(models.AbstractModel):
     def _get_options_domain(self, options, date_scope):
         domain = super()._get_options_domain(options, date_scope)
         account_acc_ids = (options.get('account_acc_ids') or self.env.context.get('account_acc_ids', []) )
-
         if account_acc_ids:
             domain.append(('account_id','in',[int(account_id) for account_id in account_acc_ids],))
 
-        date_to = options.get('date', {}).get('date_to')
+        open_items_active = options.get('exclude_zero_balance_open_items',False,)
+        open_items_date_to = options.get('exclude_zero_balance_open_items_date_to',)
 
-        if (options.get('exclude_zero_balance') and self.filter_exclude_zero_balance_open_items and date_to):
-            domain += ['&',('balance', '!=', 0),'|',('full_reconcile_id', '=', False),('full_reconcile_id.partial_reconcile_ids.max_date','>',date_to,),]
+        if open_items_active and open_items_date_to:
+            domain += [
+                '&',
+                ('balance', '!=', 0),
+                '|',
+                ('full_reconcile_id', '=', False),
+                (
+                    'full_reconcile_id.partial_reconcile_ids.max_date',
+                    '>',
+                    open_items_date_to,
+                ),
+            ]
 
         return domain
     

@@ -30,6 +30,13 @@ class AccountReport(models.AbstractModel):
         depends=['root_report_id', 'section_main_report_ids'], 
         help=("Cuando se activa 'Excluir balance en 0', muestra unicamente las partidas que permanecian abiertas a la fecha final del reporte"),
     )
+    filter_group_by_pending_balance = fields.Boolean(
+    string="Agrupar por saldo pendiente por comprobante",
+    compute=lambda report: report._compute_report_option_filter('filter_group_by_pending_balance', False,),
+    readonly=False,
+    store=True,
+    depends=['root_report_id', 'section_main_report_ids'],
+    help=("Cuando se muestran las partidas que componen el saldo, presenta cada comprobante por el saldo que permanecía pendiente a la fecha final del reporte."),)
 
     @api.readonly
     def get_options(self, previous_options):
@@ -61,7 +68,8 @@ class AccountReport(models.AbstractModel):
         res['exclude_zero_balance_open_items_date_to'] = ( res.get('date', {}).get('date_to') if open_items_active else False)
         if open_items_active: 
             res['unreconciled'] = False
-        
+
+        res['group_by_pending_balance'] = bool(open_items_active  and self.filter_group_by_pending_balance)
         return res
 
     def _get_options_domain(self, options, date_scope):

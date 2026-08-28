@@ -11,7 +11,7 @@ from odoo import models, api, _, fields
 from datetime import datetime, timedelta
 from odoo.tools.misc import format_date
 from odoo.tools import SQL
-
+from collections import defaultdict
 
 try:
     from odoo.tools.misc import xlsxwriter
@@ -27,7 +27,457 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
     
     filter_account_acc = True
 
+    def _group_by_pending_balance_enabled(self, options):
+        return bool(options.get('group_by_pending_balance'))
 
+    def _get_pending_balance_sql_parts(self, date_to):
+        residual_balance = SQL(
+            """
+            account_move_line.balance
+            - COALESCE(part_debit.amount, 0)
+            + COALESCE(part_credit.amount, 0)
+            """
+        )
+
+        residual_amount_currency = SQL(
+            """
+            account_move_line.amount_currency
+            - COALESCE(part_debit.debit_amount_currency, 0)
+            + COALESCE(part_credit.credit_amount_currency, 0)
+            """
+        )
+
+        partial_reconcile_joins = SQL(
+            """
+            LEFT JOIN LATERAL (
+                SELECT
+                    SUM(part.amount) AS amount,
+                    SUM(part.debit_amount_currency) AS debit_amount_currency
+                FROM account_partial_reconcile part
+                WHERE
+                    part.debit_move_id = account_move_line.id
+                    AND part.max_date <= %(date_to)s
+            ) part_debit ON TRUE
+
+            LEFT JOIN LATERAL (
+                SELECT
+                    SUM(part.amount) AS amount,
+                    SUM(part.credit_amount_currency) AS credit_amount_currency
+                FROM account_partial_reconcile part
+                WHERE
+                    part.credit_move_id = account_move_line.id
+                    AND part.max_date <= %(date_to)s
+            ) part_credit ON TRUE
+            """,
+            date_to=date_to,
+        )
+
+        return (
+            residual_balance,
+            residual_amount_currency,
+            partial_reconcile_joins,
+        )
+
+    def _get_pending_balance_query_sums(self, report, options):
+        queries = []
+
+        for column_group_key, column_group_options in (report._split_options_per_column_group(options).items()):
+            query = report._get_report_query(column_group_options,'from_beginning',)
+
+            date_to = (column_group_options.get( 'exclude_zero_balance_open_items_date_to') or options.get('exclude_zero_balance_open_items_date_to'))
+
+            (residual_balance, _residual_amount_currency, partial_reconcile_joins,) = self._get_pending_balance_sql_parts(date_to)
+
+            debit_select = report._currency_table_apply_rate(
+                SQL(
+                    """
+                    CASE
+                        WHEN %(residual)s > 0
+                        THEN %(residual)s
+                        ELSE 0
+                    END
+                    """,
+                    residual=residual_balance,
+                )
+            )
+
+            credit_select = report._currency_table_apply_rate(
+                SQL(
+                    """
+                    CASE
+                        WHEN %(residual)s < 0
+                        THEN -%(residual)s
+                        ELSE 0
+                    END
+                    """,
+                    residual=residual_balance,
+                )
+            )
+
+            balance_select = report._currency_table_apply_rate(
+                residual_balance
+            )
+
+            queries.append(SQL(
+                """
+                SELECT
+                    account_move_line.partner_id AS groupby,
+                    %(column_group_key)s AS column_group_key,
+                    SUM(%(debit_select)s) AS debit,
+                    SUM(%(credit_select)s) AS credit,
+                    SUM(%(balance_select)s) AS amount,
+                    SUM(%(balance_select)s) AS balance
+                FROM %(table_references)s
+                %(currency_table_join)s
+                %(partial_reconcile_joins)s
+                WHERE %(search_condition)s
+                GROUP BY account_move_line.partner_id
+                """,
+                column_group_key=column_group_key,
+                debit_select=debit_select,
+                credit_select=credit_select,
+                balance_select=balance_select,
+                table_references=query.from_clause,
+                currency_table_join=report._currency_table_aml_join(
+                    column_group_options
+                ),
+                partial_reconcile_joins=partial_reconcile_joins,
+                search_condition=query.where_clause,
+            ))
+
+        return SQL(" UNION ALL ").join(queries)
+
+    def _get_pending_balance_initial_values(  self,  partner_ids, options,):
+        report = self.env['account.report'].browse(options['report_id'])
+
+        if not report.filter_date_range:
+            return {
+                partner_id: {
+                    column_group_key: {}
+                    for column_group_key in options['column_groups']
+                }
+                for partner_id in partner_ids
+            }
+
+        queries = []
+
+        for column_group_key, column_group_options in (report._split_options_per_column_group(options).items()):
+            initial_options = self._get_options_initial_balance( column_group_options )
+
+            query = report._get_report_query( initial_options, 'from_beginning', domain=[('partner_id', 'in', partner_ids)], )
+
+            date_to = (
+                column_group_options.get(
+                    'exclude_zero_balance_open_items_date_to'
+                )
+                or options.get(
+                    'exclude_zero_balance_open_items_date_to'
+                )
+            )
+
+            (
+                residual_balance,
+                _residual_amount_currency,
+                partial_reconcile_joins,
+            ) = self._get_pending_balance_sql_parts(date_to)
+
+            debit_select = report._currency_table_apply_rate(
+                SQL(
+                    """
+                    CASE
+                        WHEN %(residual)s > 0
+                        THEN %(residual)s
+                        ELSE 0
+                    END
+                    """,
+                    residual=residual_balance,
+                )
+            )
+
+            credit_select = report._currency_table_apply_rate(
+                SQL(
+                    """
+                    CASE
+                        WHEN %(residual)s < 0
+                        THEN -%(residual)s
+                        ELSE 0
+                    END
+                    """,
+                    residual=residual_balance,
+                )
+            )
+
+            balance_select = report._currency_table_apply_rate(
+                residual_balance
+            )
+
+            queries.append(SQL(
+                """
+                SELECT
+                    account_move_line.partner_id,
+                    %(column_group_key)s AS column_group_key,
+                    SUM(%(debit_select)s) AS debit,
+                    SUM(%(credit_select)s) AS credit,
+                    SUM(%(balance_select)s) AS amount,
+                    SUM(%(balance_select)s) AS balance
+                FROM %(table_references)s
+                %(currency_table_join)s
+                %(partial_reconcile_joins)s
+                WHERE %(search_condition)s
+                GROUP BY account_move_line.partner_id
+                """,
+                column_group_key=column_group_key,
+                debit_select=debit_select,
+                credit_select=credit_select,
+                balance_select=balance_select,
+                table_references=query.from_clause,
+                currency_table_join=report._currency_table_aml_join(
+                    initial_options
+                ),
+                partial_reconcile_joins=partial_reconcile_joins,
+                search_condition=query.where_clause,
+            ))
+
+        initial_values = {
+            partner_id: {
+                column_group_key: defaultdict(float)
+                for column_group_key in options['column_groups']
+            }
+            for partner_id in partner_ids
+        }
+
+        if not queries:
+            return initial_values
+
+        self._cr.execute(SQL(" UNION ALL ").join(queries))
+
+        for result in self._cr.dictfetchall():
+            partner_id = result['partner_id']
+
+            if partner_id in initial_values:
+                initial_values[partner_id][
+                    result['column_group_key']
+                ] = result
+
+        return initial_values
+
+    def _get_pending_balance_aml_values(self,options, partner_ids,offset=0,limit=None,):
+        results = { partner_id: [] for partner_id in partner_ids }
+        partner_ids_without_none = [partner_id  for partner_id in partner_ids if partner_id ]
+        partner_clauses = []
+
+        if None in partner_ids:
+            partner_clauses.append(SQL("account_move_line.partner_id IS NULL"))
+
+        if partner_ids_without_none:
+            partner_clauses.append(SQL(
+                "account_move_line.partner_id IN %s",
+                tuple(partner_ids_without_none),
+            ))
+
+        directly_linked_partner_clause = SQL(
+            "(%s)",
+            SQL(" OR ").join(partner_clauses),
+        )
+
+        queries = []
+        report = self.env.ref(
+            'account_reports.partner_ledger_report'
+        )
+
+        journal_name = self.env[
+            'account.journal'
+        ]._field_to_sql(
+            'journal',
+            'name',
+        )
+
+        additional_columns = (
+            self._get_additional_column_aml_values()
+        )
+
+        order_by = self._get_order_by_aml_values()
+
+        for column_group_key, group_options in (
+            report._split_options_per_column_group(options).items()
+        ):
+            query = report._get_report_query(
+                group_options,
+                'strict_range',
+            )
+
+            account_alias = query.left_join(
+                lhs_alias='account_move_line',
+                lhs_column='account_id',
+                rhs_table='account_account',
+                rhs_column='id',
+                link='account_id',
+            )
+
+            account_code = self.env[
+                'account.account'
+            ]._field_to_sql(
+                account_alias,
+                'code',
+                query,
+            )
+
+            account_name = self.env[
+                'account.account'
+            ]._field_to_sql(
+                account_alias,
+                'name',
+            )
+
+            date_to = (
+                group_options.get(
+                    'exclude_zero_balance_open_items_date_to'
+                )
+                or options.get(
+                    'exclude_zero_balance_open_items_date_to'
+                )
+            )
+
+            (
+                residual_balance,
+                residual_amount_currency,
+                partial_reconcile_joins,
+            ) = self._get_pending_balance_sql_parts(date_to)
+
+            debit_select = report._currency_table_apply_rate(
+                SQL(
+                    """
+                    CASE
+                        WHEN %(residual)s > 0
+                        THEN %(residual)s
+                        ELSE 0
+                    END
+                    """,
+                    residual=residual_balance,
+                )
+            )
+
+            credit_select = report._currency_table_apply_rate(
+                SQL(
+                    """
+                    CASE
+                        WHEN %(residual)s < 0
+                        THEN -%(residual)s
+                        ELSE 0
+                    END
+                    """,
+                    residual=residual_balance,
+                )
+            )
+
+            balance_select = report._currency_table_apply_rate(
+                residual_balance
+            )
+
+            queries.append(SQL(
+                """
+                SELECT
+                    account_move_line.id,
+                    COALESCE(
+                        account_move_line.date_maturity,
+                        account_move_line.date
+                    ) AS date_maturity,
+                    account_move_line.name,
+                    account_move_line.ref,
+                    account_move_line.company_id,
+                    account_move_line.account_id,
+                    account_move_line.payment_id,
+                    account_move_line.partner_id,
+                    account_move_line.currency_id,
+                    %(amount_currency_select)s AS amount_currency,
+                    account_move_line.matching_number,
+                    %(additional_columns)s
+                    COALESCE(
+                        account_move_line.invoice_date,
+                        account_move_line.date
+                    ) AS invoice_date,
+                    %(debit_select)s AS debit,
+                    %(credit_select)s AS credit,
+                    %(balance_select)s AS amount,
+                    %(balance_select)s AS balance,
+                    account_move.name AS move_name,
+                    account_move.move_type AS move_type,
+                    %(account_code)s AS account_code,
+                    %(account_name)s AS account_name,
+                    journal.code AS journal_code,
+                    %(journal_name)s AS journal_name,
+                    %(column_group_key)s AS column_group_key,
+                    'pending_balance_aml' AS key,
+                    0 AS partial_id
+                    %(extra_select)s
+                FROM %(table_references)s
+                JOIN account_move
+                    ON account_move.id = account_move_line.move_id
+                %(currency_table_join)s
+                LEFT JOIN res_company company
+                    ON company.id = account_move_line.company_id
+                LEFT JOIN res_partner partner
+                    ON partner.id = account_move_line.partner_id
+                LEFT JOIN account_journal journal
+                    ON journal.id = account_move_line.journal_id
+                %(partial_reconcile_joins)s
+                WHERE
+                    %(search_condition)s
+                    AND %(partner_clause)s
+                    AND %(balance_select)s != 0
+                ORDER BY %(order_by)s
+                """,
+                amount_currency_select=residual_amount_currency,
+                additional_columns=additional_columns,
+                debit_select=debit_select,
+                credit_select=credit_select,
+                balance_select=balance_select,
+                account_code=account_code,
+                account_name=account_name,
+                journal_name=journal_name,
+                column_group_key=column_group_key,
+                table_references=query.from_clause,
+                currency_table_join=report._currency_table_aml_join(
+                    group_options
+                ),
+                partial_reconcile_joins=partial_reconcile_joins,
+                search_condition=query.where_clause,
+                partner_clause=directly_linked_partner_clause,
+                order_by=order_by,
+                extra_select=SQL(" ").join(
+                    self._get_aml_value_extra_select()
+                ),
+            ))
+
+        query = SQL(" UNION ALL ").join(
+            SQL("(%s)", query)
+            for query in queries
+        )
+
+        if offset:
+            query = SQL(
+                "%s OFFSET %s",
+                query,
+                offset,
+            )
+
+        if limit:
+            query = SQL(
+                "%s LIMIT %s",
+                query,
+                limit,
+            )
+
+        self._cr.execute(query)
+
+        for aml_result in self._cr.dictfetchall():
+            partner_id = aml_result['partner_id']
+
+            if partner_id in results:
+                results[partner_id].append(aml_result)
+
+        return results
+    
     def _get_custom_display_config(self):
         res = super(PartnerLedgerCustomHandler, self)._get_custom_display_config()
         #método se ejecuta al entrar
@@ -75,6 +525,8 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
         return res
     #viene de la 15.0
     def _get_query_sums(self, report, options) -> SQL:
+        if self._group_by_pending_balance_enabled(options):
+            return self._get_pending_balance_query_sums(report, options, )
         super(PartnerLedgerCustomHandler, self)._get_query_sums(report, options)
         #método se ejecuta al entrar
         _logger.warning(f'Reportes: {report}')
@@ -139,11 +591,11 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
         _logger.warning(f'_clause: {queries}')
         return SQL(' UNION ALL ').join(queries)
 
-    def _get_initial_balance_values(self, partner_ids, options):
-        res = super(PartnerLedgerCustomHandler, self)._get_initial_balance_values(partner_ids, options)
-        #se ejecuta cuando se aplica cualquier filtro de los 5 primeros y al entrar al reporte
-        #_logger.warning(f'_get_initial_balance_values: {res}')
-        return res
+    def _get_initial_balance_values( self, partner_ids,  options,):
+        if self._group_by_pending_balance_enabled(options):
+            return self._get_pending_balance_initial_values(partner_ids, options,)
+
+        return super()._get_initial_balance_values(partner_ids,options,)
 
     def _get_options_initial_balance(self, options):
         res = super(PartnerLedgerCustomHandler, self)._get_options_initial_balance(options)
@@ -153,6 +605,20 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
 
     #viene de la version 15.0
     def _get_sums_without_partner(self, options):
+
+        if self._group_by_pending_balance_enabled(options):
+            return SQL(
+                """
+                SELECT
+                    NULL::text AS column_group_key,
+                    NULL::integer AS groupby,
+                    0.0::numeric AS debit,
+                    0.0::numeric AS credit,
+                    0.0::numeric AS amount,
+                    0.0::numeric AS balance
+                WHERE FALSE
+                """
+            )
         #método se ejecuta al entrar
         _logger.warning(f'_get_sums_without_partner: ')
         account_acc_ids = []
@@ -244,6 +710,10 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
         return res
     
     def _get_aml_values(self,options,partner_ids, offset=0,limit=None, ):
+
+            if self._group_by_pending_balance_enabled(options):
+                return self._get_pending_balance_aml_values(options, partner_ids, offset=offset, limit=limit,)
+
             account_acc_ids = options.get('account_acc_ids', [])
 
             if not account_acc_ids:

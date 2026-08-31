@@ -18,6 +18,25 @@ class AccountReport(models.AbstractModel):
     _inherit = "account.report"
 
     filter_account_acc = True
+    filter_exclude_zero_balance = fields.Selection(
+        string="Excluir balances en 0",
+        selection=[ ('by_default', "Activado por defecto"), ('optional', "Opcional"),('never', "Nunca"), ],compute=lambda report: report._compute_report_option_filter( 'filter_exclude_zero_balance','never', ),readonly=False,store=True,depends=['root_report_id', 'section_main_report_ids'],)
+
+    filter_exclude_zero_balance_open_items = fields.Boolean( 
+        string="Solo las lineas que componen el saldo",
+        compute= lambda report: report._compute_report_option_filter('filter_exclude_zero_balance_open_items', False), 
+        readonly=False, 
+        store=True, 
+        depends=['root_report_id', 'section_main_report_ids'], 
+        help=("Cuando se activa 'Excluir balance en 0', muestra unicamente las partidas que permanecian abiertas a la fecha final del reporte"),
+    )
+    filter_group_by_pending_balance = fields.Boolean(
+    string="Agrupar por saldo pendiente por comprobante",
+    compute=lambda report: report._compute_report_option_filter('filter_group_by_pending_balance', False,),
+    readonly=False,
+    store=True,
+    depends=['root_report_id', 'section_main_report_ids'],
+    help=("Cuando se muestran las partidas que componen el saldo, presenta cada comprobante por el saldo que permanecía pendiente a la fecha final del reporte."),)
 
     @api.readonly
     def get_options(self, previous_options):
@@ -43,7 +62,39 @@ class AccountReport(models.AbstractModel):
             res['account_account_ids'] = previous_options['account_account_ids']
             res['account_acc_ids'] = previous_options['account_acc_ids']
             res['exclude_companies_without_difference'] = previous_options['exclude_companies_without_difference'] if ('exclude_companies_without_difference' in previous_options) else False
+
+        open_items_active = bool(res.get('exclude_zero_balance') and self.filter_exclude_zero_balance_open_items)
+        res['exclude_zero_balance_open_items'] = open_items_active
+        res['exclude_zero_balance_open_items_date_to'] = ( res.get('date', {}).get('date_to') if open_items_active else False)
+        if open_items_active: 
+            res['unreconciled'] = False
+
+        res['group_by_pending_balance'] = bool(open_items_active  and self.filter_group_by_pending_balance)
         return res
+
+    def _get_options_domain(self, options, date_scope):
+        domain = super()._get_options_domain(options, date_scope)
+        account_acc_ids = (options.get('account_acc_ids') or self.env.context.get('account_acc_ids', []) )
+        if account_acc_ids:
+            domain.append(('account_id','in',[int(account_id) for account_id in account_acc_ids],))
+
+        open_items_active = options.get('exclude_zero_balance_open_items',False,)
+        open_items_date_to = options.get('exclude_zero_balance_open_items_date_to',)
+
+        if open_items_active and open_items_date_to:
+            domain += [
+                '&',
+                ('balance', '!=', 0),
+                '|',
+                ('full_reconcile_id', '=', False),
+                (
+                    'full_reconcile_id.partial_reconcile_ids.max_date',
+                    '>',
+                    open_items_date_to,
+                ),
+            ]
+
+        return domain
     
     @api.model
     def _currency_table_aml_join_for_leader_partner(self, options, aml_alias=SQL('account_move_line')) -> SQL:
@@ -91,3 +142,25 @@ class AccountReport(models.AbstractModel):
             currency_table=self._get_currency_table(options),
             period_key=options['date']['currency_table_period_key'],
         )
+
+    def _init_options_exclude_zero_balance(self, options, previous_options):
+        if self.filter_exclude_zero_balance != 'never':
+            previous_value = previous_options.get('exclude_zero_balance')
+
+            if previous_value is not None:
+                options['exclude_zero_balance'] = previous_value
+            else:
+                options['exclude_zero_balance'] = (
+                    self.filter_exclude_zero_balance == 'by_default'
+                )
+        else:
+            options['exclude_zero_balance'] = False
+
+    def get_report_information(self, options):
+        report_information = super().get_report_information(options)
+
+        report_information['filters']['show_exclude_zero_balance'] = (
+            self.filter_exclude_zero_balance
+        )
+
+        return report_information
